@@ -1,0 +1,29 @@
+{#
+  The page both the app and the report are built on: the GOV.UK header, the service navigation with
+  its items to the right, and the GOV.UK footer. Set serviceName, serviceUrl, navigation (see
+  navigation.njk) and, for the report, navigationStart (the app adds its own links there as it
+  serves a report) and footerMeta (HTML for the footer's meta area).
+#}
+{% extends "govuk/template.njk" %}
+{% from "govuk/components/footer/macro.njk" import govukFooter %}
+{% from "govuk/components/header/macro.njk" import govukHeader %}
+{% from "govuk/components/service-navigation/macro.njk" import govukServiceNavigation %}
+{% from "navigation.njk" import navigationItems %}
+
+{% block govukHeader %}
+  {{ govukHeader({ homepageUrl: "https://www.gov.uk" }) }}
+{% endblock %}
+
+{% block govukServiceNavigation %}
+  {{ govukServiceNavigation({
+    serviceName: serviceName,
+    serviceUrl: serviceUrl,
+    navigationClasses: "app-navigation",
+    collapseNavigationOnMobile: true,
+    slots: { navigationStart: (navigationStart or "") + navigationItems(navigation) }
+  }) }}
+{% endblock %}
+
+{% block govukFooter %}
+  {{ govukFooter({ meta: { html: footerMeta } } if footerMeta else {}) }}
+{% endblock %}

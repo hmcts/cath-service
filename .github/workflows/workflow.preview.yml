@@ -76,6 +76,7 @@ jobs:
     with:
       change-id: ${{ github.event.pull_request.number }}
       urls: ${{ needs.deploy-stage.outputs.urls }}
+      ui-baseline-url: ${{ needs.deploy-stage.outputs.ui-baseline-url }}
       is-pr: true
       run-publication-smoke: true
     secrets: inherit

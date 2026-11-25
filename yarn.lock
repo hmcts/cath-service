@@ -363,6 +363,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/core-process@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@azure/core-process@npm:1.0.0"
+  checksum: 10c0/351283f1a9214a68ba6b6b2c0ce38fb42edc5adb861c350b1308b6bca6a790fc6d57f7aba3aa4fbaacbb2ae6dd095b0e014c0a5cf83e5e2e5c742813e17ce687
+  languageName: node
+  linkType: hard
+
 "@azure/core-rest-pipeline@npm:^1.10.1, @azure/core-rest-pipeline@npm:^1.17.0, @azure/core-rest-pipeline@npm:^1.19.0, @azure/core-rest-pipeline@npm:^1.22.0, @azure/core-rest-pipeline@npm:^1.22.2, @azure/core-rest-pipeline@npm:^1.8.0":
   version: 1.24.0
   resolution: "@azure/core-rest-pipeline@npm:1.24.0"
@@ -471,6 +478,26 @@ __metadata:
     open: "npm:^10.1.0"
     tslib: "npm:^2.2.0"
   checksum: 10c0/924b3b545cbffd1b22a5f28593b2024075f0aa3fc52ed6a96aa4e33f358c2f112da0cdd4d90d1a47cbcfc13a5ccfb8854d511dfed2330e1c463b642b6a362d70
+  languageName: node
+  linkType: hard
+
+"@azure/identity@npm:^4.7.0":
+  version: 4.14.1
+  resolution: "@azure/identity@npm:4.14.1"
+  dependencies:
+    "@azure/abort-controller": "npm:^2.0.0"
+    "@azure/core-auth": "npm:^1.9.0"
+    "@azure/core-client": "npm:^1.9.2"
+    "@azure/core-process": "npm:^1.0.0"
+    "@azure/core-rest-pipeline": "npm:^1.17.0"
+    "@azure/core-tracing": "npm:^1.0.0"
+    "@azure/core-util": "npm:^1.11.0"
+    "@azure/logger": "npm:^1.0.0"
+    "@azure/msal-browser": "npm:^5.5.0"
+    "@azure/msal-node": "npm:^7.1.0"
+    open: "npm:^11.0.0"
+    tslib: "npm:^2.2.0"
+  checksum: 10c0/6e2c6596f63fc079c0890095085ed91266a2e5c5f196ca52592dc7445a91d225f115af6f9456a341b3357bced451b64ff96695d27f872e0bee36c801be73edf3
   languageName: node
   linkType: hard
 
@@ -595,6 +622,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/msal-common@npm:14.16.1":
+  version: 14.16.1
+  resolution: "@azure/msal-common@npm:14.16.1"
+  checksum: 10c0/10f7369cac5735204e190f8d92b8e5f2db66f20a99da55f2febd3b2ece56419c5dde0877dd9af492d8c35efa1b2952808cc18f34b47a8e9da9ef0497cdf3c7be
+  languageName: node
+  linkType: hard
+
 "@azure/msal-common@npm:15.17.0":
   version: 15.17.0
   resolution: "@azure/msal-common@npm:15.17.0"
@@ -602,10 +636,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/msal-common@npm:16.16.2":
+  version: 16.16.2
+  resolution: "@azure/msal-common@npm:16.16.2"
+  checksum: 10c0/49d6022354586f56425f02469c7870b85d75f7c8d1c30cc5f1ad4b15c0c078f342bfb97db004e79a6f239283e47e22aec69cd9304c0b40bd45f8c86d2bd7bcbf
+  languageName: node
+  linkType: hard
+
 "@azure/msal-common@npm:16.8.0":
   version: 16.8.0
   resolution: "@azure/msal-common@npm:16.8.0"
   checksum: 10c0/a363595615710c2a954ff169acec66e097537d73b2e8ae35e6dd81d172c006c17b7b08a4b238ff0a18b3d530d149fcc3d4e778ef0774638477cb5f7be4782fb8
+  languageName: node
+  linkType: hard
+
+"@azure/msal-node@npm:^2.16.1":
+  version: 2.16.3
+  resolution: "@azure/msal-node@npm:2.16.3"
+  dependencies:
+    "@azure/msal-common": "npm:14.16.1"
+    jsonwebtoken: "npm:^9.0.0"
+    uuid: "npm:^8.3.0"
+  checksum: 10c0/7fa1da0cb22bb1142b265ae075c1a8f3d3d1fe5705c13da5500431eacff9854435e43fe59f82db22459a8c2c91022454dafacdaedab568fd0670c972f32221f5
   languageName: node
   linkType: hard
 
@@ -627,6 +679,16 @@ __metadata:
     "@azure/msal-common": "npm:16.8.0"
     jsonwebtoken: "npm:^9.0.0"
   checksum: 10c0/b30c192ae603642c52570102475614ba3e226f97c5699f5d49b5ab04621d6e7a963169134a3d47580be560d4b548f4d82880f889312ec322ee0f2dcca7ad0887
+  languageName: node
+  linkType: hard
+
+"@azure/msal-node@npm:^7.1.0":
+  version: 7.2.2
+  resolution: "@azure/msal-node@npm:7.2.2"
+  dependencies:
+    "@azure/msal-common": "npm:16.16.2"
+    jsonwebtoken: "npm:^9.0.0"
+  checksum: 10c0/ae789dc4c3330f2d7d7c8437a867aaa13e8dde2617a7df2f25e75bd9a71e5a5f3002bb75efc662ec490c4e70b837d0da92a1099a4a0f5cccb8c15ed65e46de59
   languageName: node
   linkType: hard
 
@@ -1328,9 +1390,9 @@ __metadata:
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.6"
     "@types/multer": "npm:2.1.0"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1344,12 +1406,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -1401,12 +1463,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -1438,7 +1500,7 @@ __metadata:
     "@azure/identity": "npm:4.10.0"
     "@azure/storage-blob": "npm:12.27.0"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   languageName: unknown
   linkType: soft
 
@@ -1457,7 +1519,7 @@ __metadata:
     "@types/multer": "npm:1.4.13"
     multer: "npm:1.4.5-lts.2"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1471,12 +1533,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -1490,12 +1552,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -1509,12 +1571,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -1529,12 +1591,12 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/test-support": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1549,12 +1611,12 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/test-support": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1575,12 +1637,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1594,12 +1656,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -1611,7 +1673,7 @@ __metadata:
   dependencies:
     "@hmcts-cft/cloud-native-platform": "npm:2.3.0"
     "@types/config": "npm:4.4.0"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     config: "npm:4.4.2"
   languageName: unknown
   linkType: soft
@@ -1624,13 +1686,13 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     "@types/nunjucks": "npm:3.2.6"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1644,13 +1706,13 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     "@types/nunjucks": "npm:3.2.6"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1664,13 +1726,13 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     "@types/nunjucks": "npm:3.2.6"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1684,11 +1746,11 @@ __metadata:
     "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   languageName: unknown
   linkType: soft
 
@@ -1711,12 +1773,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1731,12 +1793,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1749,10 +1811,10 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     luxon: "npm:3.7.2"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   languageName: unknown
   linkType: soft
 
@@ -1762,10 +1824,10 @@ __metadata:
   dependencies:
     "@hmcts/azure-blob": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   languageName: unknown
   linkType: soft
 
@@ -1778,12 +1840,12 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/test-support": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1796,12 +1858,12 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -1814,12 +1876,12 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -1832,12 +1894,12 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -1848,10 +1910,10 @@ __metadata:
   resolution: "@hmcts/govuk-notify@workspace:libs/govuk-notify"
   dependencies:
     "@hmcts/email-rate-limit": "workspace:*"
-    "@types/node": "npm:^22.10.2"
+    "@types/node": "npm:24.19.2"
     notifications-node-client: "npm:8.4.0"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   languageName: unknown
   linkType: soft
 
@@ -1863,12 +1925,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -1882,11 +1944,11 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -1900,12 +1962,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -1941,12 +2003,12 @@ __metadata:
     "@hmcts/azure-blob": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     ajv: "npm:8.20.0"
     exceljs: "npm:4.4.0"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
     zod: "npm:3.25.76"
   languageName: unknown
   linkType: soft
@@ -1972,12 +2034,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -1990,11 +2052,11 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     "@types/nunjucks": "npm:3.2.6"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -2007,11 +2069,11 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     "@types/nunjucks": "npm:3.2.6"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -2024,12 +2086,12 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     "@types/nunjucks": "npm:3.2.6"
     exceljs: "npm:4.4.0"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -2051,10 +2113,10 @@ __metadata:
   resolution: "@hmcts/notification@workspace:libs/notification"
   dependencies:
     "@hmcts/govuk-notify": "workspace:*"
-    "@types/node": "npm:^22.10.2"
+    "@types/node": "npm:24.19.2"
     notifications-node-client: "npm:^8.2.1"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   languageName: unknown
   linkType: soft
 
@@ -2118,10 +2180,10 @@ __metadata:
     "@aws-sdk/node-http-handler": "npm:3.374.0"
     "@types/express": "npm:5.0.6"
     "@types/multer": "npm:2.0.0"
-    "@types/node": "npm:22.13.10"
+    "@types/node": "npm:24.19.2"
     multer: "npm:2.0.2"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -2131,7 +2193,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/pdf-generation@workspace:libs/pdf-generation"
   dependencies:
-    "@types/node": "npm:22.19.21"
+    "@types/node": "npm:24.19.2"
     puppeteer: "npm:24.42.0"
     typescript: "npm:6.0.3"
   languageName: unknown
@@ -2145,12 +2207,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -2176,7 +2238,7 @@ __metadata:
     "@hmcts/location": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@prisma/client": "npm:7.8.0"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     http-proxy: "npm:1.18.1"
     prisma: "npm:7.8.0"
     tsx: "npm:4.22.4"
@@ -2257,7 +2319,7 @@ __metadata:
     "@hmcts/wpafcc-weekly-hearing-list": "workspace:*"
     ajv: "npm:8.20.0"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   languageName: unknown
   linkType: soft
 
@@ -2269,12 +2331,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -2284,6 +2346,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/redis@workspace:libs/redis"
   dependencies:
+    "@azure/identity": "npm:4.10.0"
+    "@redis/entraid": "npm:5.12.4"
     typescript: "npm:6.0.3"
   peerDependencies:
     redis: ^4.0.0 || ^5.0.0
@@ -2298,12 +2362,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -2316,12 +2380,12 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -2334,12 +2398,12 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     ajv: "npm:8.20.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -2352,12 +2416,12 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     ajv: "npm:8.20.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -2371,11 +2435,11 @@ __metadata:
     "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -2434,7 +2498,7 @@ __metadata:
     cheerio: "npm:1.2.0"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     "@prisma/client": "*"
     express: ^5.2.0
@@ -2468,6 +2532,80 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/ui-baseline@workspace:apps/ui-baseline":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/ui-baseline@workspace:apps/ui-baseline"
+  dependencies:
+    "@axe-core/playwright": "npm:4.13.0"
+    "@azure/identity": "npm:4.10.0"
+    "@azure/keyvault-secrets": "npm:4.11.2"
+    "@azure/storage-blob": "npm:12.27.0"
+    "@hmcts-cft/cloud-native-platform": "npm:2.3.0"
+    "@hmcts/administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/ast-daily-hearing-list": "workspace:*"
+    "@hmcts/azure-blob": "workspace:*"
+    "@hmcts/business-and-property-division-rolls-building-daily-cause-list": "workspace:*"
+    "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/cic-weekly-hearing-list": "workspace:*"
+    "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
+    "@hmcts/civil-daily-cause-list": "workspace:*"
+    "@hmcts/cop-daily-cause-list": "workspace:*"
+    "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/crown-advanced-pdda-list": "workspace:*"
+    "@hmcts/crown-daily-list": "workspace:*"
+    "@hmcts/crown-firm-list": "workspace:*"
+    "@hmcts/daily-cause-list-common": "workspace:*"
+    "@hmcts/et-daily-list": "workspace:*"
+    "@hmcts/et-fortnightly-list": "workspace:*"
+    "@hmcts/et-list-common": "workspace:*"
+    "@hmcts/family-daily-cause-list": "workspace:*"
+    "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
+    "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*"
+    "@hmcts/grc-weekly-hearing-list": "workspace:*"
+    "@hmcts/iac-daily-list": "workspace:*"
+    "@hmcts/interim-applications-daily-cause-list": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/magistrates-adult-court-list": "workspace:*"
+    "@hmcts/magistrates-public-adult-court-list": "workspace:*"
+    "@hmcts/magistrates-public-list": "workspace:*"
+    "@hmcts/magistrates-standard-list": "workspace:*"
+    "@hmcts/pht-weekly-hearing-list": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/publication": "workspace:*"
+    "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/send-daily-hearing-list": "workspace:*"
+    "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*"
+    "@hmcts/sjp-press-list": "workspace:*"
+    "@hmcts/sjp-public-list": "workspace:*"
+    "@hmcts/sscs-daily-hearing-list": "workspace:*"
+    "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list": "workspace:*"
+    "@hmcts/upper-tribunal-common": "workspace:*"
+    "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list": "workspace:*"
+    "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list": "workspace:*"
+    "@hmcts/utiac-jr-daily-hearing-list": "workspace:*"
+    "@hmcts/utiac-statutory-appeal-daily-hearing-list": "workspace:*"
+    "@hmcts/wpafcc-weekly-hearing-list": "workspace:*"
+    "@types/express": "npm:5.0.6"
+    "@types/node": "npm:24.19.2"
+    "@types/nunjucks": "npm:3.2.6"
+    "@types/supertest": "npm:7.2.1"
+    exceljs: "npm:4.4.0"
+    express: "npm:5.2.1"
+    govuk-frontend: "npm:6.2.0"
+    nunjucks: "npm:3.2.4"
+    pdfjs-dist: "npm:6.4.299"
+    playwright: "npm:1.62.1"
+    redis: "npm:5.12.1"
+    supertest: "npm:7.2.2"
+    tsx: "npm:4.22.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.12"
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list@workspace:*, @hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-administrative-appeals-chamber-daily-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"
@@ -2477,10 +2615,10 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/upper-tribunal-common": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     luxon: "npm:3.7.2"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -2493,10 +2631,10 @@ __metadata:
     "@hmcts/azure-blob": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   languageName: unknown
   linkType: soft
 
@@ -2509,10 +2647,10 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/upper-tribunal-common": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     luxon: "npm:3.7.2"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -2527,10 +2665,10 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/upper-tribunal-common": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     luxon: "npm:3.7.2"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -2544,11 +2682,11 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -2562,11 +2700,11 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -2586,7 +2724,7 @@ __metadata:
     express-session: "npm:1.19.0"
     sanitize-html: "npm:2.17.7"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     "@hmcts/cookie-manager": ^1.1.0
     connect-redis: ^9.0.0
@@ -2640,6 +2778,7 @@ __metadata:
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/redis": "workspace:*"
     "@hmcts/send-daily-hearing-list": "workspace:*"
     "@hmcts/sjp-press-list": "workspace:*"
     "@hmcts/sjp-public-list": "workspace:*"
@@ -2660,7 +2799,7 @@ __metadata:
     "@types/nunjucks": "npm:3.2.6"
     "@types/supertest": "npm:7.2.1"
     compression: "npm:1.8.1"
-    concurrently: "npm:10.0.5"
+    concurrently: "npm:10.0.7"
     config: "npm:4.4.2"
     connect-redis: "npm:9.0.0"
     cookie-parser: "npm:1.4.7"
@@ -2691,12 +2830,12 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
+    vitest: "npm:4.1.12"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -2819,6 +2958,127 @@ __metadata:
     govuk-frontend: ^6.0.0
     moment: 2.30.1
   checksum: 10c0/ec895678d17ca70e966b8313cdf120e1d56cc4cf44f8832d085a0dfc8648ddb92cbe000941453b1d331808a9fc056c3682637d24e6bea7c788264f64466a3db8
+  languageName: node
+  linkType: hard
+
+"@napi-rs/canvas-android-arm64@npm:1.0.13":
+  version: 1.0.13
+  resolution: "@napi-rs/canvas-android-arm64@npm:1.0.13"
+  conditions: os=android & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@napi-rs/canvas-darwin-arm64@npm:1.0.13":
+  version: 1.0.13
+  resolution: "@napi-rs/canvas-darwin-arm64@npm:1.0.13"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@napi-rs/canvas-darwin-x64@npm:1.0.13":
+  version: 1.0.13
+  resolution: "@napi-rs/canvas-darwin-x64@npm:1.0.13"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@napi-rs/canvas-linux-arm-gnueabihf@npm:1.0.13":
+  version: 1.0.13
+  resolution: "@napi-rs/canvas-linux-arm-gnueabihf@npm:1.0.13"
+  conditions: os=linux & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@napi-rs/canvas-linux-arm64-gnu@npm:1.0.13":
+  version: 1.0.13
+  resolution: "@napi-rs/canvas-linux-arm64-gnu@npm:1.0.13"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@napi-rs/canvas-linux-arm64-musl@npm:1.0.13":
+  version: 1.0.13
+  resolution: "@napi-rs/canvas-linux-arm64-musl@npm:1.0.13"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@napi-rs/canvas-linux-riscv64-gnu@npm:1.0.13":
+  version: 1.0.13
+  resolution: "@napi-rs/canvas-linux-riscv64-gnu@npm:1.0.13"
+  conditions: os=linux & cpu=riscv64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@napi-rs/canvas-linux-x64-gnu@npm:1.0.13":
+  version: 1.0.13
+  resolution: "@napi-rs/canvas-linux-x64-gnu@npm:1.0.13"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@napi-rs/canvas-linux-x64-musl@npm:1.0.13":
+  version: 1.0.13
+  resolution: "@napi-rs/canvas-linux-x64-musl@npm:1.0.13"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@napi-rs/canvas-win32-arm64-msvc@npm:1.0.13":
+  version: 1.0.13
+  resolution: "@napi-rs/canvas-win32-arm64-msvc@npm:1.0.13"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@napi-rs/canvas-win32-x64-msvc@npm:1.0.13":
+  version: 1.0.13
+  resolution: "@napi-rs/canvas-win32-x64-msvc@npm:1.0.13"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@napi-rs/canvas@npm:^1.0.10":
+  version: 1.0.13
+  resolution: "@napi-rs/canvas@npm:1.0.13"
+  dependencies:
+    "@napi-rs/canvas-android-arm64": "npm:1.0.13"
+    "@napi-rs/canvas-darwin-arm64": "npm:1.0.13"
+    "@napi-rs/canvas-darwin-x64": "npm:1.0.13"
+    "@napi-rs/canvas-linux-arm-gnueabihf": "npm:1.0.13"
+    "@napi-rs/canvas-linux-arm64-gnu": "npm:1.0.13"
+    "@napi-rs/canvas-linux-arm64-musl": "npm:1.0.13"
+    "@napi-rs/canvas-linux-riscv64-gnu": "npm:1.0.13"
+    "@napi-rs/canvas-linux-x64-gnu": "npm:1.0.13"
+    "@napi-rs/canvas-linux-x64-musl": "npm:1.0.13"
+    "@napi-rs/canvas-win32-arm64-msvc": "npm:1.0.13"
+    "@napi-rs/canvas-win32-x64-msvc": "npm:1.0.13"
+  dependenciesMeta:
+    "@napi-rs/canvas-android-arm64":
+      optional: true
+    "@napi-rs/canvas-darwin-arm64":
+      optional: true
+    "@napi-rs/canvas-darwin-x64":
+      optional: true
+    "@napi-rs/canvas-linux-arm-gnueabihf":
+      optional: true
+    "@napi-rs/canvas-linux-arm64-gnu":
+      optional: true
+    "@napi-rs/canvas-linux-arm64-musl":
+      optional: true
+    "@napi-rs/canvas-linux-riscv64-gnu":
+      optional: true
+    "@napi-rs/canvas-linux-x64-gnu":
+      optional: true
+    "@napi-rs/canvas-linux-x64-musl":
+      optional: true
+    "@napi-rs/canvas-win32-arm64-msvc":
+      optional: true
+    "@napi-rs/canvas-win32-x64-msvc":
+      optional: true
+    canvas:
+      built: true
+  checksum: 10c0/6c0144dfe1953a15882c84c04b2960bcac157c72de40d173be5da3abdbe50451d3136961826d9f14d005b857dc50f2ffc8c7baf37096fbbaac1f19983ca96e53
   languageName: node
   linkType: hard
 
@@ -4115,6 +4375,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@redis/entraid@npm:5.12.4":
+  version: 5.12.4
+  resolution: "@redis/entraid@npm:5.12.4"
+  dependencies:
+    "@azure/identity": "npm:^4.7.0"
+    "@azure/msal-node": "npm:^2.16.1"
+  peerDependencies:
+    "@redis/client": ^5.12.4
+  checksum: 10c0/17e42a2780f5b104e677e5548da970c6a1124fba0f232747f34ba66f1493e1ca3aad014d54ea3523618a164335629c2b39a304d0dc206272c57ca7cec4838718
+  languageName: node
+  linkType: hard
+
 "@redis/json@npm:5.12.1":
   version: 5.12.1
   resolution: "@redis/json@npm:5.12.1"
@@ -4725,30 +4997,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:22.13.10":
-  version: 22.13.10
-  resolution: "@types/node@npm:22.13.10"
+"@types/node@npm:24.19.2":
+  version: 24.19.2
+  resolution: "@types/node@npm:24.19.2"
   dependencies:
-    undici-types: "npm:~6.20.0"
-  checksum: 10c0/a3865f9503d6f718002374f7b87efaadfae62faa499c1a33b12c527cfb9fd86f733e1a1b026b80c5a0e4a965701174bc3305595a7d36078aa1abcf09daa5dee9
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:22.19.21":
-  version: 22.19.21
-  resolution: "@types/node@npm:22.19.21"
-  dependencies:
-    undici-types: "npm:~6.21.0"
-  checksum: 10c0/9a18a5fabaf75a55d63796d6086029c4f9fdd1c026a26d629804f5cc99b3302c749be321df29d7a7141dc227501ed645b5f9d01095d926f5d2c0e2230fcd3f59
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:24.10.4":
-  version: 24.10.4
-  resolution: "@types/node@npm:24.10.4"
-  dependencies:
-    undici-types: "npm:~7.16.0"
-  checksum: 10c0/069639cb7233ee747df1897b5e784f6b6c5da765c96c94773c580aac888fa1a585048d2a6e95eb8302d89c7a9df75801c8b5a0b7d0221d4249059cf09a5f4228
+    undici-types: "npm:>=7.24.0 <7.24.7"
+  checksum: 10c0/b51a7f8854007ad579dffdd0633d8addbfeb2c97cceb380f2eba0ed163638ec52e17565385a6cc04d54ac4ff99c70c64aee68a4ca45b6128c035e828794e29c5
   languageName: node
   linkType: hard
 
@@ -4756,15 +5010,6 @@ __metadata:
   version: 14.18.63
   resolution: "@types/node@npm:14.18.63"
   checksum: 10c0/626a371419a6a0e11ca460b22bb4894abe5d75c303739588bc96267e380aa8b90ba5a87bc552400584f0ac2a84b5c458dadcbcf0dfd2396ebeb765f7a7f95893
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^22.10.2":
-  version: 22.20.1
-  resolution: "@types/node@npm:22.20.1"
-  dependencies:
-    undici-types: "npm:~6.21.0"
-  checksum: 10c0/f2ba54d3d1fb92e1c57c78d32c3a17655b1e87363b707136f55c422b4838d4054901ce5d27f75bb0e5ecb7ebfee3804e0987822d22b473473008091857a09353
   languageName: node
   linkType: hard
 
@@ -4931,12 +5176,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/coverage-v8@npm:4.1.10":
-  version: 4.1.10
-  resolution: "@vitest/coverage-v8@npm:4.1.10"
+"@vitest/coverage-v8@npm:4.1.12":
+  version: 4.1.12
+  resolution: "@vitest/coverage-v8@npm:4.1.12"
   dependencies:
     "@bcoe/v8-coverage": "npm:^1.0.2"
-    "@vitest/utils": "npm:4.1.10"
+    "@vitest/utils": "npm:4.1.12"
     ast-v8-to-istanbul: "npm:^1.0.0"
     istanbul-lib-coverage: "npm:^3.2.2"
     istanbul-lib-report: "npm:^3.0.1"
@@ -4946,34 +5191,34 @@ __metadata:
     std-env: "npm:^4.0.0-rc.1"
     tinyrainbow: "npm:^3.1.0"
   peerDependencies:
-    "@vitest/browser": 4.1.10
-    vitest: 4.1.10
+    "@vitest/browser": 4.1.12
+    vitest: 4.1.12
   peerDependenciesMeta:
     "@vitest/browser":
       optional: true
-  checksum: 10c0/f607ab5610ba93ff586d1680bc6d574ee42606ddafd33d5dca14d568e1ff110bf7aea0c82d87b69003b10604d78ccdb535948704e26bbdbfdda6b27edf524486
+  checksum: 10c0/0280b642bfeaf977bd08c0218e919334268ee4be1e9ed812de013ad82e32a244323447fd502b3f3476cf2bc5a040c1bc62babe68f0061a47562adfeb371b358e
   languageName: node
   linkType: hard
 
-"@vitest/expect@npm:4.1.10":
-  version: 4.1.10
-  resolution: "@vitest/expect@npm:4.1.10"
+"@vitest/expect@npm:4.1.12":
+  version: 4.1.12
+  resolution: "@vitest/expect@npm:4.1.12"
   dependencies:
     "@standard-schema/spec": "npm:^1.1.0"
     "@types/chai": "npm:^5.2.2"
-    "@vitest/spy": "npm:4.1.10"
-    "@vitest/utils": "npm:4.1.10"
+    "@vitest/spy": "npm:4.1.12"
+    "@vitest/utils": "npm:4.1.12"
     chai: "npm:^6.2.2"
     tinyrainbow: "npm:^3.1.0"
-  checksum: 10c0/a817ad0d9bd6a039776a7228d54fb8319c17e4af15917407f5566ac61781a8511f591d302519d6999217399915bc3c0290028189fc73f5c38f80cb01b6f19c8d
+  checksum: 10c0/386bbb6b7aadbfbfe8a5c7fc9d0a875a6da24a36edb3af519755e2d658359a0211bc4188a8dc38a1a34317c752624c4db58616752861323dcae475e3f1e6a975
   languageName: node
   linkType: hard
 
-"@vitest/mocker@npm:4.1.10":
-  version: 4.1.10
-  resolution: "@vitest/mocker@npm:4.1.10"
+"@vitest/mocker@npm:4.1.12":
+  version: 4.1.12
+  resolution: "@vitest/mocker@npm:4.1.12"
   dependencies:
-    "@vitest/spy": "npm:4.1.10"
+    "@vitest/spy": "npm:4.1.12"
     estree-walker: "npm:^3.0.3"
     magic-string: "npm:^0.30.21"
   peerDependencies:
@@ -4984,53 +5229,53 @@ __metadata:
       optional: true
     vite:
       optional: true
-  checksum: 10c0/4aa70b0df58681652e2e28093437fb2e8f4d02a6d03f5619abc266ac1c5ae5f43326148061d13ae6e071e0f6cfcf7634659af63644de8ce098a7c98949a3d1ad
+  checksum: 10c0/6fccf67d42830b7caadfdfc94b8e9f3166a4686edd5bdf9083773d981f906ea93f172c0207482568f91d4fd72a9843f0c6644687d2ba3b3ce7bc8b6e9541cfa1
   languageName: node
   linkType: hard
 
-"@vitest/pretty-format@npm:4.1.10":
-  version: 4.1.10
-  resolution: "@vitest/pretty-format@npm:4.1.10"
+"@vitest/pretty-format@npm:4.1.12":
+  version: 4.1.12
+  resolution: "@vitest/pretty-format@npm:4.1.12"
   dependencies:
     tinyrainbow: "npm:^3.1.0"
-  checksum: 10c0/1a5daba730ffe23f2000bff484b4b2842f3b178d93663cb487b215516b8d3b62caa3e2bb2a3c63307b61a9fe58fb9bfff38559bc0c5e49d8aa403d6803a1d918
+  checksum: 10c0/b3d3635a49e7f328afdb0a627a537ba66c16609e3082dc58adca4c32881007afdeff88975697a21c740eced31751369e1ad06e134f4194e573ac9a758d6016ea
   languageName: node
   linkType: hard
 
-"@vitest/runner@npm:4.1.10":
-  version: 4.1.10
-  resolution: "@vitest/runner@npm:4.1.10"
+"@vitest/runner@npm:4.1.12":
+  version: 4.1.12
+  resolution: "@vitest/runner@npm:4.1.12"
   dependencies:
-    "@vitest/utils": "npm:4.1.10"
+    "@vitest/utils": "npm:4.1.12"
     pathe: "npm:^2.0.3"
-  checksum: 10c0/554b72639de9694271b99be8ae273fe12ec793093ec91cce143816cd1187d40b7138a4d9d4de4f456cfca9567de986825bff97e107c05b9eb4abc130e854286d
+  checksum: 10c0/d39b42c4e004017752ba2cadd0964c71e13dfa1536653e3a9129bf60abe684e39974ad75a3fc4ba9fd137a8e1a79e8efea80e0469c78e35019f61c8ebbdaf500
   languageName: node
   linkType: hard
 
-"@vitest/snapshot@npm:4.1.10":
-  version: 4.1.10
-  resolution: "@vitest/snapshot@npm:4.1.10"
+"@vitest/snapshot@npm:4.1.12":
+  version: 4.1.12
+  resolution: "@vitest/snapshot@npm:4.1.12"
   dependencies:
-    "@vitest/pretty-format": "npm:4.1.10"
-    "@vitest/utils": "npm:4.1.10"
+    "@vitest/pretty-format": "npm:4.1.12"
+    "@vitest/utils": "npm:4.1.12"
     magic-string: "npm:^0.30.21"
     pathe: "npm:^2.0.3"
-  checksum: 10c0/e71398725f51af5fd0c07bb4b957d0f987daf9b4c564ac24cb2a4d1afde1a6939f535ac17761a32dcc41b0a1e6d4088af66dc44df89fdebebb92aabed1a92b5f
+  checksum: 10c0/c309ae2966b9cda46ca018540467872a91a5d641b150b82362c9ea4b21b493669ebcbf284729c1216f178c08af5a3884d3a434a01091a8edc90da77d207bb985
   languageName: node
   linkType: hard
 
-"@vitest/spy@npm:4.1.10":
-  version: 4.1.10
-  resolution: "@vitest/spy@npm:4.1.10"
-  checksum: 10c0/e5c08012560af6727fd66741c5cda25560d7c5442103d0c83e4276a9b0dd90b9da6cdf823a461195229a16c6ff87768ce788a68d0fa29dea73ee285618668178
+"@vitest/spy@npm:4.1.12":
+  version: 4.1.12
+  resolution: "@vitest/spy@npm:4.1.12"
+  checksum: 10c0/4732cafd7015b4ae39616f09405e9d1e5907b6edfdcc6eeee3a70518d966453ac75b979585fa2453a70dcacee22ecfc92e4708ff4c1dcdca1cb927d3f25306ed
   languageName: node
   linkType: hard
 
-"@vitest/ui@npm:4.1.10":
-  version: 4.1.10
-  resolution: "@vitest/ui@npm:4.1.10"
+"@vitest/ui@npm:4.1.12":
+  version: 4.1.12
+  resolution: "@vitest/ui@npm:4.1.12"
   dependencies:
-    "@vitest/utils": "npm:4.1.10"
+    "@vitest/utils": "npm:4.1.12"
     fflate: "npm:^0.8.2"
     flatted: "npm:^3.4.2"
     pathe: "npm:^2.0.3"
@@ -5038,19 +5283,19 @@ __metadata:
     tinyglobby: "npm:^0.2.15"
     tinyrainbow: "npm:^3.1.0"
   peerDependencies:
-    vitest: 4.1.10
-  checksum: 10c0/59cd54e3a3c512de00828f0b739323d0c076dc3577fd13678b270f716120d92d10f4922a55363ab9e1de78c42a6b68831f6b7eaaad2d3df86ed9ab856e17b469
+    vitest: 4.1.12
+  checksum: 10c0/05c2c56030cf55d87a120cc7a61f934d33b154cea7552ebe42e4d3557fc77a762ea6cfee8feeb51b5a7d16f3f8f578471bd48723ad86a55cdae23ae56430f15c
   languageName: node
   linkType: hard
 
-"@vitest/utils@npm:4.1.10":
-  version: 4.1.10
-  resolution: "@vitest/utils@npm:4.1.10"
+"@vitest/utils@npm:4.1.12":
+  version: 4.1.12
+  resolution: "@vitest/utils@npm:4.1.12"
   dependencies:
-    "@vitest/pretty-format": "npm:4.1.10"
+    "@vitest/pretty-format": "npm:4.1.12"
     convert-source-map: "npm:^2.0.0"
     tinyrainbow: "npm:^3.1.0"
-  checksum: 10c0/05b0ecec6997ec22fc08377e57dbd8fa37992e05961f3a7a916d98b1ab56d15c2a87dbd83d392b628242bdc156b1705e7fa60a3bf0c54bdb51158c153e05fc5d
+  checksum: 10c0/b70518b3a046700e080537f3aecd1fca3a88733000df55b4bdb24751c0209bd45fddf80fb5e217862e1e7d6b3fb63da5113fe04a27a177a3c04c1c0231ecfe18
   languageName: node
   linkType: hard
 
@@ -5731,13 +5976,13 @@ __metadata:
     "@biomejs/cli-linux-arm64": "npm:^2.3.6"
     "@microsoft/microsoft-graph-client": "npm:3.0.7"
     "@types/jsonwebtoken": "npm:9.0.10"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.19.2"
     "@types/passport": "npm:1.0.17"
     "@types/supertest": "npm:7.2.1"
-    "@vitest/coverage-v8": "npm:4.1.10"
-    "@vitest/ui": "npm:4.1.10"
+    "@vitest/coverage-v8": "npm:4.1.12"
+    "@vitest/ui": "npm:4.1.12"
     accessible-autocomplete: "npm:^3.0.1"
-    concurrently: "npm:10.0.5"
+    concurrently: "npm:10.0.7"
     happy-dom: "npm:^20.0.5"
     jsonwebtoken: "npm:9.0.3"
     jwks-rsa: "npm:4.1.0"
@@ -5750,8 +5995,8 @@ __metadata:
     tsx: "npm:4.22.4"
     turbo: "npm:2.10.9"
     typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
-    yaml: "npm:2.9.0"
+    vitest: "npm:4.1.12"
+    yaml: "npm:2.9.1"
   languageName: unknown
   linkType: soft
 
@@ -6002,20 +6247,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"concurrently@npm:10.0.5":
-  version: 10.0.5
-  resolution: "concurrently@npm:10.0.5"
+"concurrently@npm:10.0.7":
+  version: 10.0.7
+  resolution: "concurrently@npm:10.0.7"
   dependencies:
     chalk: "npm:5.6.2"
     rxjs: "npm:7.8.2"
-    shell-quote: "npm:1.9.0"
+    shell-quote: "npm:1.12.0"
     supports-color: "npm:10.2.2"
     tree-kill: "npm:1.2.2"
     yargs: "npm:18.0.0"
   bin:
     conc: dist/bin/index.js
     concurrently: dist/bin/index.js
-  checksum: 10c0/2e66ece2f2a016b4f8b175f88f67d84bbedc8eff864310d37fe8c82e58459a40cfe69c5f0fe8ce9fc97f028157d7adb1c71629433e305e95f447a7840e417ad9
+  checksum: 10c0/f6656fb26c8ee3c4b924c5a62ca9d762220bd3c9c3b43fc75a7014a6c97cc994ed88371a7075d80a0b1b06daf1719a4d7ddd61e4df7fc2f4dabe16e2ace284e4
   languageName: node
   linkType: hard
 
@@ -6281,6 +6526,16 @@ __metadata:
     bundle-name: "npm:^4.1.0"
     default-browser-id: "npm:^5.0.0"
   checksum: 10c0/576593b617b17a7223014b4571bfe1c06a2581a4eb8b130985d90d253afa3f40999caec70eb0e5776e80d4af6a41cce91018cd3f86e57ad578bf59e46fb19abe
+  languageName: node
+  linkType: hard
+
+"default-browser@npm:^5.5.1":
+  version: 5.5.1
+  resolution: "default-browser@npm:5.5.1"
+  dependencies:
+    bundle-name: "npm:^4.1.0"
+    default-browser-id: "npm:^5.0.0"
+  checksum: 10c0/feb5e7a6a6f2fcbc7a6c5c78e071a4f7a3ab136e6244b9637e58fe6170f6e1254ae099cbe2ebc2b2823c387ed50fda176ce31d386f4f2ebbd43d8fb1cb6aacf7
   languageName: node
   linkType: hard
 
@@ -7790,6 +8045,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"is-in-ssh@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "is-in-ssh@npm:1.0.0"
+  checksum: 10c0/fbb4c25d85c543df09997fbe7aeca410ae0c839c5825bba2d4c672df765e9ce0e7558e781b371c0a21d6ef9bbac39b31875617a68eaaea5504438d07db9a2ffa
+  languageName: node
+  linkType: hard
+
 "is-inside-container@npm:^1.0.0":
   version: 1.0.0
   resolution: "is-inside-container@npm:1.0.0"
@@ -8886,6 +9148,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"open@npm:^11.0.0":
+  version: 11.0.4
+  resolution: "open@npm:11.0.4"
+  dependencies:
+    default-browser: "npm:^5.5.1"
+    define-lazy-prop: "npm:^3.0.0"
+    is-in-ssh: "npm:^1.0.0"
+    is-inside-container: "npm:^1.0.0"
+    powershell-utils: "npm:^0.2.1"
+    wsl-utils: "npm:^1.0.0"
+  checksum: 10c0/5be0a902323ea9266cf7323edf8d714b516f739519485e98b2508e38e1ffe6f98e3426aeb182fc88239bf98777258b27abbfe5cb1938bff8dbccec2fd603aca5
+  languageName: node
+  linkType: hard
+
 "openid-client@npm:6.8.5":
   version: 6.8.5
   resolution: "openid-client@npm:6.8.5"
@@ -9066,6 +9342,18 @@ __metadata:
   version: 0.0.1
   resolution: "pause@npm:0.0.1"
   checksum: 10c0/f362655dfa7f44b946302c5a033148852ed5d05f744bd848b1c7eae6a543f743e79c7751ee896ba519fd802affdf239a358bb2ea5ca1b1c1e4e916279f83ab75
+  languageName: node
+  linkType: hard
+
+"pdfjs-dist@npm:6.4.299":
+  version: 6.4.299
+  resolution: "pdfjs-dist@npm:6.4.299"
+  dependencies:
+    "@napi-rs/canvas": "npm:^1.0.10"
+  dependenciesMeta:
+    "@napi-rs/canvas":
+      optional: true
+  checksum: 10c0/f64c9bfda0838a2aba815b2083a1273df4611c749532a959296501270c589cb813c48429a8730a5ca033244d3dd8176c305c6241c8f6d9ebce069d9a9dba3e67
   languageName: node
   linkType: hard
 
@@ -9283,6 +9571,13 @@ __metadata:
   version: 3.4.7
   resolution: "postgres@npm:3.4.7"
   checksum: 10c0/b2e61b1064d38e7e1df8291f6d5a7e11f892a3240e00cf2b5e5542bf9abbfe97f3963164aeb56b42c1ab6b8aae3454c57f5bbc1791df0769375542740a7cde72
+  languageName: node
+  linkType: hard
+
+"powershell-utils@npm:^0.2.0, powershell-utils@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "powershell-utils@npm:0.2.1"
+  checksum: 10c0/be60cd95e78aa143256bfa5ce88736caf874f9b4ac1b9bb3a041749bf8eebb49cdbd1a9859ff7462f2c6421e15f96f711c1e60bd323998fe98d978a4a3116376
   languageName: node
   linkType: hard
 
@@ -9926,10 +10221,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shell-quote@npm:1.9.0":
-  version: 1.9.0
-  resolution: "shell-quote@npm:1.9.0"
-  checksum: 10c0/a39960107eb086b02394cfceb3c732bd3bf567b568719ff47101448fc3f1bf4a59ecfdd8960ff7ea564d749ef8bda70f2c82a768f22d8c7aeeabf2b64f53b7e8
+"shell-quote@npm:1.12.0":
+  version: 1.12.0
+  resolution: "shell-quote@npm:1.12.0"
+  checksum: 10c0/1605a4ed6a758bf13de7cb8197a4184d8015f7a4dbdcd6cd4a717d5b30b3ae7666300cc4ae7f3155cf80ace9739e9e82061ee5aa1a648f53f5fab31a220816d0
   languageName: node
   linkType: hard
 
@@ -10532,24 +10827,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici-types@npm:~6.20.0":
-  version: 6.20.0
-  resolution: "undici-types@npm:6.20.0"
-  checksum: 10c0/68e659a98898d6a836a9a59e6adf14a5d799707f5ea629433e025ac90d239f75e408e2e5ff086afc3cace26f8b26ee52155293564593fbb4a2f666af57fc59bf
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~6.21.0":
-  version: 6.21.0
-  resolution: "undici-types@npm:6.21.0"
-  checksum: 10c0/c01ed51829b10aa72fc3ce64b747f8e74ae9b60eafa19a7b46ef624403508a54c526ffab06a14a26b3120d055e1104d7abe7c9017e83ced038ea5cf52f8d5e04
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~7.16.0":
-  version: 7.16.0
-  resolution: "undici-types@npm:7.16.0"
-  checksum: 10c0/3033e2f2b5c9f1504bdc5934646cb54e37ecaca0f9249c983f7b1fc2e87c6d18399ebb05dc7fd5419e02b2e915f734d872a65da2e3eeed1813951c427d33cc9a
+"undici-types@npm:>=7.24.0 <7.24.7":
+  version: 7.24.6
+  resolution: "undici-types@npm:7.24.6"
+  checksum: 10c0/d9cd8befb643ac904615c280a095ba4240531f6bb4a5e75a22a7483630ca8d3f1016d2ab6ace6ceda1f63b3a2db2fe037fafe121d6917a0187573aa548ff78ca
   languageName: node
   linkType: hard
 
@@ -10703,17 +10984,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitest@npm:4.1.10":
-  version: 4.1.10
-  resolution: "vitest@npm:4.1.10"
+"vitest@npm:4.1.12":
+  version: 4.1.12
+  resolution: "vitest@npm:4.1.12"
   dependencies:
-    "@vitest/expect": "npm:4.1.10"
-    "@vitest/mocker": "npm:4.1.10"
-    "@vitest/pretty-format": "npm:4.1.10"
-    "@vitest/runner": "npm:4.1.10"
-    "@vitest/snapshot": "npm:4.1.10"
-    "@vitest/spy": "npm:4.1.10"
-    "@vitest/utils": "npm:4.1.10"
+    "@vitest/expect": "npm:4.1.12"
+    "@vitest/mocker": "npm:4.1.12"
+    "@vitest/pretty-format": "npm:4.1.12"
+    "@vitest/runner": "npm:4.1.12"
+    "@vitest/snapshot": "npm:4.1.12"
+    "@vitest/spy": "npm:4.1.12"
+    "@vitest/utils": "npm:4.1.12"
     es-module-lexer: "npm:^2.0.0"
     expect-type: "npm:^1.3.0"
     magic-string: "npm:^0.30.21"
@@ -10731,12 +11012,12 @@ __metadata:
     "@edge-runtime/vm": "*"
     "@opentelemetry/api": ^1.9.0
     "@types/node": ^20.0.0 || ^22.0.0 || >=24.0.0
-    "@vitest/browser-playwright": 4.1.10
-    "@vitest/browser-preview": 4.1.10
-    "@vitest/browser-webdriverio": 4.1.10
-    "@vitest/coverage-istanbul": 4.1.10
-    "@vitest/coverage-v8": 4.1.10
-    "@vitest/ui": 4.1.10
+    "@vitest/browser-playwright": 4.1.12
+    "@vitest/browser-preview": 4.1.12
+    "@vitest/browser-webdriverio": ^4.1.11
+    "@vitest/coverage-istanbul": 4.1.12
+    "@vitest/coverage-v8": 4.1.12
+    "@vitest/ui": 4.1.12
     happy-dom: "*"
     jsdom: "*"
     vite: ^6.0.0 || ^7.0.0 || ^8.0.0
@@ -10767,7 +11048,7 @@ __metadata:
       optional: false
   bin:
     vitest: ./vitest.mjs
-  checksum: 10c0/ff07294a57f9c62f3b503f7cf88a52ee0753ed26389a49cda430387a3898f39d80af47180b0af19e27acab5bd11ae95706bd4b44ce8befc97d3ae49af6ca4fc1
+  checksum: 10c0/0e571967f9fa2192170203afcb439434b04fbcd914a4dde176544fc45768e76226a284f6fa9d9a4e9bc9fce593bfbe6ab50ee25b3ca50c278eb33562345e0aaf
   languageName: node
   linkType: hard
 
@@ -10899,6 +11180,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"wsl-utils@npm:^1.0.0":
+  version: 1.0.1
+  resolution: "wsl-utils@npm:1.0.1"
+  dependencies:
+    is-wsl: "npm:^3.1.0"
+    powershell-utils: "npm:^0.2.0"
+  checksum: 10c0/535a7684d63d9dd0b4349997f81ebb38705809031f354bd0d3ec2e74ebaf94d21f2fbbf4f149e1832474827867ced07b5aadc256a17f9cfd3e70d2f9047dee8e
+  languageName: node
+  linkType: hard
+
 "xml-naming@npm:^0.1.0":
   version: 0.1.0
   resolution: "xml-naming@npm:0.1.0"
@@ -10941,7 +11232,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yaml@npm:2.9.0, yaml@npm:^2.0.0":
+"yaml@npm:2.9.1":
+  version: 2.9.1
+  resolution: "yaml@npm:2.9.1"
+  bin:
+    yaml: bin.mjs
+  checksum: 10c0/9d06676ef02b89559a8b10a71882bd2cdae81e8393dc8dbc871615c3259475d9609ad973d19cb3c9e71e72d6206e3d1e7aa241c7e55f3d16fd2e77db305827d6
+  languageName: node
+  linkType: hard
+
+"yaml@npm:^2.0.0":
   version: 2.9.0
   resolution: "yaml@npm:2.9.0"
   bin:

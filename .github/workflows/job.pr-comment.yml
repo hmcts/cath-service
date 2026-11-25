@@ -11,6 +11,11 @@ on:
         required: true
         type: string
         description: "Base64-encoded JSON of deployment URLs"
+      ui-baseline-url:
+        required: false
+        type: string
+        default: ""
+        description: "Where the hosted parity check is, when the deploy deployed it (a release of its own)"
 
 env:
   CHANGE_ID: ${{ inputs.change-id }}
@@ -37,8 +42,12 @@ jobs:
           echo "TEAM_NAME=${TEAM_NAME}" >> $GITHUB_ENV
           echo "APPLICATION_NAME=${APPLICATION_NAME}" >> $GITHUB_ENV
 
+      # The preview cleanup removes each release named by a rel: label; ui-baseline is a release of its
+      # own (job.helm-deploy.yml), and workflow.preview-cleanup.yml removes both when the PR closes too
       - name: Add PR labels for cleanup
         uses: actions/github-script@v9
+        env:
+          UI_BASELINE_URL: ${{ inputs.ui-baseline-url }}
         with:
           script: |
             const teamName = '${{ env.TEAM_NAME }}';
@@ -46,7 +55,8 @@ jobs:
             const labels = [
               `ns:${teamName}`,
               `prd:${teamName}`,
-              `rel:${applicationName}-pr-${{ env.CHANGE_ID }}`
+              `rel:${applicationName}-pr-${{ env.CHANGE_ID }}`,
+              ...(process.env.UI_BASELINE_URL ? [`rel:${applicationName}-pr-${{ env.CHANGE_ID }}-ui-baseline`] : [])
             ];
 
             for (const label of labels) {
@@ -64,6 +74,8 @@ jobs:
 
       - name: Comment preview URLs
         uses: actions/github-script@v9
+        env:
+          UI_BASELINE_URL: ${{ inputs.ui-baseline-url }}
         with:
           script: |
             // Decode base64-encoded URLs
@@ -94,6 +106,7 @@ jobs:
               'Your preview environment is ready:',
               '',
               urlList || '_(No ingress URLs found)_',
+              ...(process.env.UI_BASELINE_URL ? [`- **UI baseline** (VPN only): ${process.env.UI_BASELINE_URL}`] : []),
               '',
               'The environment will be automatically cleaned up when this PR is closed.'
             ].join('\n');

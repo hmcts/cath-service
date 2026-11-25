@@ -1,0 +1,88 @@
+name: UI baseline - record pip
+
+# Records the pip baseline apps/ui-baseline compares CaTH against, and stores it in aat's
+# storage (cathsaaat, container ui-baseline) for the hosted check and anyone
+# running a check to fetch with `yarn ui-baseline:baseline pull`. Run by hand: pip is pinned in
+# apps/ui-baseline/pip/setup.sh and the fixtures are committed, so the baseline only needs
+# recording again when either changes.
+#
+# It runs pip in Docker on a GitHub-hosted runner, as a developer's machine does; the private
+# runner groups have no Docker. About 70 minutes: every page is captured as each role its guard
+# lets in, signed in as well as out where public, and at mobile width.
+on:
+  workflow_dispatch:
+    inputs:
+      store:
+        description: "Store the recorded baseline in aat (otherwise only keep it as a workflow artifact)"
+        type: boolean
+        default: true
+
+concurrency:
+  group: ui-baseline-record
+  cancel-in-progress: false
+
+jobs:
+  record:
+    name: Record pip baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Install Playwright's Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Record the baseline
+        run: yarn ui-baseline:record-pip
+
+      - name: Keep the run summary and logs
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ui-baseline-run
+          path: |
+            apps/ui-baseline/output/baseline/run.json
+            apps/ui-baseline/output/baseline/*.log
+          if-no-files-found: ignore
+
+      # Not stored, so the recording itself is kept here instead, to look at before recording again
+      # with store on, or to push by hand (yarn ui-baseline:baseline push). Kept if the recording
+      # failed partway too, as that is when it is most worth looking at.
+      - name: Keep the recorded baseline
+        if: always() && !inputs.store
+        uses: actions/upload-artifact@v6
+        with:
+          name: ui-baseline
+          path: apps/ui-baseline/output/baseline
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Azure login (OIDC)
+        if: inputs.store
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Store the baseline in aat
+        if: inputs.store
+        run: |
+          CONNECTION_STRING="$(az keyvault secret show --vault-name cath-aat --name storageaccount-connection-string --query value -o tsv)"
+          echo "::add-mask::$CONNECTION_STRING"
+          CATH_STORAGE_CONNECTION_STRING="$CONNECTION_STRING" yarn ui-baseline:baseline push --env aat
