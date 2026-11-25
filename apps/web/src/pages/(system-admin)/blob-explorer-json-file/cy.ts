@@ -1,7 +1,10 @@
 export const cy = {
   title: "Blob Explorer – JSON file",
   header: "Blob Explorer – JSON file",
-  jsonFileResubmitButton: "Re-submit subscription",
+  resubmitButton: "Re-submit subscription",
+  sendToCourtelButton: "[WELSH TRANSLATION REQUIRED: 'Send to Courtel']",
+  sendToThirdPartyButton: "[WELSH TRANSLATION REQUIRED: 'Send to third party subscribers']",
+  sendSubscriptionEmailButton: "[WELSH TRANSLATION REQUIRED: 'Send subscription email']",
   jsonFileMetadataHeading: "Metadata",
   jsonFileAccordionTitle: "View Raw JSON Content",
   jsonFileLinkToTemplate: "Link to rendered template",

@@ -7,8 +7,6 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
 
-    <h1 class="govuk-heading-xl">{{ header }}</h1>
-
     {% if error %}
       {{ govukErrorSummary({
         titleText: errorSummaryTitle,
@@ -18,7 +16,11 @@
           }
         ]
       }) }}
-    {% else %}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ header }}</h1>
+
+    {% if metadata %}
 
       {{ govukTable({
         rows: [
@@ -100,15 +102,16 @@
       <form method="post" novalidate>
         {{ govukButton({
           text: confirmButton,
-          classes: "govuk-button"
+          classes: "govuk-button",
+          preventDoubleClick: true
         }) }}
       </form>
 
-      <p class="govuk-body">
-        <a href="/blob-explorer-locations" class="govuk-link">{{ confirmCancelLink }}</a>
-      </p>
-
     {% endif %}
+
+    <p class="govuk-body">
+      <a href="{{ cancelHref or '/blob-explorer-locations' }}" class="govuk-link">{{ confirmCancelLink }}</a>
+    </p>
 
   </div>
 </div>

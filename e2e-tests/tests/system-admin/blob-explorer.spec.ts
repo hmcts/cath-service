@@ -6,6 +6,8 @@ import { loadListTypeFixture } from "../../utils/publication-payloads.js";
 import { uploadTestPublication } from "../../utils/publication-upload.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 
+const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+
 test.describe("Blob Explorer", () => {
   // Browse only this test's own court and publication; nobody subscribes to the court
   let court: { locationId: number; name: string };
@@ -92,18 +94,52 @@ test.describe("Blob Explorer", () => {
     const metadataSummaryList = page.locator(".govuk-summary-list").first();
     await expect(metadataSummaryList).toBeVisible();
 
-    // Re-submit is only checked for presence: clicking it would send subscription notifications
-    const resubmitButton = page.getByRole("button", { name: /Re-submit subscription/i });
-    await expect(resubmitButton).toBeVisible();
+    // STEP 8: The four resend actions are shown in order
+    const resendButtons = page.locator(".govuk-button-group").getByRole("button");
+    await expect(resendButtons).toHaveText(["Re-submit subscription", "Send to Courtel", "Send to third party subscribers", "Send subscription email"]);
 
     // Check accessibility on JSON file page
-    accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
+    accessibilityScanResults = await new AxeBuilder({ page }).withTags(WCAG_TAGS).disableRules(["region"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
-    // Test Welsh on JSON file page
+    // Test Welsh on JSON file page: the buttons keep the language through to the confirmation page
     await switchLanguage(page, "cy");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await switchLanguage(page, "en");
+    await expect(resendButtons).toHaveCount(4);
+    await expect(page.getByRole("button", { name: "[WELSH TRANSLATION REQUIRED: 'Send to Courtel']" })).toBeVisible();
+    await page.getByRole("button", { name: "[WELSH TRANSLATION REQUIRED: 'Send to Courtel']" }).click();
+    await expect(page).toHaveURL(/blob-explorer-confirm-resubmission.*action=courtel.*lng=cy/);
+    await expect(page.getByRole("heading", { level: 1, name: "[WELSH TRANSLATION REQUIRED: 'Confirm send to Courtel']" })).toBeVisible();
+    accessibilityScanResults = await new AxeBuilder({ page }).withTags(WCAG_TAGS).disableRules(["region"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+    await page.goto(`/blob-explorer-json-file?artefactId=${artefactId}&lng=en`);
+
+    // STEP 9: Send to Courtel, then Cancel back to the publication page without sending
+    await page.getByRole("button", { name: "Send to Courtel" }).click();
+    await expect(page).toHaveURL(new RegExp(`blob-explorer-confirm-resubmission.*artefactId=${artefactId}.*action=courtel`));
+    await expect(page.getByRole("heading", { level: 1, name: "Confirm send to Courtel" })).toBeVisible();
+    await expect(page.getByRole("table")).toContainText(court.name);
+    await page.getByRole("link", { name: "Cancel" }).click();
+    await expect(page).toHaveURL(new RegExp(`blob-explorer-json-file.*artefactId=${artefactId}`));
+    await expect(page.getByRole("heading", { name: /Blob Explorer – JSON file/i })).toBeVisible();
+
+    // STEP 10: Send subscription email on this test's own court; nobody subscribes, so nothing is sent
+    await page.getByRole("button", { name: "Send subscription email" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Confirm send subscription email" })).toBeVisible();
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await expect(page).toHaveURL(/blob-explorer-confirm-resubmission.*action=email/);
+    const errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toContainText("No one is subscribed to this publication, so no emails were sent.");
+    await expect(page).toHaveTitle(/^Error:/);
+    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Confirm" })).toBeVisible();
+
+    // Check accessibility on the confirmation page with the error shown
+    accessibilityScanResults = await new AxeBuilder({ page }).withTags(WCAG_TAGS).disableRules(["region"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+
+    await page.getByRole("link", { name: "Cancel" }).click();
+    await expect(page).toHaveURL(new RegExp(`blob-explorer-json-file.*artefactId=${artefactId}`));
 
     // Navigate back to locations
     await page.goto("/blob-explorer-locations");

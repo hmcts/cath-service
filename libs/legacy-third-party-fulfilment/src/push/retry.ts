@@ -23,14 +23,15 @@ export async function pushWithRetry(
   body: string | null,
   logPrefix = "[ThirdParty]",
   pdfPath?: string,
-  flatFilePath?: string
+  flatFilePath?: string,
+  maxAttempts = MAX_ATTEMPTS
 ): Promise<{ statusCode: number; success: boolean }> {
   let lastResult = { statusCode: 0, success: false };
 
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     if (attempt > 0) {
       const delayMs = BACKOFF_DELAYS_MS[attempt - 1];
-      console.warn(`${logPrefix} Push attempt ${attempt}/${MAX_ATTEMPTS} failed (status ${lastResult.statusCode}) — retrying in ${delayMs}ms`);
+      console.warn(`${logPrefix} Push attempt ${attempt}/${maxAttempts} failed (status ${lastResult.statusCode}) — retrying in ${delayMs}ms`);
       await delay(delayMs);
     }
 
@@ -50,6 +51,6 @@ export async function pushWithRetry(
     }
   }
 
-  console.error(`${logPrefix} Push failed after ${MAX_ATTEMPTS} attempts (last status ${lastResult.statusCode})`);
+  console.error(`${logPrefix} Push failed after ${maxAttempts} attempts (last status ${lastResult.statusCode})`);
   return lastResult;
 }

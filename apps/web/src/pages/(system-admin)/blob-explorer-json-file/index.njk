@@ -21,12 +21,15 @@
       }) }}
     {% else %}
 
-      <form method="post" novalidate>
-        {{ govukButton({
-          text: jsonFileResubmitButton,
-          classes: "govuk-button"
-        }) }}
-      </form>
+      <div class="govuk-button-group">
+        {% for button in resendButtons %}
+          {{ govukButton({
+            text: button.text,
+            href: button.href,
+            classes: button.classes
+          }) }}
+        {% endfor %}
+      </div>
 
       <h2 class="govuk-heading-m govuk-!-margin-top-6">{{ jsonFileMetadataHeading }}</h2>
 

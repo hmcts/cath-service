@@ -24,28 +24,28 @@ const ALLOWED_SUBSCRIPTION_SENSITIVITIES: Record<string, string[]> = {
 
 const LONDON_DATE_FORMAT = new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" });
 
-export async function sendPublicationToThirdParties(params: PublicationFulfilmentParams): Promise<void> {
-  const { artefactId, isUpdate, jsonData, logPrefix = DEFAULT_LOG_PREFIX } = params;
+export async function sendPublicationToThirdParties(params: PublicationFulfilmentParams): Promise<ThirdPartyFulfilmentOutcome> {
+  const { artefactId, isUpdate, jsonData, ignoreDisplayWindow = false, logPrefix = DEFAULT_LOG_PREFIX } = params;
 
   const artefact = await findArtefactForFulfilment(artefactId);
   if (!artefact) {
     console.error(`${logPrefix} Third-party fulfilment skipped: artefact not found`, { artefactId });
-    return;
+    return "failed";
   }
 
-  if (!isWithinDisplayWindow(artefact, new Date())) {
+  if (!ignoreDisplayWindow && !isWithinDisplayWindow(artefact, new Date())) {
     console.info(`${logPrefix} Third-party fulfilment skipped: publication is outside its display window`, { artefactId });
-    return;
+    return "no-recipients";
   }
 
   const subscribers = await findSubscribers(artefact.listType.name, artefact.sensitivity, artefactId, logPrefix);
   if (subscribers.length === 0) {
-    return;
+    return "no-recipients";
   }
 
   const contentPart = await buildContentPart(artefact, jsonData, logPrefix);
   if (!contentPart) {
-    return;
+    return "failed";
   }
 
   const metadataPart: MultipartPart = {
@@ -56,7 +56,7 @@ export async function sendPublicationToThirdParties(params: PublicationFulfilmen
   const { body, contentType } = buildMultipartBody([metadataPart, contentPart]);
   const method = isUpdate ? "PUT" : "POST";
 
-  await Promise.all(
+  const deliveries = await Promise.all(
     subscribers.map((subscriber) =>
       deliverToSubscriber(
         subscriber,
@@ -66,6 +66,8 @@ export async function sendPublicationToThirdParties(params: PublicationFulfilmen
       )
     )
   );
+
+  return deliveries.some((isDelivered) => isDelivered) ? "sent" : "failed";
 }
 
 export async function sendPublicationDeletionToThirdParties(params: PublicationDeletionParams): Promise<void> {
@@ -165,12 +167,12 @@ async function deliverToSubscriber(
   publicationId: string,
   buildRequest: (destinationUrl: string) => Omit<DeliveryRequest, "accessToken">,
   logPrefix: string
-): Promise<void> {
+): Promise<boolean> {
   try {
     const destinationUrl = await getDestinationUrl(name, userId);
     if (!destinationUrl) {
       console.error(`${logPrefix} Third-party subscriber skipped: no destination URL configured`, { userId });
-      return;
+      return false;
     }
 
     // Legacy still sends the request when no token could be obtained
@@ -186,8 +188,10 @@ async function deliverToSubscriber(
     } else {
       console.error(`${logPrefix} Third-party ${request.method} failed after retries`, { userId, publicationId });
     }
+    return isDelivered;
   } catch (error) {
     console.error(`${logPrefix} Third-party delivery failed`, { userId, publicationId, error: error instanceof Error ? error.message : String(error) });
+    return false;
   }
 }
 
@@ -195,8 +199,11 @@ interface PublicationFulfilmentParams {
   artefactId: string;
   isUpdate: boolean;
   jsonData?: unknown;
+  ignoreDisplayWindow?: boolean;
   logPrefix?: string;
 }
+
+export type ThirdPartyFulfilmentOutcome = "sent" | "no-recipients" | "failed";
 
 interface PublicationDeletionParams {
   artefactId: string;

@@ -82,6 +82,17 @@ describe("pushWithRetry", () => {
     expect(mockExecutePush).toHaveBeenCalledTimes(3);
   });
 
+  it("makes a single attempt when maxAttempts is 1", async () => {
+    mockExecutePush.mockResolvedValue({ statusCode: 503, success: false });
+
+    const resultPromise = pushWithRetry(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, "[ThirdParty]", undefined, undefined, 1);
+    await vi.runAllTimersAsync();
+    const result = await resultPromise;
+
+    expect(result).toEqual({ statusCode: 503, success: false });
+    expect(mockExecutePush).toHaveBeenCalledTimes(1);
+  });
+
   it("retries and succeeds on the third attempt", async () => {
     mockExecutePush
       .mockResolvedValueOnce({ statusCode: 500, success: false })

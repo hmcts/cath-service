@@ -1,7 +1,7 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getArtefactMetadata, getJsonContent, getRenderedTemplateUrl } from "@hmcts/publication";
 import "@hmcts/web-core";
-import { escapeHtml, formatDateTime } from "@hmcts/system-admin-pages";
+import { buildResendButtons, escapeHtml, formatDateTime } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -33,6 +33,12 @@ const getHandler = async (req: Request, res: Response) => {
     res.render("blob-explorer-json-file/index", {
       ...t,
       metadata,
+      resendButtons: buildResendButtons(artefactId, locale, {
+        resubmit: t.resubmitButton,
+        courtel: t.sendToCourtelButton,
+        "third-party": t.sendToThirdPartyButton,
+        email: t.sendSubscriptionEmailButton
+      }),
       jsonContent: jsonContent ? escapeHtml(JSON.stringify(jsonContent, null, 2)) : null,
       renderedTemplateUrl,
       formatDateTime,
@@ -48,18 +54,4 @@ const getHandler = async (req: Request, res: Response) => {
   }
 };
 
-const postHandler = async (req: Request, res: Response) => {
-  const artefactId = req.query.artefactId as string;
-
-  if (!artefactId) {
-    return res.redirect("/blob-explorer-locations");
-  }
-
-  // Store artefact ID in session for confirmation page
-  req.session.resubmissionArtefactId = artefactId;
-
-  return res.redirect(`/blob-explorer-confirm-resubmission?artefactId=${encodeURIComponent(artefactId)}`);
-};
-
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];
-export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), postHandler];

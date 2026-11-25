@@ -682,6 +682,8 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
       console.error(`${logPrefix} Notification errors:`, { count: result.errors.length, errors: sanitizedErrors });
     }
 
+    const totals = { totalSubscriptions: result.totalSubscriptions, sent: result.sent, failed: result.failed, skipped: result.skipped };
+
     if (locale) {
       const language = LOCALE_TO_LANGUAGE[locale] ?? "ENGLISH";
       try {
@@ -709,18 +711,17 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
           });
           console.error(`${logPrefix} List type notification errors:`, { count: listTypeResult.errors.length, errors: sanitizedErrors });
         }
+
+        totals.totalSubscriptions += listTypeResult.totalSubscriptions;
+        totals.sent += listTypeResult.sent;
+        totals.failed += listTypeResult.failed;
+        totals.skipped += listTypeResult.skipped;
       } catch (error) {
         console.error(`${logPrefix} Failed to send list type notifications:`, { artefactId, error: error instanceof Error ? error.message : String(error) });
       }
     }
 
-    return {
-      success: true,
-      totalSubscriptions: result.totalSubscriptions,
-      sent: result.sent,
-      failed: result.failed,
-      skipped: result.skipped
-    };
+    return { success: true, ...totals };
   } catch (error) {
     console.error(`${logPrefix} Failed to send notifications:`, { artefactId, error: error instanceof Error ? error.message : String(error) });
     return { success: false };
