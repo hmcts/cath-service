@@ -48,8 +48,10 @@ async function renderPdf(html: string): Promise<PdfGenerationResult> {
 
     const page = await browser.newPage();
 
+    // Puppeteer doesn't support networkidle waits for setContent. The PDF templates inline
+    // their styles and load nothing over the network, so "load" waits for everything.
     await page.setContent(html, {
-      waitUntil: "networkidle0"
+      waitUntil: "load"
     });
 
     const pdfBuffer = await page.pdf(PDF_OPTIONS);
