@@ -68,7 +68,6 @@ import { createSimpleRouter } from "@hmcts-cft/simple-router";
 import cookieParser from "cookie-parser";
 import type { Express } from "express";
 import express from "express";
-import { createClient } from "redis";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -84,6 +83,8 @@ export async function createApp(): Promise<Express> {
   // before getPropertiesVolumeSecrets() has set env vars from Key Vault. If imported statically,
   // config caches stale default values for APPLICATION_INSIGHTS_CONNECTION_STRING and other KV secrets.
   const { authNavigationMiddleware, cftIdamHealthCheck, configurePassport, sessionTimeoutMiddleware } = await import("@hmcts/auth");
+  // Dynamic for the same reason: @hmcts/redis loads `config` at module scope.
+  const { createRedisClient } = await import("@hmcts/redis");
 
   const app = express();
   app.set("trust proxy", 1);
@@ -110,7 +111,10 @@ export async function createApp(): Promise<Express> {
       }
     })
   );
-  const redisClient = await getRedisClient(config);
+  // Session store client. The flag comes from this file's own config instance,
+  // loaded after the Key Vault secrets.
+  const redisClient = createRedisClient(process.env.REDIS_URL ?? config.get("redis.url"), config.get<boolean>("redis.managedIdentity"));
+  await redisClient.connect();
   app.use(expressSessionRedis({ redisConnection: redisClient }));
   app.locals.redisClient = redisClient;
 
@@ -222,9 +226,10 @@ export async function createApp(): Promise<Express> {
 
   // Enable test-support routes in non-production environments or when explicitly enabled
   if (process.env.NODE_ENV !== "production" || process.env.ENABLE_TEST_SUPPORT === "true") {
-    const { apiRoutes: testSupportRoutes } = await import("@hmcts/test-support/config");
+    const { apiRoutes: testSupportRoutes, webRoutes: testSupportWebRoutes } = await import("@hmcts/test-support/config");
     app.use(express.json());
     app.use(await createSimpleRouter(testSupportRoutes));
+    app.use(await createSimpleRouter(testSupportWebRoutes));
   }
 
   app.use(notFoundHandler());
@@ -240,12 +245,3 @@ function localEnvOverrides(): string[] {
     .filter(([, value]) => value !== undefined && value.trim() !== "")
     .map(([key]) => key);
 }
-
-const getRedisClient = async (config: { get: (key: string) => any }) => {
-  const url = process.env.REDIS_URL ?? config.get("redis.url");
-  const redisClient = createClient({ url });
-  redisClient.on("error", (err) => console.error("Redis Client Error", err));
-
-  await redisClient.connect();
-  return redisClient;
-};

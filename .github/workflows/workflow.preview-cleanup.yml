@@ -1,0 +1,118 @@
+name: Preview Cleanup
+
+# Removes the hosted parity check's part of a pull request's preview when the pull request is closed
+# (merged or not): its Helm release, cath-service-pr-<n>-ui-baseline (a release of its own,
+# job.helm-deploy.yml), and its image's pr-<n> tags in ACR. The rest of the preview is the
+# platform's to clean up (hmcts/cnp-aks-pipelines), as it always has been.
+#
+# The platform also deletes the release a rel: label names, and the pull request carries one for
+# this release (job.pr-comment.yml); a scheduled sweep deletes any -pr- release not updated for 3
+# days. Either finds nothing left to do after this.
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - master
+
+# The preview workflow's group, so a deploy still running when the pull request closes is cancelled
+# rather than left to recreate what this removes
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  CHANGE_ID: ${{ github.event.pull_request.number }}
+  # Where job.helm-deploy.yml deploys previews (its cluster-suffix defaults to 00)
+  CLUSTER: cft-preview-00
+  REGISTRY_NAME: hmctsprod
+
+jobs:
+  release:
+    name: Delete the hosted check's release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set environment variables
+        run: |
+          CHART_PATH="helm/cath-service/Chart.yaml"
+          TEAM_NAME=$(grep -A 1 'annotations:' "$CHART_PATH" | grep 'team:' | awk '{print $2}' | tr -d '"')
+          APPLICATION_NAME=$(grep '^name:' "$CHART_PATH" | awk '{print $2}' | tr -d '"')
+          {
+            echo "NAMESPACE=${TEAM_NAME}"
+            echo "RELEASE_NAME=${APPLICATION_NAME}-pr-${CHANGE_ID}-ui-baseline"
+          } >> "$GITHUB_ENV"
+
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
+
+      - name: Get AKS credentials
+        uses: azure/aks-set-context@v5
+        with:
+          resource-group: ${{ env.CLUSTER }}-rg
+          cluster-name: ${{ env.CLUSTER }}-aks
+          admin: 'true'
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5
+        with:
+          version: 'v4.2.3'
+
+      # Not --wait: the pod finishes the run it has going first (its terminationGracePeriodSeconds is
+      # 9000), and the release is deleted either way
+      - name: Delete the release
+        run: |
+          # Only "release: not found" means there is nothing to delete; any other failure (expired
+          # credentials, the API not answering) fails the job, rather than leaving the pod running
+          if helm status "${RELEASE_NAME}" --namespace "${NAMESPACE}" >/dev/null 2>/tmp/status.err; then
+            helm uninstall "${RELEASE_NAME}" --namespace "${NAMESPACE}"
+            echo "- Deleted \`${RELEASE_NAME}\`" >> "$GITHUB_STEP_SUMMARY"
+          elif grep -q 'release: not found' /tmp/status.err; then
+            echo "${RELEASE_NAME} is not installed"
+            echo "- \`${RELEASE_NAME}\` was not installed" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::Could not tell whether ${RELEASE_NAME} is installed: $(tail -1 /tmp/status.err)"
+            exit 1
+          fi
+
+  image:
+    name: Untag the hosted check's image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      # Tagged pr-<n> and pr-<n>-<sha> for a pull request (job.build-and-publish-images.yml).
+      # Untagging needs delete permission on the registry, which the identity that pushes may not
+      # have, so a failure is a warning: the tags are then left to the registry's own retention.
+      - name: Untag pr-${{ env.CHANGE_ID }}
+        continue-on-error: true
+        run: |
+          repository="cath/cath-ui-baseline"
+          tags=$(az acr repository show-tags --name "${REGISTRY_NAME}" --repository "${repository}" \
+            --query "[?@ == 'pr-${CHANGE_ID}' || starts_with(@, 'pr-${CHANGE_ID}-')]" --output tsv 2>/dev/null || true)
+          failed=""
+          for tag in ${tags}; do
+            if az acr repository untag --name "${REGISTRY_NAME}" --image "${repository}:${tag}" >/dev/null; then
+              echo "- Untagged \`${repository}:${tag}\`" >> "$GITHUB_STEP_SUMMARY"
+            else
+              failed="${failed} ${repository}:${tag}"
+            fi
+          done
+          if [ -n "${failed}" ]; then
+            echo "::warning::Could not untag:${failed}. The registry's retention will remove them."
+            exit 1
+          fi

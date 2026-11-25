@@ -1,13 +1,9 @@
-import { type APIRequestContext, expect, test } from "@playwright/test";
-import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
+import { expect, test } from "@playwright/test";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import {
   assertEmailDownloadLinks,
-  cleanupTestNotifications,
-  cleanupTestSubscriptions,
-  cleanupTestUsers,
+  createNotificationSubscriber,
   createTestSubscription,
-  createTestUser,
   type GovNotifyEmail,
   waitForNotifications
 } from "../../utils/notification-helpers.js";
@@ -19,10 +15,9 @@ import {
   PDF_PAYLOAD_GATE_BYTES,
   type StoredFileExtension
 } from "../../utils/publication-payloads.js";
-import { checkFlatFileExists, deleteTestArtefacts, type FlatFileInfo, getListTypes, type NotificationRecord } from "../../utils/test-support-api.js";
+import { uploadTestPublication } from "../../utils/publication-upload.js";
+import { checkFlatFileExists, type FlatFileInfo, getListTypes, type NotificationRecord } from "../../utils/test-support-api.js";
 
-const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
-const ENDPOINT = `${API_BASE_URL}/publication`;
 const NOTIFY_KEY_MISSING = "GOVUK_NOTIFY_API_KEY not set - the email body cannot be read back from Notify";
 const NOTIFY_STATUS_PATTERN = /delivered|sending|pending|created|permanent-failure/;
 const ALL_STORED_FILES: StoredFileExtension[] = [".pdf", ".xlsx"];
@@ -42,45 +37,19 @@ function generatePublicationDates(daysFromNow = 1) {
   };
 }
 
-// Publication metadata travels in x-* headers; the request body is the payload itself.
-function publicationHeaders(listType: string, dates: PublicationDates, locationId: number) {
-  return {
-    "x-provenance": "MANUAL_UPLOAD",
-    "x-court-id": locationId.toString(),
-    "x-content-date": dates.contentDate,
-    "x-list-type": listType,
-    "x-language": "ENGLISH",
-    "x-type": "LIST",
-    "x-sensitivity": "PUBLIC",
-    "x-display-from": dates.displayFrom,
-    "x-display-to": dates.displayTo
-  };
-}
-
-async function publishJson(request: APIRequestContext, listTypeName: string, payload: unknown, dates: PublicationDates, locationId: number): Promise<string> {
-  const token = await getApiAuthToken();
-  const response = await request.post(ENDPOINT, {
-    data: payload,
-    headers: { ...publicationHeaders(listTypeName, dates, locationId), Authorization: `Bearer ${token}` }
-  });
-
-  expect(response.status(), await response.text()).toBe(201);
-  const { artefactId } = await response.json();
-  expect(artefactId).toBeDefined();
+async function publishJson(listTypeName: string, payload: unknown, dates: PublicationDates, locationId: number): Promise<string> {
+  const { artefactId } = await uploadTestPublication({ locationId, listTypeName, payload, ...publicationWindow(dates) });
   return artefactId;
 }
 
-async function publishFlatFile(request: APIRequestContext, listTypeName: string, dates: PublicationDates, locationId: number): Promise<string> {
-  const token = await getApiAuthToken();
-  const response = await request.post(ENDPOINT, {
-    multipart: { file: { name: "hearing-list.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n%%EOF") } },
-    headers: { ...publicationHeaders(listTypeName, dates, locationId), Authorization: `Bearer ${token}` }
-  });
-
-  expect(response.status(), await response.text()).toBe(201);
-  const { artefactId } = await response.json();
-  expect(artefactId).toBeDefined();
+async function publishFlatFile(listTypeName: string, dates: PublicationDates, locationId: number): Promise<string> {
+  const file = { name: "hearing-list.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n%%EOF") };
+  const { artefactId } = await uploadTestPublication({ locationId, listTypeName, file, ...publicationWindow(dates) });
   return artefactId;
+}
+
+function publicationWindow(dates: PublicationDates) {
+  return { contentDate: dates.contentDate, displayFrom: dates.displayFrom, displayTo: dates.displayTo };
 }
 
 // Other users in a shared environment may subscribe to the same list type, so pick this test's
@@ -134,49 +103,18 @@ function expectEmailContent(email: GovNotifyEmail, expected: { friendlyName: str
 test.describe("Subscription Notifications", () => {
   const friendlyNames = new Map<string, string>();
 
-  const testData: {
-    userIds: string[];
-    subscriptionIds: string[];
-    publicationIds: string[];
-  } = {
-    userIds: [],
-    subscriptionIds: [],
-    publicationIds: []
-  };
-
   test.beforeAll(async () => {
-    // Exact name match: the test-support ?name= lookup uses `contains`, which confuses e.g. FAMILY_ with CIVIL_AND_FAMILY_
     const listTypes = (await getListTypes()) as { name: string; friendlyName: string | null }[];
     for (const listType of listTypes) {
       friendlyNames.set(listType.name, listType.friendlyName ?? listType.name);
     }
   });
 
-  test.afterEach(async () => {
-    // Users are created with the real CFT_IDAM test account email (not prefixed), so they and their
-    // subscriptions, notifications and artefacts are cleaned up here. Locations are prefixed and
-    // removed by global-teardown.
-    await cleanupTestNotifications(testData.publicationIds);
-    await cleanupTestSubscriptions(testData.subscriptionIds);
-    await cleanupTestUsers(testData.userIds);
-
-    if (testData.publicationIds.length > 0) {
-      await deleteTestArtefacts({ artefactIds: testData.publicationIds });
-    }
-
-    testData.userIds = [];
-    testData.subscriptionIds = [];
-    testData.publicationIds = [];
-  });
-
+  // Each subscriber is this test's own user (prefixed provenance id) at this test's own court, so global-teardown
+  // removes the users, subscriptions, notifications and artefacts; no per-test cleanup is needed
   async function subscribeTestAccount(locationId: number) {
-    const user = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
-    testData.userIds.push(user.userId);
-
-    const subscription = await createTestSubscription(user.userId, locationId);
-    testData.subscriptionIds.push(subscription.subscriptionId);
-
-    return subscription;
+    const user = await createNotificationSubscriber();
+    return createTestSubscription(user.userId, locationId);
   }
 
   function friendlyNameOf(listTypeName: string): string {
@@ -185,7 +123,7 @@ test.describe("Subscription Notifications", () => {
     return friendlyName!;
   }
 
-  test("strategic list publication notifies every subscriber with PDF and Excel download links", async ({ request }) => {
+  test("strategic list publication notifies every subscriber with PDF and Excel download links", async () => {
     test.skip(!process.env.GOVUK_NOTIFY_API_KEY, NOTIFY_KEY_MISSING);
     test.setTimeout(180_000);
 
@@ -196,8 +134,7 @@ test.describe("Subscription Notifications", () => {
     // PART 1: single subscriber receives an email with the standard subscription content
     const subscription1 = await subscribeTestAccount(location.locationId);
     const dates1 = generatePublicationDates(1);
-    const publicationId1 = await publishJson(request, listTypeName, payload, dates1, location.locationId);
-    testData.publicationIds.push(publicationId1);
+    const publicationId1 = await publishJson(listTypeName, payload, dates1, location.locationId);
 
     const notification1 = await waitForSentNotification(publicationId1, subscription1.subscriptionId);
     await waitForStoredFiles(publicationId1, ALL_STORED_FILES);
@@ -212,19 +149,17 @@ test.describe("Subscription Notifications", () => {
     // PART 2: every subscriber to the location is notified for the same publication
     const subscription2 = await subscribeTestAccount(location.locationId);
     const dates2 = generatePublicationDates(2);
-    const publicationId2 = await publishJson(request, listTypeName, payload, dates2, location.locationId);
-    testData.publicationIds.push(publicationId2);
+    const publicationId2 = await publishJson(listTypeName, payload, dates2, location.locationId);
 
     await waitForSentNotification(publicationId2, subscription1.subscriptionId);
     await waitForSentNotification(publicationId2, subscription2.subscriptionId);
   });
 
-  test("no notifications sent when no subscriptions exist for location @nightly", async ({ request }) => {
+  test("no notifications sent when no subscriptions exist for location @nightly", async () => {
     const location = await createUniqueTestLocation({ namePrefix: "Unsubscribed Notification Court" });
     const payload = loadListTypeFixture("civil-and-family-daily-cause-list");
 
-    const publicationId = await publishJson(request, STRATEGIC_LIST_TYPE, payload, generatePublicationDates(3), location.locationId);
-    testData.publicationIds.push(publicationId);
+    const publicationId = await publishJson(STRATEGIC_LIST_TYPE, payload, generatePublicationDates(3), location.locationId);
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -232,7 +167,7 @@ test.describe("Subscription Notifications", () => {
     expect(notifications).toHaveLength(0);
   });
 
-  test("non-strategic list publication sends the PDF-only email with 1 download link", async ({ request }) => {
+  test("non-strategic list publication sends the PDF-only email with 1 download link", async () => {
     test.skip(!process.env.GOVUK_NOTIFY_API_KEY, NOTIFY_KEY_MISSING);
     // Puppeteer PDF generation can take 40-60 seconds on a CI cold start, and notifications follow it
     test.setTimeout(120_000);
@@ -242,8 +177,7 @@ test.describe("Subscription Notifications", () => {
     const dates = generatePublicationDates(1);
 
     const payload = loadListTypeFixture("care-standards-tribunal-weekly-hearing-list");
-    const publicationId = await publishJson(request, NON_STRATEGIC_LIST_TYPE, payload, dates, location.locationId);
-    testData.publicationIds.push(publicationId);
+    const publicationId = await publishJson(NON_STRATEGIC_LIST_TYPE, payload, dates, location.locationId);
 
     const notification = await waitForSentNotification(publicationId, subscription.subscriptionId);
 
@@ -259,7 +193,7 @@ test.describe("Subscription Notifications", () => {
     });
   });
 
-  test("flat-file publication sends the flat-file email with 1 link to the uploaded document @nightly", async ({ request }) => {
+  test("flat-file publication sends the flat-file email with 1 link to the uploaded document @nightly", async () => {
     test.skip(!process.env.GOVUK_NOTIFY_API_KEY, NOTIFY_KEY_MISSING);
     test.setTimeout(120_000);
 
@@ -268,8 +202,7 @@ test.describe("Subscription Notifications", () => {
     const subscription = await subscribeTestAccount(location.locationId);
     const dates = generatePublicationDates(1);
 
-    const publicationId = await publishFlatFile(request, listTypeName, dates, location.locationId);
-    testData.publicationIds.push(publicationId);
+    const publicationId = await publishFlatFile(listTypeName, dates, location.locationId);
 
     const notification = await waitForSentNotification(publicationId, subscription.subscriptionId);
 
@@ -281,7 +214,7 @@ test.describe("Subscription Notifications", () => {
     expectEmailContent(email, { friendlyName: friendlyNameOf(listTypeName), locationName: location.name, formattedContentDate: dates.formattedContentDate });
   });
 
-  test("publication over the PDF payload gate sends the Excel-only email with 1 link @nightly", async ({ request }) => {
+  test("publication over the PDF payload gate sends the Excel-only email with 1 link @nightly", async () => {
     test.skip(!process.env.GOVUK_NOTIFY_API_KEY, NOTIFY_KEY_MISSING);
     test.setTimeout(120_000);
 
@@ -294,8 +227,7 @@ test.describe("Subscription Notifications", () => {
     const subscription = await subscribeTestAccount(location.locationId);
     const dates = generatePublicationDates(1);
 
-    const publicationId = await publishJson(request, listTypeName, payload, dates, location.locationId);
-    testData.publicationIds.push(publicationId);
+    const publicationId = await publishJson(listTypeName, payload, dates, location.locationId);
 
     const notification = await waitForSentNotification(publicationId, subscription.subscriptionId);
 
@@ -308,7 +240,7 @@ test.describe("Subscription Notifications", () => {
     expectEmailContent(email, { friendlyName: friendlyNameOf(listTypeName), locationName: location.name, formattedContentDate: dates.formattedContentDate });
   });
 
-  test("publication with a generated file over 2 MB stores the file but sends the no-links email @nightly", async ({ request }) => {
+  test("publication with a generated file over 2 MB stores the file but sends the no-links email @nightly", async () => {
     test.skip(!process.env.GOVUK_NOTIFY_API_KEY, NOTIFY_KEY_MISSING);
     test.setTimeout(180_000);
 
@@ -317,8 +249,7 @@ test.describe("Subscription Notifications", () => {
     const subscription = await subscribeTestAccount(location.locationId);
     const dates = generatePublicationDates(1);
 
-    const publicationId = await publishJson(request, listTypeName, buildOversizedCivilAndFamilyPayload(), dates, location.locationId);
-    testData.publicationIds.push(publicationId);
+    const publicationId = await publishJson(listTypeName, buildOversizedCivilAndFamilyPayload(), dates, location.locationId);
 
     const notification = await waitForSentNotification(publicationId, subscription.subscriptionId);
 

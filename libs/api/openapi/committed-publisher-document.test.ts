@@ -140,13 +140,14 @@ describe("committed publisher document", () => {
       expect(committed.info.version).toBe(inputs.source.info.version);
     });
 
-    it("should list only the APIM gateway server", () => {
+    it("should list only the APIM gateway servers", () => {
       // Assert
       expect(committed.servers).toEqual([
         expect.objectContaining({
           url: "https://cft-api-mgmt.{environment}.platform.hmcts.net/cath",
           variables: { environment: { default: "aat", enum: ["aat", "demo", "perftest"] } }
-        })
+        }),
+        expect.objectContaining({ url: "https://cft-api-mgmt.platform.hmcts.net/cath" })
       ]);
     });
 

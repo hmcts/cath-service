@@ -33,17 +33,20 @@ vi.mock("@hmcts/postgres-prisma", () => ({
   }
 }));
 
-vi.mock("redis", () => ({
-  createClient: vi.fn(() => ({
-    on: vi.fn(),
-    connect: vi.fn().mockResolvedValue(undefined)
-  }))
+const mockRedisClient = vi.hoisted(() => ({
+  on: vi.fn(),
+  connect: vi.fn().mockResolvedValue(undefined)
+}));
+
+vi.mock("@hmcts/redis", () => ({
+  createRedisClient: vi.fn(() => mockRedisClient)
 }));
 
 vi.mock("config", () => ({
   default: {
     get: vi.fn((key: string) => {
       if (key === "redis.url") return "redis://localhost:6379";
+      if (key === "redis.managedIdentity") return false;
       if (key === "gtm") return { id: "GTM-TEST" };
       if (key === "dynatrace") return { enabled: false };
       if (key === "applicationInsights") return { connectionString: "test" };
@@ -170,6 +173,11 @@ vi.mock("@hmcts/web-core/config", () => ({
   moduleRoot: "/mock/web-core"
 }));
 
+vi.mock("@hmcts/test-support/config", () => ({
+  apiRoutes: { path: "/mock/test-support/routes" },
+  webRoutes: { path: "/mock/test-support/web-routes" }
+}));
+
 const KEY_VAULT_SECRETS = {
   GOVUK_NOTIFY_API_KEY: "key-vault-notify-key",
   SSO_CLIENT_ID: "key-vault-sso-client-id"
@@ -182,6 +190,18 @@ async function createAppWithLocalDev(localDev: string | undefined) {
   vi.resetModules();
   const { createApp } = await import("./app.js");
   return createApp();
+}
+
+async function createAppWithEnv(env: Record<string, string | undefined>) {
+  for (const [key, value] of Object.entries(env)) {
+    vi.stubEnv(key, value);
+  }
+  vi.resetModules();
+  const { createSimpleRouter } = await import("@hmcts-cft/simple-router");
+  vi.mocked(createSimpleRouter).mockClear();
+  const { createApp } = await import("./app.js");
+  await createApp();
+  return vi.mocked(createSimpleRouter).mock.calls.map(([routes]) => (routes as { path?: string } | undefined)?.path);
 }
 
 // Stubbing every Key Vault key first means vi.unstubAllEnvs() also undoes the fake's writes.
@@ -304,11 +324,14 @@ describe("Web Application", () => {
       expect(errorHandler).toHaveBeenCalled();
     });
 
-    it("should connect to Redis", async () => {
-      const { createClient } = await import("redis");
-      expect(createClient).toHaveBeenCalledWith({
-        url: "redis://localhost:6379"
-      });
+    it("should create the session Redis client from config with the managed identity flag and connect it", async () => {
+      const { createRedisClient } = await import("@hmcts/redis");
+      const { expressSessionRedis } = await import("@hmcts/web-core");
+
+      expect(createRedisClient).toHaveBeenCalledWith("redis://localhost:6379", false);
+      expect(mockRedisClient.connect).toHaveBeenCalled();
+      expect(mockRedisClient.connect.mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(expressSessionRedis).mock.invocationCallOrder[0]);
+      expect(expressSessionRedis).toHaveBeenCalledWith({ redisConnection: mockRedisClient });
     });
 
     it("should configure file upload middleware with error handling", async () => {
@@ -389,6 +412,43 @@ describe("Web Application", () => {
       // Assert
       expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
       expect(getOmit()).toEqual([]);
+    });
+  });
+
+  describe("test-support routes", () => {
+    it("should mount the test-support API and web routes outside production", async () => {
+      // Act
+      const mountedPaths = await createAppWithEnv({ NODE_ENV: "development", ENABLE_TEST_SUPPORT: undefined });
+
+      // Assert
+      expect(mountedPaths).toContain("/mock/test-support/routes");
+      expect(mountedPaths).toContain("/mock/test-support/web-routes");
+    });
+
+    it("should mount the test-support routes in production when ENABLE_TEST_SUPPORT is true", async () => {
+      // Act
+      const mountedPaths = await createAppWithEnv({ NODE_ENV: "production", ENABLE_TEST_SUPPORT: "true" });
+
+      // Assert
+      expect(mountedPaths).toContain("/mock/test-support/routes");
+      expect(mountedPaths).toContain("/mock/test-support/web-routes");
+    });
+
+    it("should not register the test-support login route in production without ENABLE_TEST_SUPPORT", async () => {
+      // Act
+      const mountedPaths = await createAppWithEnv({ NODE_ENV: "production", ENABLE_TEST_SUPPORT: undefined });
+
+      // Assert
+      expect(mountedPaths).not.toContain("/mock/test-support/web-routes");
+      expect(mountedPaths).not.toContain("/mock/test-support/routes");
+    });
+
+    it("should not register the test-support login route in production when ENABLE_TEST_SUPPORT is not exactly true", async () => {
+      // Act
+      const mountedPaths = await createAppWithEnv({ NODE_ENV: "production", ENABLE_TEST_SUPPORT: "yes" });
+
+      // Assert
+      expect(mountedPaths).not.toContain("/mock/test-support/web-routes");
     });
   });
 

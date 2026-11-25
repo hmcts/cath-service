@@ -26,6 +26,10 @@
           ]
         }
       }
+    },
+    {
+      "url": "https://cft-api-mgmt.platform.hmcts.net/cath",
+      "description": "Production CFT API Management gateway. Validates the bearer token and app role, then calls CaTH with its own token. This is the only entry point for publishing source systems in production."
     }
   ],
   "tags": [

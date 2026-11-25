@@ -10,10 +10,14 @@ provider "azurerm" {
   features {}
 }
 
-# The core-infra vnet that holds the Redis private endpoint is in a different
-# subscription for ithc and perftest than for aat and demo. Falls back to
-# var.subscription so the alias is always configured; it is only read where
-# local.redis_subnet_override is true.
+# The subscription holding each environment's core-infra vnet, which hosts the
+# Redis private endpoints. ithc and perftest are in a different subscription
+# (DCD-CNP-QA) from aat and demo (DCD-CNP-DEV) and prod (DCD-CNP-PROD), so they
+# set core_infra_subscription_id explicitly; the others leave it null and fall
+# back to var.subscription. Since #1065 ithc and perftest also apply from
+# DCD-CNP-QA, so the override now matches their var.subscription, but it is
+# kept so the lookup doesn't depend on where an environment applies from. The
+# Managed Redis subnet lookup reads this alias in every environment.
 provider "azurerm" {
   alias           = "core_infra"
   subscription_id = local.core_infra_subscription_id != null ? local.core_infra_subscription_id : var.subscription

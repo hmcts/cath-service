@@ -51,7 +51,10 @@ test.describe("CFT IDAM Login Flow", () => {
     await expect(page.getByText(/you have successfully signed into your myhmcts account/i)).toBeVisible();
   });
 
-  test("Language and query parameters are preserved through CFT IDAM flow @nightly", async ({ page }) => {
+  // Skipped until https://github.com/hmcts/cath-service/issues/1395 (item 5) is fixed; re-enable then.
+  test.fixme("Language and query parameters are preserved through CFT IDAM flow @nightly", {
+    annotation: { type: "issue", description: "https://github.com/hmcts/cath-service/issues/1395" }
+  }, async ({ page }) => {
     // Test 1: Language parameter is preserved through CFT IDAM redirect
     await page.goto("/sign-in?lng=cy");
 
