@@ -1,8 +1,8 @@
-import { normaliseHost } from "./allowed-hosts.js";
+import { normaliseHost } from "./pip-apis.js";
 
 const MAX_URL_LENGTH = 2048;
 
-export function validatePipUrl(input: unknown, allowedHosts: readonly string[]): UrlValidationResult {
+export function validatePipUrl(input: unknown, isAllowedHost: (host: string) => boolean): UrlValidationResult {
   const value = typeof input === "string" ? input.trim() : "";
 
   if (value === "") {
@@ -19,7 +19,7 @@ export function validatePipUrl(input: unknown, allowedHosts: readonly string[]):
   }
 
   const isAllowedPort = url.port === "" || url.port === "443";
-  if (!isAllowedPort || !allowedHosts.includes(normaliseHost(url.hostname))) {
+  if (!isAllowedPort || !isAllowedHost(normaliseHost(url.hostname))) {
     return { kind: "invalid", error: "host-not-allowed" };
   }
 

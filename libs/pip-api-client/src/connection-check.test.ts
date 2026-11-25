@@ -1,22 +1,27 @@
-import { discardBody, requestAccessToken, sendOutboundRequest } from "@hmcts/third-party-user";
+import { requestAccessToken, sendOutboundRequest } from "@hmcts/third-party-user";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { checkPipConnection, isPipConnectionCheckConfigured } from "./connection-check.js";
 
 vi.mock("@hmcts/third-party-user", () => ({
   requestAccessToken: vi.fn(),
-  sendOutboundRequest: vi.fn(),
-  discardBody: vi.fn()
+  sendOutboundRequest: vi.fn()
 }));
 
 const ACCESS_TOKEN = "eyJ.access.token";
 const CLIENT_SECRET = "super-secret-value";
 const TARGET = new URL("https://pip-data-management.staging.platform.hmcts.net/locations/111?caseRef=ABC123");
 
+const DATA_MANAGEMENT_URI = "api://data-management-app-id";
+
 const TOKEN_ENV = {
   AZURE_TENANT_ID: "tenant-id",
-  CATH_SERVICE_API_CLIENT_ID: "client-id",
-  CATH_SERVICE_API_CLIENT_SECRET: CLIENT_SECRET,
-  CATH_SERVICE_API_CLIENT_SCOPE: "api://client-id/.default"
+  PIP_API_CLIENT_ID: "client-id",
+  PIP_API_CLIENT_SECRET: CLIENT_SECRET
+};
+
+const HOSTS_ENV = {
+  PIP_DATA_MANAGEMENT_SCOPE: DATA_MANAGEMENT_URI,
+  PIP_ACCOUNT_MANAGEMENT_SCOPE: "api://account-management-app-id"
 };
 
 function okResponse(status = 200) {
@@ -30,11 +35,10 @@ describe("connection-check", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env = { ...originalEnv, ...TOKEN_ENV };
+    process.env = { ...originalEnv, ...TOKEN_ENV, ...HOSTS_ENV };
     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(requestAccessToken).mockResolvedValue({ kind: "token", accessToken: ACCESS_TOKEN });
     vi.mocked(sendOutboundRequest).mockResolvedValue(okResponse());
-    vi.mocked(discardBody).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -43,7 +47,7 @@ describe("connection-check", () => {
   });
 
   describe("isPipConnectionCheckConfigured", () => {
-    it("should return true when all four token settings are present", () => {
+    it("should return true when the tenant, client ID and client secret are present", () => {
       // Act & Assert
       expect(isPipConnectionCheckConfigured()).toBe(true);
     });
@@ -58,7 +62,7 @@ describe("connection-check", () => {
 
     it("should return false when a setting is only whitespace", () => {
       // Arrange
-      process.env.CATH_SERVICE_API_CLIENT_SECRET = "   ";
+      process.env.PIP_API_CLIENT_SECRET = "   ";
 
       // Act & Assert
       expect(isPipConnectionCheckConfigured()).toBe(false);
@@ -68,7 +72,7 @@ describe("connection-check", () => {
   describe("checkPipConnection", () => {
     it("should return not-configured and send nothing when a token setting is missing", async () => {
       // Arrange
-      delete process.env.CATH_SERVICE_API_CLIENT_SECRET;
+      delete process.env.PIP_API_CLIENT_SECRET;
 
       // Act
       const result = await checkPipConnection(TARGET);
@@ -88,8 +92,46 @@ describe("connection-check", () => {
         tokenUrl: "https://login.microsoftonline.com/tenant-id/oauth2/v2.0/token",
         clientId: "client-id",
         clientSecret: CLIENT_SECRET,
-        scope: "api://client-id/.default"
+        scope: `${DATA_MANAGEMENT_URI}/.default`
       });
+    });
+
+    it("should request the token for the app ID URI of the host being called", async () => {
+      // Arrange
+      const accountManagement = new URL("https://pip-account-management.staging.platform.hmcts.net/account/1");
+
+      // Act
+      await checkPipConnection(accountManagement);
+
+      // Assert
+      expect(requestAccessToken).toHaveBeenCalledWith(expect.objectContaining({ scope: "api://account-management-app-id/.default" }));
+    });
+
+    it.each([DATA_MANAGEMENT_URI, `${DATA_MANAGEMENT_URI}/`, `${DATA_MANAGEMENT_URI}/.default`])(
+      "should request <app ID URI>/.default when the configured value is %s",
+      async (appIdUri) => {
+        // Arrange
+        process.env.PIP_DATA_MANAGEMENT_SCOPE = appIdUri;
+
+        // Act
+        await checkPipConnection(TARGET);
+
+        // Assert
+        expect(requestAccessToken).toHaveBeenCalledWith(expect.objectContaining({ scope: `${DATA_MANAGEMENT_URI}/.default` }));
+      }
+    );
+
+    it("should return not-configured and send nothing when the host has no scope", async () => {
+      // Arrange
+      delete process.env.PIP_DATA_MANAGEMENT_SCOPE;
+
+      // Act
+      const result = await checkPipConnection(TARGET);
+
+      // Assert
+      expect(result).toEqual({ kind: "not-configured" });
+      expect(requestAccessToken).not.toHaveBeenCalled();
+      expect(sendOutboundRequest).not.toHaveBeenCalled();
     });
 
     it("should send a GET with the bearer token to the URL", async () => {
@@ -112,8 +154,19 @@ describe("connection-check", () => {
       const result = await checkPipConnection(TARGET);
 
       // Assert
-      expect(result).toEqual({ kind: "response", status, durationMs: expect.any(Number) });
-      expect(discardBody).toHaveBeenCalledWith(outbound.response);
+      expect(result).toEqual({ kind: "response", status, durationMs: expect.any(Number), bodyPreview: undefined });
+    });
+
+    it("should return a masked preview of a JSON response body", async () => {
+      // Arrange
+      const response = new Response('{"name":"Jane Doe","locationId":111}', { status: 200, headers: { "Content-Type": "application/json" } });
+      vi.mocked(sendOutboundRequest).mockResolvedValue({ kind: "response", status: 200, response });
+
+      // Act
+      const result = await checkPipConnection(TARGET);
+
+      // Assert
+      expect(result).toEqual({ kind: "response", status: 200, durationMs: expect.any(Number), bodyPreview: '{"name":"***","locationId":111}' });
     });
 
     it.each([

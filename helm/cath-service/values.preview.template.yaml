@@ -38,8 +38,6 @@ cath-web:
       SSO_ALLOW_HTTP_REDIRECT: 'true'
       REDIS_URL: "redis://{{ .Release.Name }}-redis-master:6379"
       POSTGRES_DATABASE: "{{ .Release.Name }}"
-      # Preview has no PIP environment of its own, so the connection check targets PIP staging
-      PIP_API_ALLOWED_HOSTS: "pip-data-management.staging.platform.hmcts.net,pip-account-management.staging.platform.hmcts.net"
     secrets:
       POSTGRES_HOST:
         secretRef: postgres
@@ -122,15 +120,18 @@ cath-web:
             alias: AZURE_STORAGE_CONNECTION_STRING
           - name: storageaccount-name
             alias: AZURE_STORAGE_ACCOUNT_NAME
-          # CaTH AI API client for the system admin PIP connection check (#1482)
+          # PIP frontend's client for the system admin PIP connection check (#1482). It holds api.request.admin
+          # on PIP data and account management; CaTH's own client does not yet.
           - name: app-tenant-id
             alias: AZURE_TENANT_ID
-          - name: cath-service-api-client-id
-            alias: CATH_SERVICE_API_CLIENT_ID
-          - name: cath-service-api-client-secret
-            alias: CATH_SERVICE_API_CLIENT_SECRET
-          - name: cath-service-api-client-scope
-            alias: CATH_SERVICE_API_CLIENT_SCOPE
+          - name: pip-frontend-id
+            alias: PIP_API_CLIENT_ID
+          - name: pip-frontend-pwd
+            alias: PIP_API_CLIENT_SECRET
+          - name: pip-data-management-scope
+            alias: PIP_DATA_MANAGEMENT_SCOPE
+          - name: pip-account-management-scope
+            alias: PIP_ACCOUNT_MANAGEMENT_SCOPE
 
 # API application configuration
 cath-api:

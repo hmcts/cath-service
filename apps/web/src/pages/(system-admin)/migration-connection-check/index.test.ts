@@ -1,4 +1,4 @@
-import { checkPipConnection, getAllowedPipHosts, isPipConnectionCheckConfigured, validatePipUrl } from "@hmcts/pip-api-client";
+import { checkPipConnection, getPipApiHostPatterns, isAllowedPipHost, isPipConnectionCheckConfigured, validatePipUrl } from "@hmcts/pip-api-client";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { cy } from "./cy.js";
@@ -7,7 +7,8 @@ import { GET, POST } from "./index.js";
 
 vi.mock("@hmcts/pip-api-client", () => ({
   checkPipConnection: vi.fn(),
-  getAllowedPipHosts: vi.fn(),
+  getPipApiHostPatterns: vi.fn(),
+  isAllowedPipHost: vi.fn(),
   isPipConnectionCheckConfigured: vi.fn(),
   validatePipUrl: vi.fn()
 }));
@@ -17,6 +18,7 @@ vi.mock("@hmcts/system-admin-pages", () => ({
 }));
 
 const HOST = "pip-data-management.staging.platform.hmcts.net";
+const HOST_PATTERN = "pip-data-management.<environment>.platform.hmcts.net";
 const INPUT = `https://${HOST}/locations/111?caseRef=ABC123`;
 const TEMPLATE = "migration-connection-check/index";
 
@@ -30,7 +32,7 @@ describe("migration-connection-check page", () => {
     vi.clearAllMocks();
     req = { body: {}, query: {} };
     res = { render: vi.fn(), locals: { locale: "en" } };
-    vi.mocked(getAllowedPipHosts).mockReturnValue([HOST]);
+    vi.mocked(getPipApiHostPatterns).mockReturnValue([HOST_PATTERN]);
     vi.mocked(isPipConnectionCheckConfigured).mockReturnValue(true);
     vi.mocked(validatePipUrl).mockImplementation((input) => ({ kind: "valid", url: new URL(String(input)) }));
     vi.mocked(checkPipConnection).mockResolvedValue({ kind: "response", status: 200, durationMs: 42 });
@@ -58,7 +60,7 @@ describe("migration-connection-check page", () => {
       // Assert
       expect(res.render).toHaveBeenCalledWith(
         TEMPLATE,
-        expect.objectContaining({ pageTitle: en.pageTitle, isConfigured: true, allowedHosts: [HOST], data: { url: "" }, lngParam: "" })
+        expect.objectContaining({ pageTitle: en.pageTitle, isConfigured: true, allowedHosts: [HOST_PATTERN], data: { url: "" }, lngParam: "" })
       );
     });
 
@@ -73,9 +75,9 @@ describe("migration-connection-check page", () => {
       expect(res.render).toHaveBeenCalledWith(TEMPLATE, expect.objectContaining({ pageTitle: cy.pageTitle, lngParam: "?lng=cy" }));
     });
 
-    it("should render as not configured when no hosts are allowed", async () => {
+    it("should render as not configured when no PIP API scope is set", async () => {
       // Arrange
-      vi.mocked(getAllowedPipHosts).mockReturnValue([]);
+      vi.mocked(getPipApiHostPatterns).mockReturnValue([]);
 
       // Act
       await getHandler(req as Request, res as Response, vi.fn());
@@ -144,7 +146,7 @@ describe("migration-connection-check page", () => {
       expect(renderedOptions().errors).toEqual([{ text: cy.errorMessages.required, href: "#url" }]);
     });
 
-    it("should validate the entered URL against the allowed hosts", async () => {
+    it("should validate the entered URL against the PIP API hosts", async () => {
       // Arrange
       req.body = { url: INPUT };
 
@@ -152,7 +154,7 @@ describe("migration-connection-check page", () => {
       await postHandler(req as Request, res as Response, vi.fn());
 
       // Assert
-      expect(validatePipUrl).toHaveBeenCalledWith(INPUT, [HOST]);
+      expect(validatePipUrl).toHaveBeenCalledWith(INPUT, isAllowedPipHost);
       expect(checkPipConnection).toHaveBeenCalledWith(new URL(INPUT));
     });
 
@@ -165,7 +167,7 @@ describe("migration-connection-check page", () => {
       await postHandler(req as Request, res as Response, vi.fn());
 
       // Assert
-      expect(validatePipUrl).toHaveBeenCalledWith("", [HOST]);
+      expect(validatePipUrl).toHaveBeenCalledWith("", isAllowedPipHost);
     });
 
     it("should show a connected result with status, time and token rows", async () => {
@@ -185,6 +187,19 @@ describe("migration-connection-check page", () => {
         [en.result.tokenObtained]: en.result.yes
       });
       expect(renderedOptions().data).toEqual({ url: INPUT });
+    });
+
+    it("should show the masked response preview but leave it out of the audit log", async () => {
+      // Arrange
+      req.body = { url: INPUT };
+      vi.mocked(checkPipConnection).mockResolvedValue({ kind: "response", status: 200, durationMs: 42, bodyPreview: '{"name":"***"}' });
+
+      // Act
+      await postHandler(req as Request, res as Response, vi.fn());
+
+      // Assert
+      expect(resultRows()[en.result.responsePreview]).toBe('{"name":"***"}');
+      expect(req.auditMetadata?.entityInfo).not.toContain("***");
     });
 
     it.each([

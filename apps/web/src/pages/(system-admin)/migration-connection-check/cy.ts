@@ -25,7 +25,8 @@ export const cy = {
     yes: "Ie",
     no: "Na",
     reason: "Rheswm",
-    errorCode: "[WELSH TRANSLATION REQUIRED: 'Error code']"
+    errorCode: "[WELSH TRANSLATION REQUIRED: 'Error code']",
+    responsePreview: "[WELSH TRANSLATION REQUIRED: 'Response (first 100 characters, text values hidden)']"
   },
   outcomes: {
     connected: "[WELSH TRANSLATION REQUIRED: 'Connected']",

@@ -1,7 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import {
   checkPipConnection,
-  getAllowedPipHosts,
+  getPipApiHostPatterns,
+  isAllowedPipHost,
   isPipConnectionCheckConfigured,
   type PipConnectionResult,
   type TokenFailureReason,
@@ -35,7 +36,7 @@ const postHandler = async (req: Request, res: Response) => {
     return renderPage(res, { url: input });
   }
 
-  const validation = validatePipUrl(input, getAllowedPipHosts());
+  const validation = validatePipUrl(input, isAllowedPipHost);
   if (validation.kind === "invalid") {
     req.auditMetadata = { action: AuditLogAction.PIP_CONNECTION_CHECK };
     return renderPage(res, { url: input, errors: [{ text: t.errorMessages[ERROR_KEY_BY_VALIDATION_ERROR[validation.error]], href: "#url" }] });
@@ -66,7 +67,7 @@ function renderPage(res: Response, { url, errors, connectionResult }: PageState)
     cy,
     lngParam,
     isConfigured: isConfigured(),
-    allowedHosts: getAllowedPipHosts(),
+    allowedHosts: getPipApiHostPatterns(),
     data: { url },
     errors,
     connectionResult
@@ -78,7 +79,7 @@ function getLocale(res: Response): Locale {
 }
 
 function isConfigured(): boolean {
-  return getAllowedPipHosts().length > 0 && isPipConnectionCheckConfigured();
+  return getPipApiHostPatterns().length > 0 && isPipConnectionCheckConfigured();
 }
 
 function toOutcome(result: PipConnectionResult): Outcome {
@@ -116,6 +117,9 @@ function toResultView(url: URL, outcome: Outcome, result: PipConnectionResult, t
 
   if (result.kind === "response") {
     rows.push({ key: t.result.httpStatus, value: String(result.status) });
+    if (result.bodyPreview) {
+      rows.push({ key: t.result.responsePreview, value: result.bodyPreview });
+    }
   }
   if ("durationMs" in result) {
     rows.push({ key: t.result.responseTime, value: `${result.durationMs} ${t.result.milliseconds}` });

@@ -3,11 +3,12 @@ import { validatePipUrl } from "./url-validation.js";
 
 const DATA_MANAGEMENT_HOST = "pip-data-management.staging.platform.hmcts.net";
 const ALLOWED_HOSTS = [DATA_MANAGEMENT_HOST, "pip-account-management.staging.platform.hmcts.net"];
+const isAllowedHost = (host: string) => ALLOWED_HOSTS.includes(host);
 
 describe("validatePipUrl", () => {
   it("should accept an https URL on an allowed host", () => {
     // Act
-    const result = validatePipUrl(`https://${DATA_MANAGEMENT_HOST}/locations/111`, ALLOWED_HOSTS);
+    const result = validatePipUrl(`https://${DATA_MANAGEMENT_HOST}/locations/111`, isAllowedHost);
 
     // Assert
     expect(result.kind).toBe("valid");
@@ -16,7 +17,7 @@ describe("validatePipUrl", () => {
 
   it("should accept any allowed host, so other PIP APIs can be checked", () => {
     // Act
-    const result = validatePipUrl("https://pip-account-management.staging.platform.hmcts.net/account/1", ALLOWED_HOSTS);
+    const result = validatePipUrl("https://pip-account-management.staging.platform.hmcts.net/account/1", isAllowedHost);
 
     // Assert
     expect(result.kind).toBe("valid");
@@ -29,7 +30,7 @@ describe("validatePipUrl", () => {
     ["surrounding whitespace", `  https://${DATA_MANAGEMENT_HOST}/locations/1  `]
   ])("should accept %s", (_description, input) => {
     // Act
-    const result = validatePipUrl(input, ALLOWED_HOSTS);
+    const result = validatePipUrl(input, isAllowedHost);
 
     // Assert
     expect(result.kind).toBe("valid");
@@ -42,7 +43,7 @@ describe("validatePipUrl", () => {
     ["a non-string value", ["https://example.com"]]
   ])("should return required for %s", (_description, input) => {
     // Act
-    const result = validatePipUrl(input, ALLOWED_HOSTS);
+    const result = validatePipUrl(input, isAllowedHost);
 
     // Assert
     expect(result).toEqual({ kind: "invalid", error: "required" });
@@ -53,7 +54,7 @@ describe("validatePipUrl", () => {
     const input = `https://${DATA_MANAGEMENT_HOST}/${"a".repeat(2048)}`;
 
     // Act
-    const result = validatePipUrl(input, ALLOWED_HOSTS);
+    const result = validatePipUrl(input, isAllowedHost);
 
     // Assert
     expect(result).toEqual({ kind: "invalid", error: "too-long" });
@@ -69,7 +70,7 @@ describe("validatePipUrl", () => {
     ["a path without a host", "/locations/1"]
   ])("should return invalid-format for %s", (_description, input) => {
     // Act
-    const result = validatePipUrl(input, ALLOWED_HOSTS);
+    const result = validatePipUrl(input, isAllowedHost);
 
     // Assert
     expect(result).toEqual({ kind: "invalid", error: "invalid-format" });
@@ -85,7 +86,7 @@ describe("validatePipUrl", () => {
     ["localhost", "https://localhost/locations/1"]
   ])("should return host-not-allowed for %s", (_description, input) => {
     // Act
-    const result = validatePipUrl(input, ALLOWED_HOSTS);
+    const result = validatePipUrl(input, isAllowedHost);
 
     // Assert
     expect(result).toEqual({ kind: "invalid", error: "host-not-allowed" });
@@ -93,7 +94,7 @@ describe("validatePipUrl", () => {
 
   it("should reject every URL when no hosts are allowed", () => {
     // Act
-    const result = validatePipUrl(`https://${DATA_MANAGEMENT_HOST}/locations/1`, []);
+    const result = validatePipUrl(`https://${DATA_MANAGEMENT_HOST}/locations/1`, () => false);
 
     // Assert
     expect(result).toEqual({ kind: "invalid", error: "host-not-allowed" });

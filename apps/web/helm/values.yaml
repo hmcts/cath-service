@@ -46,9 +46,6 @@ nodejs:
     MAX_PDF_PAYLOAD_KB: 256 # 256 KB
     MAX_EXCEL_PAYLOAD_KB: 10240 # 10 MB
     MAX_SUMMARY_PAYLOAD_KB: 256
-    # Hosts the system admin PIP connection check (/migration-connection-check) may call. Comma-separated.
-    # Same PIP env mapping as B2C_CUSTOM_DOMAIN. Empty in prod until the PIP prod hostnames are confirmed (#1482).
-    PIP_API_ALLOWED_HOSTS: '{{ if ne .Values.global.environment `prod` }}{{ $pipEnv := get (dict `aat` `staging` `perftest` `test`) .Values.global.environment | default .Values.global.environment }}pip-data-management.{{ $pipEnv }}.platform.hmcts.net,pip-account-management.{{ $pipEnv }}.platform.hmcts.net{{ end }}'
   # This list is duplicated in helm/cath-service/values.preview.template.yaml, which the
   # preview deploy uses. Helm replaces arrays rather than merging them, so preview has to
   # restate the whole list to swap SSO_CLIENT_ID/SSO_CLIENT_SECRET for their -dev
@@ -106,12 +103,15 @@ nodejs:
           alias: AZURE_STORAGE_CONNECTION_STRING
         - name: storageaccount-name
           alias: AZURE_STORAGE_ACCOUNT_NAME
-        # CaTH AI API client for the system admin PIP connection check (#1482)
+        # PIP frontend's client for the system admin PIP connection check (#1482). It holds api.request.admin
+        # on PIP data and account management; CaTH's own client does not yet.
         - name: app-tenant-id
           alias: AZURE_TENANT_ID
-        - name: cath-service-api-client-id
-          alias: CATH_SERVICE_API_CLIENT_ID
-        - name: cath-service-api-client-secret
-          alias: CATH_SERVICE_API_CLIENT_SECRET
-        - name: cath-service-api-client-scope
-          alias: CATH_SERVICE_API_CLIENT_SCOPE
+        - name: pip-frontend-id
+          alias: PIP_API_CLIENT_ID
+        - name: pip-frontend-pwd
+          alias: PIP_API_CLIENT_SECRET
+        - name: pip-data-management-scope
+          alias: PIP_DATA_MANAGEMENT_SCOPE
+        - name: pip-account-management-scope
+          alias: PIP_ACCOUNT_MANAGEMENT_SCOPE

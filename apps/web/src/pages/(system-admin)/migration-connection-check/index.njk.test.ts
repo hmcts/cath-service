@@ -9,6 +9,7 @@ import { en } from "./en.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATE = "(system-admin)/migration-connection-check/index.njk";
 const HOSTS = ["pip-data-management.staging.platform.hmcts.net", "pip-account-management.staging.platform.hmcts.net"];
+const HOST_PATTERNS = ["pip-data-management.<environment>.platform.hmcts.net", "pip-account-management.<environment>.platform.hmcts.net"];
 
 let env: nunjucks.Environment;
 
@@ -34,7 +35,7 @@ function renderPage(overrides = {}, locale: typeof en | typeof cy = en) {
     ...locale,
     lngParam: locale === cy ? "?lng=cy" : "",
     isConfigured: true,
-    allowedHosts: HOSTS,
+    allowedHosts: HOST_PATTERNS,
     data: { url: "" },
     ...overrides
   });
@@ -51,13 +52,13 @@ describe("migration-connection-check template", () => {
     assertNoErrors($);
   });
 
-  it("should list every allowed host in the hint", () => {
+  it("should list every PIP API host pattern in the hint", () => {
     const { $ } = renderPage();
 
     const hosts = $("#allowed-hosts li");
     expect(hosts).toHaveLength(2);
-    expect(hosts.eq(0).text()).toBe(HOSTS[0]);
-    expect(hosts.eq(1).text()).toBe(HOSTS[1]);
+    expect(hosts.eq(0).text()).toBe(HOST_PATTERNS[0]);
+    expect(hosts.eq(1).text()).toBe(HOST_PATTERNS[1]);
     expect($("#url-hint").text()).toContain(en.authHint);
   });
 

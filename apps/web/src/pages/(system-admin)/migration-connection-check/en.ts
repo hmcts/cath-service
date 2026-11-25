@@ -25,7 +25,8 @@ export const en = {
     yes: "Yes",
     no: "No",
     reason: "Reason",
-    errorCode: "Error code"
+    errorCode: "Error code",
+    responsePreview: "Response (first 100 characters, text values hidden)"
   },
   outcomes: {
     connected: "Connected",
