@@ -10,6 +10,8 @@ export const en = {
   backToTop: "Back to top",
   showFilters: "Show filters",
   hideFilters: "Hide filters",
+  azNavigationLabel: "A to Z of courts and tribunals",
+  azNoResults: "(no courts or tribunals)",
   subJurisdictionLabels: {
     1: "Type of civil court",
     2: "Type of family court",

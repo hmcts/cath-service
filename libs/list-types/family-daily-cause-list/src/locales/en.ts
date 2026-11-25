@@ -14,7 +14,7 @@ export const en = {
     "Sometimes it is necessary for hearings to be held in private and you will not be able to observe remotely or in person. Members of the press are able to attend some private hearings.",
   openJusticeMoreInfo: "For more information, please visit",
   openJusticeLink: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
-  openJusticeLinkText: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
+  openJusticeLinkText: "Observe a court or tribunal hearing",
   factLinkText: "Find contact details and other information about courts and tribunals",
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
   factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",

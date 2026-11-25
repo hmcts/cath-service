@@ -14,35 +14,34 @@
       }) }}
     {% endif %}
 
-    <form method="post" novalidate>
-      <div class="govuk-form-group{% if errors %} govuk-form-group--error{% endif %}">
-        {{ govukRadios({
-          name: "viewOption",
-          fieldset: {
-            legend: {
-              text: title,
-              isPageHeading: true,
-              classes: "govuk-fieldset__legend--l"
+    <form method="post" novalidate data-replace-history-on-error>
+      {{ govukRadios({
+        name: "viewOption",
+        fieldset: {
+          legend: {
+            text: title,
+            isPageHeading: true,
+            classes: "govuk-fieldset__legend--l"
+          }
+        },
+        errorMessage: { text: errors[0].text } if errors else false,
+        items: [
+          {
+            value: "court-tribunal",
+            html: courtTribunalLabel,
+            hint: {
+              text: courtTribunalHint
             }
           },
-          items: [
-            {
-              value: "court-tribunal",
-              html: courtTribunalLabel,
-              hint: {
-                text: courtTribunalHint
-              }
-            },
-            {
-              value: "sjp-case",
-              html: sjpCaseLabel,
-              hint: {
-                text: sjpCaseHint
-              }
+          {
+            value: "sjp-case",
+            html: sjpCaseLabel,
+            hint: {
+              text: sjpCaseHint
             }
-          ]
-        }) }}
-      </div>
+          }
+        ]
+      }) }}
 
       {{ govukButton({
         text: continueButton

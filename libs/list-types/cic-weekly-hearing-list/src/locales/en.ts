@@ -18,7 +18,7 @@ export const en = {
   restrictedReportingOrdersText:
     "The inclusion of a case in the Press List is no guarantee that it is not subject to a restricted reporting order. Members of the press should ensure that no order exists on an individual case before submitting material for publication.",
   importantInformationLinkPrefix: "For more information, please visit",
-  importantInformationLinkText: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
+  importantInformationLinkText: "Observe a court or tribunal hearing",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   searchCasesTitle: "Search Cases",
   searchCasesLabel: "Search by case reference, case name, venue, or other details",

@@ -19,7 +19,7 @@ export const cy = {
     "Weithiau mae'n angenrheidiol cynnal gwrandawiadau yn breifat ac ni fyddwch yn gallu arsylwi o bell nac yn bersonol. Mae aelodau o'r wasg yn gallu mynychu rhai gwrandawiadau preifat.",
   openJusticeMoreInfo: "I gael rhagor o wybodaeth, ewch i",
   openJusticeLink: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
-  openJusticeLinkText: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
+  openJusticeLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys",
   courtroom: "Ystafell Llys",
   time: "Amser",
   beforeJudge: "Gerbron",

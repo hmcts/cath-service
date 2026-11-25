@@ -15,7 +15,7 @@ export const en = {
     "Asylum Support Tribunal parties and representatives will be informed directly as to the arrangements for hearing cases remotely. Any other person interested in joining the hearing remotely should contact the Asylum Support Tribunal Office direct, in advance of the hearing date, by emailing asylumsupporttribunals@justice.gov.uk so that arrangements can be made. The following details should be included in the subject line of the email [OBSERVER/MEDIA] REQUEST – [case reference] – [hearing date]. If the case is to be heard in private or is subject to a reporting restriction, this will be notified."
   ],
   importantInformationLinkPrefix: "For more information, please visit",
-  importantInformationLinkText: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
+  importantInformationLinkText: "Observe a court or tribunal hearing",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   searchCasesTitle: "Search Cases",
   searchCasesLabel: "Search by appellant, appeal reference number, or other details",

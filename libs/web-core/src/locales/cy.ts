@@ -2,6 +2,7 @@ export const cy = {
   govUk: "GOV.UK",
   phase: "beta",
   back: "Yn ôl",
+  opensInNewTab: "(yn agor mewn tab newydd)",
   navigation: {
     signIn: "Mewngofnodi"
   },

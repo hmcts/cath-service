@@ -15,6 +15,7 @@ describe("view-option page", () => {
     res = {
       render: vi.fn(),
       redirect: vi.fn(),
+      setHeader: vi.fn(),
       locals: {
         locale: "en"
       }
@@ -287,5 +288,32 @@ describe("view-option page", () => {
         );
       });
     });
+  });
+});
+
+describe("view-option page caching", () => {
+  const NO_STORE = "private, max-age=0, no-cache, no-store, must-revalidate";
+
+  function buildResponse() {
+    return { render: vi.fn(), redirect: vi.fn(), setHeader: vi.fn(), locals: { locale: "en" } } as unknown as Response;
+  }
+
+  it("should stop the browser caching the page so Back fetches a fresh copy", async () => {
+    const res = buildResponse();
+
+    await GET({ query: {} } as Request, res);
+
+    expect(res.setHeader).toHaveBeenCalledWith("Cache-Control", NO_STORE);
+  });
+
+  it.each([
+    ["the error page", {}],
+    ["the redirect", { viewOption: "court-tribunal" }]
+  ])("should stop the browser caching %s so Back never shows a stale error", async (_, body) => {
+    const res = buildResponse();
+
+    await POST({ body } as Request, res);
+
+    expect(res.setHeader).toHaveBeenCalledWith("Cache-Control", NO_STORE);
   });
 });

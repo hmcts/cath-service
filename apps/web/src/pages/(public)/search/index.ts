@@ -3,14 +3,13 @@ import type { Request, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-interface SearchError {
-  text: string;
-  href: string;
-}
+// Matches pip-frontend: stops the browser restoring a stale copy (e.g. one showing an error) on Back.
+const NO_STORE = "private, max-age=0, no-cache, no-store, must-revalidate";
 
 export const GET = async (req: Request, res: Response) => {
   const locationId = req.query.locationId ? Number.parseInt(req.query.locationId as string, 10) : undefined;
   const locale = res.locals.locale || "en";
+  res.setHeader("Cache-Control", NO_STORE);
 
   let preselectedLocation: { id: number; name: string; welshName: string } | undefined;
 
@@ -37,37 +36,14 @@ export const POST = async (req: Request, res: Response) => {
   const selectedLocationId = req.body?.locationId;
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
-
-  if (!selectedLocationId) {
-    const errors: SearchError[] = [
-      {
-        text: t.errorMessage,
-        href: "#location"
-      }
-    ];
-
-    return res.render("search/index", {
-      en,
-      cy,
-      errors,
-      locale
-    });
-  }
-
   const locationIdNum = Number.parseInt(selectedLocationId, 10);
+  res.setHeader("Cache-Control", NO_STORE);
 
-  if (Number.isNaN(locationIdNum) || !(await getLocationById(locationIdNum))) {
-    const errors: SearchError[] = [
-      {
-        text: t.errorMessage,
-        href: "#location"
-      }
-    ];
-
+  if (!selectedLocationId || Number.isNaN(locationIdNum) || !(await getLocationById(locationIdNum))) {
     return res.render("search/index", {
       en,
       cy,
-      errors,
+      errors: [{ text: t.errorMessage, href: "#location" }],
       locale
     });
   }

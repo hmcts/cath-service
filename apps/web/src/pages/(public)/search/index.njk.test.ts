@@ -103,6 +103,35 @@ describe("search template", () => {
       assertErrorSummary($, [cy.errorMessage]);
       expect($(".govuk-error-summary__title").text()).toContain(cy.errorSummaryTitle);
     });
+
+    it("should render the inline error message matching the summary when errors are present", () => {
+      const errors = [{ text: en.errorMessage, href: "#location" }];
+      const data = { ...en, locale: "en", errors };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("#location-error").text()).toContain(en.errorMessage);
+      expect($("#location").attr("aria-describedby")).toContain("location-error");
+    });
+
+    it("should render the inline error message above the hint", () => {
+      const errors = [{ text: en.errorMessage, href: "#location" }];
+      const data = { ...en, locale: "en", errors };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const formGroupChildIds = $(".govuk-form-group")
+        .children()
+        .map((_, el) => $(el).attr("id"))
+        .get();
+      expect(formGroupChildIds.indexOf("location-error")).toBeLessThan(formGroupChildIds.indexOf("location-hint"));
+    });
+
+    it("should not render an inline error message when there are no errors", () => {
+      const { $ } = render(env, TEMPLATE, { ...en, locale: "en" });
+
+      expect($("#location-error")).toHaveLength(0);
+    });
   });
 
   describe("Locale consistency", () => {

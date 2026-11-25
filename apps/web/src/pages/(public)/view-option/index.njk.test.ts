@@ -63,6 +63,7 @@ describe("view-option template", () => {
       const form = $("form");
       expect(form).toHaveLength(1);
       expect(form.attr("method")).toBe("post");
+      expect(form.attr("data-replace-history-on-error")).toBeDefined();
     });
 
     it("should render the Welsh heading and button", () => {
@@ -95,6 +96,26 @@ describe("view-option template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       assertNoErrors($);
+      expect($("#viewOption-error")).toHaveLength(0);
+      expect($(".govuk-form-group--error")).toHaveLength(0);
+    });
+
+    it("should render the inline error below the heading and above the radios when there are errors", () => {
+      const data = {
+        ...en,
+        errors: [{ text: en.errorMessage, href: "#viewOption" }]
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const inlineError = $("#viewOption-error");
+      expect(inlineError).toHaveLength(1);
+      expect(inlineError.text()).toContain(en.errorMessage);
+      expect(inlineError.find(".govuk-visually-hidden").text()).toContain("Error:");
+      expect(inlineError.prev("legend").find("h1").text()).toContain(en.title);
+      expect(inlineError.next(".govuk-radios")).toHaveLength(1);
+      expect($("fieldset").attr("aria-describedby")).toContain("viewOption-error");
+      expect($("#viewOption")).toHaveLength(1);
     });
 
     it("should render the error summary and highlight the form group when there are errors", () => {
@@ -120,6 +141,7 @@ describe("view-option template", () => {
 
       assertErrorSummary($, [cy.errorMessage]);
       expect($(".govuk-error-summary__title").text()).toContain(cy.errorSummaryTitle);
+      expect($("#viewOption-error").text()).toContain(cy.errorMessage);
     });
   });
 

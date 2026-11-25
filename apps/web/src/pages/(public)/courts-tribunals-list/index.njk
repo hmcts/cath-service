@@ -110,13 +110,13 @@
       </div>
 
       {# A-Z Navigation #}
-      <nav aria-label="Alphabetical navigation" class="az-navigation govuk-!-margin-bottom-1">
+      <nav aria-label="{{ azNavigationLabel }}" class="az-navigation govuk-!-margin-bottom-1">
         {% set alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"] %}
         {% for letter in alphabet %}
           {% if letter in availableLetters %}
             <a href="#letter-{{ letter }}" class="az-navigation__link">{{ letter }}</a>
           {% else %}
-            <span class="az-navigation__letter--disabled">{{ letter }}</span>
+            <span class="az-navigation__letter--disabled">{{ letter }}<span class="govuk-visually-hidden"> {{ azNoResults }}</span></span>
           {% endif %}
         {% endfor %}
       </nav>

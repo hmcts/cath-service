@@ -25,7 +25,7 @@
         <p class="govuk-body">{{ t.importantInformationSecondParagraph }}</p>
         <p class="govuk-body">
           <a href="{{ t.importantInformationLinkUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
-            {{ t.importantInformationLinkText }}
+            {{ t.importantInformationLinkText }} {{ opensInNewTab }}
           </a>
         </p>
         {% if extraInformationText %}<p class="govuk-body govuk-!-font-weight-bold">{{ extraInformationText }}</p>{% endif %}
