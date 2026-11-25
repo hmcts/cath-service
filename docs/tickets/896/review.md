@@ -39,7 +39,7 @@ None.
 
 ## ⚠️ HIGH PRIORITY Issues
 
-1. **A permanent Notify rejection blocks that account's deletion forever and keeps the job failing on every run.** (`service.ts:48-52`, `service.ts:84-87`, `apps/crons/src/inactive-verification.ts:10-13`)
+1. ✅ **Resolved with option (a):** `isInvalidEmailAddressError` lets an invalid-address 400 proceed to deletion with a warning; all other failures still block. Non-prod uses a Notify test key, so the team-key concern does not apply. **A permanent Notify rejection blocks that account's deletion forever and keeps the job failing on every run.** (`service.ts:48-52`, `service.ts:84-87`, `apps/crons/src/inactive-verification.ts:10-13`)
    - **What happens:** If `sendMediaAccountDeletionEmail` throws, `archiveAndDelete` is never called and the user is counted `failed`. Because `findMediaUsersForDeletion` uses on-or-before matching (`queries.ts:37`), the same user is selected on every later run. Notify rejects synchronously with a 400 in these cases:
      - `ValidationError` for a malformed `email_address` (Notify does not validate a well-formed but bouncing address up front; that shows up later as an async `permanent-failure`, so it does not block)
      - `BadRequestError` "Can't send to this recipient using a team-only API key" if a non-prod key is a team key

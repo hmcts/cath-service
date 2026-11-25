@@ -1,7 +1,7 @@
 import { archiveAndDeleteUser, type B2cUserDeleter } from "@hmcts/account/user-archive";
 import { deleteB2cUser, getGraphApiAccessToken } from "@hmcts/auth/graph-api";
 import { EMAIL_RATE_LIMITED } from "@hmcts/email-rate-limit";
-import { extractNotifyError } from "@hmcts/govuk-notify";
+import { extractNotifyError, isInvalidEmailAddressError } from "@hmcts/govuk-notify";
 import { verificationEmailDate } from "./date-boundaries.js";
 import { getNotificationSettings, sendIdamSignInNotificationEmail, sendMediaAccountDeletionEmail, sendMediaVerificationEmail } from "./notifications.js";
 import {
@@ -44,10 +44,22 @@ export async function processInactiveAccounts(): Promise<InactiveAccountsSummary
   const mediaDeletions = await runStep(
     "media-deletion",
     (after) => findMediaUsersForDeletion(settings, runDate, after),
-    // The email goes first because the address is gone once the account is deleted, so a failed send keeps the account for the next run
+    // The email goes first because the address is gone once the account is deleted, so a failed send keeps the account for the next run.
+    // The exception is an address Notify rejects as invalid: no retry can succeed, so keeping the account would hold its data past retention.
     async (user) => {
       const reVerificationEmailDate = verificationEmailDate(user.lastVerifiedDate, settings.mediaVerificationEmailDays, settings.startDate);
-      await sendMediaAccountDeletionEmail(notificationSettings, user, reVerificationEmailDate);
+      try {
+        await sendMediaAccountDeletionEmail(notificationSettings, user, reVerificationEmailDate);
+      } catch (error) {
+        if (!isInvalidEmailAddressError(error)) {
+          throw error;
+        }
+        console.warn("Inactive accounts: deleting without the deletion email because Notify rejected the address", {
+          step: "media-deletion",
+          userId: user.userId,
+          ...describeError(error)
+        });
+      }
       return archiveAndDelete(user);
     }
   );

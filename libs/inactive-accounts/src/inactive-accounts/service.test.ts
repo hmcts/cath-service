@@ -47,6 +47,10 @@ function mediaDeletionUser(userId: string, lastVerifiedDate = new Date("2026-01-
   return { userId, email: `${userId}@example.com`, firstName: "Media", lastVerifiedDate };
 }
 
+function notifyError(status: number, error: string, message: string) {
+  return Object.assign(new Error("Request failed"), { response: { status, data: { errors: [{ error, message }] } } });
+}
+
 function mockBatches(finder: (typeof FINDERS)[number], ...batches: { userId: string }[][]) {
   for (const batch of batches) {
     vi.mocked(finder).mockResolvedValueOnce(batch as never);
@@ -302,9 +306,7 @@ describe("processInactiveAccounts", () => {
     it("should keep the account and count it failed when the deletion email fails, then carry on", async () => {
       // Arrange
       mockBatches(findMediaUsersForDeletion, [mediaDeletionUser("md-1"), mediaDeletionUser("md-2")]);
-      vi.mocked(sendMediaAccountDeletionEmail).mockRejectedValueOnce(
-        Object.assign(new Error("Request failed"), { response: { status: 400, data: { errors: [{ error: "BadRequestError", message: "Bad email" }] } } })
-      );
+      vi.mocked(sendMediaAccountDeletionEmail).mockRejectedValueOnce(notifyError(400, "BadRequestError", "Missing personalisation: full-name"));
 
       // Act
       const summary = await processInactiveAccounts();
@@ -317,9 +319,59 @@ describe("processInactiveAccounts", () => {
         step: "media-deletion",
         userId: "md-1",
         status: 400,
-        message: "Bad email"
+        message: "Missing personalisation: full-name"
       });
       expect(JSON.stringify(consoleErrorSpy.mock.calls)).not.toContain("@example.com");
+    });
+
+    it("should delete the account and log a warning when Notify rejects the email address as invalid", async () => {
+      // Arrange
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      mockBatches(findMediaUsersForDeletion, [mediaDeletionUser("md-1"), mediaDeletionUser("md-2")]);
+      vi.mocked(sendMediaAccountDeletionEmail).mockRejectedValueOnce(notifyError(400, "ValidationError", "email_address Not a valid email address"));
+
+      // Act
+      const summary = await processInactiveAccounts();
+
+      // Assert
+      expect(vi.mocked(archiveAndDeleteUser).mock.calls.map(([userId]) => userId)).toEqual(["md-1", "md-2"]);
+      expect(summary.mediaDeletions).toEqual({ succeeded: 2, skipped: 0, failed: 0 });
+      expect(consoleWarnSpy).toHaveBeenCalledWith("Inactive accounts: deleting without the deletion email because Notify rejected the address", {
+        step: "media-deletion",
+        userId: "md-1",
+        status: 400,
+        message: "email_address Not a valid email address"
+      });
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+      expect(JSON.stringify(consoleWarnSpy.mock.calls)).not.toContain("@example.com");
+    });
+
+    it("should keep the account when Notify rejects the send with a team-only API key", async () => {
+      // Arrange
+      mockBatches(findMediaUsersForDeletion, [mediaDeletionUser("md-1")]);
+      vi.mocked(sendMediaAccountDeletionEmail).mockRejectedValueOnce(
+        notifyError(400, "BadRequestError", "Can't send to this recipient using a team-only API key")
+      );
+
+      // Act
+      const summary = await processInactiveAccounts();
+
+      // Assert
+      expect(archiveAndDeleteUser).not.toHaveBeenCalled();
+      expect(summary.mediaDeletions).toEqual({ succeeded: 0, skipped: 0, failed: 1 });
+    });
+
+    it("should keep the account when Notify fails with a server error", async () => {
+      // Arrange
+      mockBatches(findMediaUsersForDeletion, [mediaDeletionUser("md-1")]);
+      vi.mocked(sendMediaAccountDeletionEmail).mockRejectedValueOnce(notifyError(500, "Exception", "Internal server error"));
+
+      // Act
+      const summary = await processInactiveAccounts();
+
+      // Assert
+      expect(archiveAndDeleteUser).not.toHaveBeenCalled();
+      expect(summary.mediaDeletions).toEqual({ succeeded: 0, skipped: 0, failed: 1 });
     });
 
     it("should keep the account and log no address when the real email rate limiter rejects the deletion email", async () => {
