@@ -18,5 +18,13 @@ job:
           alias: APPLICATION_INSIGHTS_CONNECTION_STRING
         - name: postgres-url
           alias: DATABASE_URL
+        - name: app-tenant-id
+          alias: AZURE_TENANT_ID
+        - name: cath-service-api-client-id
+          alias: CATH_SERVICE_API_CLIENT_ID
+        - name: cath-service-api-client-secret
+          alias: CATH_SERVICE_API_CLIENT_SECRET
+        - name: cath-service-api-client-scope
+          alias: CATH_SERVICE_API_CLIENT_SCOPE
   schedule: "0 0/10 * * *" # this is just a placeholder, configure in your flux
   concurrencyPolicy: Forbid
