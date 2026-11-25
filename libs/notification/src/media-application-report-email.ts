@@ -22,7 +22,7 @@ export async function sendMediaApplicationReportEmail({ csvBuffer, reportDate, a
 
   try {
     const linkToFile = prepareNotifyFileUpload(apiKey, csvBuffer, {
-      filename: `media-application-report-${isoDate.slice(0, 10)}.csv`,
+      filename: `media-applications-${isoDate.slice(0, 10)}.csv`,
       confirmEmailBeforeDownload: false,
       retentionPeriod: RETENTION_PERIOD
     });

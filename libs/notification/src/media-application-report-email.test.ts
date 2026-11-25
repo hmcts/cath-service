@@ -19,7 +19,7 @@ const RECIPIENT = "team@example.com";
 const REPORT_DATE = new Date("2026-10-19T00:00:00Z");
 const PREPARED_UPLOAD = {
   file: "Y3N2",
-  filename: "media-application-report-2026-10-19.csv",
+  filename: "media-applications-2026-10-19.csv",
   confirm_email_before_download: false,
   retention_period: "78 weeks"
 };
@@ -76,7 +76,7 @@ describe("sendMediaApplicationReportEmail", () => {
 
     // Assert
     expect(mockPrepareUpload).toHaveBeenCalledWith(data.csvBuffer, {
-      filename: "media-application-report-2026-10-19.csv",
+      filename: "media-applications-2026-10-19.csv",
       confirmEmailBeforeDownload: false,
       retentionPeriod: "78 weeks"
     });

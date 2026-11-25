@@ -176,7 +176,7 @@ The service throws; it never calls `process.exit`. `apps/crons/src/index.ts` own
 `sendMediaApplicationReportEmail({ csvBuffer, reportDate, applicationCount }): Promise<void>`
 
 - Reads `GOVUK_NOTIFY_API_KEY`, `GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPLICATION_REPORT` and `MEDIA_APPLICATION_REPORT_RECIPIENT_EMAIL` from `process.env` when called, in small getters. Throws `<VAR> environment variable is not set` when one is missing. Throws `MEDIA_APPLICATION_REPORT_RECIPIENT_EMAIL is not a valid email address` if a basic email regex fails.
-- `link_to_file = NotifyClient.prepareUpload(csvBuffer, { filename: "media-application-report-<YYYY-MM-DD>.csv", confirmEmailBeforeDownload: false, retentionPeriod: "78 weeks" })`, matching PIP. The `filename` must end in `.csv` so Notify serves it as a CSV and not as a `.txt` download.
+- `link_to_file = NotifyClient.prepareUpload(csvBuffer, { filename: "media-applications-<YYYY-MM-DD>.csv", confirmEmailBeforeDownload: false, retentionPeriod: "78 weeks" })`, matching PIP. The `filename` must end in `.csv` so Notify serves it as a CSV and not as a `.txt` download.
 - If `csvBuffer.length` exceeds 2 MB (Notify's limit), throw `Media application report CSV exceeds the 2MB GOV.UK Notify limit` before calling Notify.
 - `notifyClient.sendEmail(templateId, recipient, { personalisation: { link_to_file, env_name }, reference: "media-application-report-<timestamp>" })`. These are the two fields PIP's template `c59c90a3-…` uses.
 - `env_name` is `process.env.ENV_NAME` mapped to a display name (`prod`→Production, `aat`→AAT, `demo`→Demo, `perftest`→Perftest, otherwise the raw value; `Local` when unset), mirroring PIP's `convertEnvironmentName`. `reportDate` and `applicationCount` are only used for the log line and reference.
