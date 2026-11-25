@@ -1,8 +1,5 @@
 {
   "applicationInsights": {
     "connectionString": "APPLICATION_INSIGHTS_CONNECTION_STRING"
-  },
-  "pipApi": {
-    "url": "PIP_API_URL"
   }
 }

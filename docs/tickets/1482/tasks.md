@@ -24,6 +24,17 @@
 - [ ] T13: Hold a review with Platform Ops, security and SDS. Record the approvals in `write-up.md`
 - [ ] T14: Delete the PoC Job and probe pod. Close the spike PR without merging the crons script. Remove the aat role assignment if it won't carry forward
 
+### Part 2: Migration area and PIP connection check (merged to master)
+- [x] T20: Export `requestAccessToken`, `sendOutboundRequest`, `discardBody` and their types from `@hmcts/third-party-user`
+- [x] T21: Create `libs/pip-api-client` (package.json, tsconfig, root tsconfig path) with `allowed-hosts.ts`, `url-validation.ts`, `connection-check.ts` and unit tests
+- [x] T22: Add the "Migration" tile to `system-admin-dashboard` en/cy and update its tests
+- [x] T23: Add the `/migration` hub page (controller, template, en/cy, unit and template tests)
+- [x] T24: Add the `/migration-connection-check` page (controller with validation, result mapping and audit metadata, template, en/cy, unit and template tests)
+- [x] T25: Helm: `PIP_API_ALLOWED_HOSTS` and the four secret mounts in `apps/web/helm/values.yaml`; preview value in `values.preview.template.yaml`; add `@hmcts/pip-api-client` to `apps/web/package.json`
+- [x] T26: E2E: no new spec (ticket owner's decision). Only the Migration tile is added to `system-admin-dashboard.spec.ts`, whose tile count would otherwise fail
+- [x] T27: Remove the crons PoC (`pip-connectivity-check*.ts`, the `pipApi.url` mapping, the crons secret mounts)
+- [ ] T28: In aat, test `https://pip-data-management.staging.platform.hmcts.net/locations/111` from the page and record the result in `write-up.md`
+
 ### Follow-up tickets to raise
 - [ ] T15: Entra: create the app role on the CaTH AI API app registration and assign it in aat, demo, perftest and prod (draft in follow-up-tickets.md)
 - [ ] T16: Application: `libs/pip-api-client` with a token client (in-memory cache, refresh before expiry), a typed client for the SDS endpoints, paging, a concurrency cap, `429`/`5xx` backoff, and Helm env and secret mounts on the consuming workload only (draft in follow-up-tickets.md)

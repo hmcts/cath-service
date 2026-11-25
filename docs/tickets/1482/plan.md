@@ -264,3 +264,218 @@ Security and IG:
 PROD dependencies:
 
 12. Do the `cath-service-api-client-*` secrets and `app-tenant-id` exist in the `cath-prod` vault, and is the PROD subscription ready (#1095)?
+
+---
+
+# Part 2: System admin "Migration" area with a PIP connection check
+
+> **Added 2026-11-25.** In scope for #1482 (decided by the ticket owner, no separate ticket). This replaces the crons Job as the way to test the connection. It runs from the web pod (the workload the dashboard actually runs in) and needs no kubectl rights. Unlike the PoC, this code is **merged to master**.
+
+## 7. Technical Approach
+
+### User journey
+
+```
+System Admin Dashboard ──(tile "Migration")──> /migration
+   /migration ──(tile "Check PIP connection")──> /migration-connection-check
+   /migration-connection-check: enter a URL ──"Test connection"──> POST, same page shows the result
+```
+
+### Behaviour
+
+1. A system admin enters a full URL, for example `https://pip-data-management.staging.platform.hmcts.net/locations/111`, and selects **Test connection**.
+2. The server validates the URL against an **allow-list of hosts** for the environment (`PIP_API_ALLOWED_HOSTS`). The field stays free text, so Account Management and other PIP APIs can be checked later just by adding their host to the list.
+3. Only after the URL passes validation, the server gets a client-credentials token (CaTH AI API app registration) and sends `GET <url>` with `Authorization: Bearer <token>`. Redirects are not followed. The response body is discarded unread.
+4. The page shows: URL tested, Result, HTTP status, Response time, Access token obtained (Yes/No).
+
+### Why an allow-list rather than any URL
+
+The request is made from inside CFT with the CaTH client's bearer token. Without a host allow-list, anyone with system admin could:
+- make the server call internal-only addresses (for example `169.254.169.254` Azure metadata, cluster services), which is server-side request forgery;
+- send the CaTH token to a host they control and reuse it, including the `api.publisher.user` role it already carries.
+
+The allow-list keeps the field free text while making both impossible. The list comes from config, not the form.
+
+### URL rules (in this order)
+
+| Rule | Error (en) |
+|---|---|
+| Not empty | Enter a URL |
+| At most 2,048 characters | URL must be 2,048 characters or fewer |
+| Parses as a URL, scheme `https`, no username or password | Enter a URL in the correct format, like https://pip-data-management.staging.platform.hmcts.net/locations/1 |
+| Host (case-insensitive, port must be empty or 443) exactly matches an entry in `PIP_API_ALLOWED_HOSTS` | Enter a URL for an allowed PIP API: `<host list>` |
+
+If `PIP_API_ALLOWED_HOSTS` is empty or the client secrets are missing, the page shows an inset text "The PIP connection check is not set up in this environment", and a POST returns that message without calling anything.
+
+### Result mapping
+
+| Outcome | Result shown (en) |
+|---|---|
+| Token request failed (HTTP status, invalid response, network error, timeout) | Could not get an access token, with the reason |
+| `2xx` | Connected |
+| `3xx` | Redirected (not followed) |
+| `401` | Not authorised: the PIP API rejected the access token |
+| `403` | Forbidden: the token was accepted but does not have the required role |
+| `404` | Not found: check the URL |
+| `429` | Rate limited |
+| `5xx` | The PIP API returned an error |
+| Other status | The PIP API returned status N |
+| Network error (`ENOTFOUND`, `ECONNREFUSED`, ...) | Could not reach the PIP API, with the safe error code |
+| Timeout | The request timed out |
+
+Unauthenticated endpoints such as `/locations/{id}` return `200` without a token, so "Connected" there proves the network path only. The page says this in hint text: "A Connected result only proves authentication if the endpoint requires a token."
+
+### Configuration (web)
+
+| Value | Source | Env var |
+|---|---|---|
+| Allowed hosts | `apps/web/helm/values.yaml` `environment`, templated per env with the same `aat`→`staging` / `perftest`→`test` map as `B2C_CUSTOM_DOMAIN` | `PIP_API_ALLOWED_HOSTS` (comma-separated) |
+| Tenant | `cath` vault `app-tenant-id` | `AZURE_TENANT_ID` |
+| Client ID / secret / scope | `cath` vault `cath-service-api-client-id` / `-secret` / `-scope` | `CATH_SERVICE_API_CLIENT_ID` / `_SECRET` / `_SCOPE` |
+
+```yaml
+PIP_API_ALLOWED_HOSTS: 'pip-data-management.{{ get (dict `aat` `staging` `perftest` `test`) .Values.global.environment | default .Values.global.environment }}.platform.hmcts.net,pip-account-management.{{ get (dict `aat` `staging` `perftest` `test`) .Values.global.environment | default .Values.global.environment }}.platform.hmcts.net'
+```
+
+`TBC:` prod hostnames (PIP prod may not follow `<app>.<env>.platform.hmcts.net`) and the preview value (`preview` has no PIP env; set it to the staging hosts in `values.preview.template.yaml`).
+
+### Security trade-off: client secret in the web pod
+
+The web pod does not mount `cath-service-api-client-secret` today. Mounting it means a compromise of the public-facing web app also exposes a credential that holds `api.publisher.user` (publish to CaTH). This is accepted for non-prod to unblock testing. Before PROD, security decides between accepting it and a separate app registration with only the PIP read role (clarification 8). The page is system-admin only and the secret never leaves the server.
+
+### Audit
+
+Unlike the #829 subscriber test (not audited), this takes a free-text URL and sends a credential, so each test **is** audit-logged: action `PIP_CONNECTION_CHECK`, with the host, the path, the result category and the status. No query string (it could carry identifiers), no body, no token.
+
+### Code reuse
+
+`libs/third-party-user` already has the pieces, unexported: `sendOutboundRequest()` (timeout, `redirect: "manual"`, safe error codes), `discardBody()` and `requestAccessToken()`. Export them (and their result types) from `@hmcts/third-party-user` and use them from the new lib, rather than copying them. If reviewers prefer, move them to a small `libs/oauth-client` later. That is a pure move.
+
+### What happens to the crons PoC
+
+This PR now merges to master, and the crons version would mount the client secret into every crons job. Remove `apps/crons/src/pip-connectivity-check*.ts`, the `pipApi.url` config mapping and the four crons secret mounts. The web page replaces them. The crons evidence already gathered stays in `write-up.md`.
+
+## 8. Implementation Details
+
+### File structure
+
+```
+libs/pip-api-client/                         # @hmcts/pip-api-client (follow-up T16 starts here)
+├── package.json  tsconfig.json
+└── src/
+    ├── index.ts                             # exports checkPipConnection, validatePipUrl, getAllowedPipHosts, types
+    ├── allowed-hosts.ts (+ .test.ts)        # parse PIP_API_ALLOWED_HOSTS
+    ├── url-validation.ts (+ .test.ts)       # rules table above -> { kind: "valid", url } | { kind: "invalid", error }
+    └── connection-check.ts (+ .test.ts)     # token + GET, timing, result union
+
+libs/third-party-user/src/index.ts           # + export requestAccessToken, sendOutboundRequest, discardBody, types
+
+apps/web/src/pages/(system-admin)/
+├── system-admin-dashboard/en.ts, cy.ts      # + "Migration" tile -> /migration
+├── migration/                               # hub page: one tile for now
+│   ├── index.ts  index.njk  en.ts  cy.ts  index.test.ts  index.njk.test.ts
+└── migration-connection-check/
+    ├── index.ts  index.njk  en.ts  cy.ts  index.test.ts  index.njk.test.ts
+
+apps/web/helm/values.yaml                    # + PIP_API_ALLOWED_HOSTS, + 4 secret mounts
+helm/cath-service/values.preview.template.yaml  # PIP_API_ALLOWED_HOSTS = staging hosts
+root tsconfig.json                           # + @hmcts/pip-api-client path
+apps/web/package.json                        # + "@hmcts/pip-api-client": "workspace:*"
+e2e-tests/tests/system-admin/system-admin-dashboard.spec.ts   # + Migration tile in tileData (no new E2E spec)
+```
+
+### Lib API
+
+```typescript
+// libs/pip-api-client/src/url-validation.ts
+export function validatePipUrl(input: string, allowedHosts: readonly string[]): UrlValidationResult;
+
+export type UrlValidationResult =
+  | { kind: "valid"; url: URL }
+  | { kind: "invalid"; error: "required" | "too-long" | "invalid-format" | "host-not-allowed" };
+
+// libs/pip-api-client/src/connection-check.ts
+export async function checkPipConnection(url: URL): Promise<PipConnectionResult>;
+
+export type PipConnectionResult =
+  | { kind: "not-configured" }
+  | { kind: "token-failure"; reason: TokenFailureReason }
+  | { kind: "response"; status: number; durationMs: number }
+  | { kind: "network-error"; code?: string; durationMs: number }
+  | { kind: "timeout"; durationMs: number };
+```
+
+`checkPipConnection` reads the four env vars, builds `https://login.microsoftonline.com/<tenant>/oauth2/v2.0/token`, calls `requestAccessToken`, then `sendOutboundRequest(url, { method: "GET", headers: { Authorization, Accept: "application/json" } })`, then `discardBody`. It times only the GET. No token caching: a manual button press does not need it (YAGNI).
+
+### Controller (`migration-connection-check/index.ts`)
+
+```typescript
+export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];
+export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), postHandler];
+```
+
+- `getHandler`: renders the form, the allowed hosts as hint text, and the not-configured inset text when needed.
+- `postHandler`: `validatePipUrl(req.body.url, getAllowedPipHosts())`. If invalid, re-render with `govukErrorSummary` and the inline error, keeping the entered value. If valid, `checkPipConnection(url)`, set `req.auditMetadata` (action `PIP_CONNECTION_CHECK`, host/path/result/status), map to a result view model with the locale, and re-render with the value kept so the admin can retry.
+
+### Templates
+
+- `migration/index.njk`: reuses the `admin-tile` markup from the dashboard, with one tile "Check PIP connection".
+- `migration-connection-check/index.njk`:
+  - back link to `/migration`, `h1` "Check connection to PIP";
+  - `govukInput` (`id`/`name` `url`, `type: "url"`, `spellcheck: false`, `autocomplete: "off"`), label "URL to test", hint listing the allowed hosts and the unauthenticated-endpoint caveat;
+  - `govukButton` "Test connection";
+  - result: the existing `.connection-result` block (`role="alert"`, success/fail modifier from #829) containing a `govukSummaryList` with URL tested, Result, HTTP status, Response time, Access token obtained.
+- Welsh: every string in `cy.ts`, with `[WELSH TRANSLATION REQUIRED: '...']` placeholders where no translation is available yet, as the repo does elsewhere.
+
+## 9. Error Handling & Edge Cases
+
+| Case | Handling |
+|---|---|
+| Not a system admin | `requireRole` returns the standard 403 or sign-in redirect |
+| `PIP_API_ALLOWED_HOSTS` unset or empty | Not-configured inset text. POST calls nothing |
+| Client secrets missing | `checkPipConnection` returns `not-configured`. Nothing is sent |
+| `http://`, a username/password in the URL, `javascript:`, invalid URL | `invalid-format` |
+| Host on the list but with a different port, for example `:8443` | `host-not-allowed` |
+| Look-alike hosts (`pip-data-management.staging.platform.hmcts.net.evil.com`, `evil.com#@pip-...`) | `URL.hostname` exact match, so `host-not-allowed` |
+| Upper-case host, trailing dot | Lower-cased. A trailing dot is stripped before comparing |
+| Allowed host redirects elsewhere | `redirect: "manual"` shows "Redirected (not followed)". The token never goes to the redirect target |
+| Very slow endpoint | `sendOutboundRequest` 30 s timeout, shown as "The request timed out" |
+| Large or personal-data response | Body discarded unread. Never rendered or logged |
+| Token or secret in logs or the audit record | Never logged. Only the host, path, status and category |
+| Double submit | Harmless: a read-only GET |
+
+## 10. Acceptance Criteria Mapping (Part 2)
+
+| Requirement | Verified by |
+|---|---|
+| Dashboard has a "Migration" tile leading to a Migration page with a "Check PIP connection" tile | Dashboard and migration page unit and template tests. E2E journey |
+| Free-text URL plus **Test connection** shows the HTTP status and a plain-English result | Controller and lib unit tests. Manual run in aat against `/locations/111` |
+| Only allow-listed PIP hosts are called | `url-validation.test.ts` (look-alike, port, scheme, credentials cases). E2E enters a disallowed host |
+| Works for Account Management later without code changes | Allow-list is config. Unit test with two hosts |
+| No token, secret or response body is shown or logged | Lib tests assert the logs and audit metadata |
+| Welsh and accessibility | Template tests with `cy`. Locale-key parity. Axe in E2E |
+
+## 11. Test Scenarios (Part 2)
+
+Unit (Vitest):
+- `allowed-hosts`: comma-separated parsing, whitespace, empty entries, case.
+- `url-validation`: each rule and each edge case in section 9.
+- `connection-check`: not configured; token failures (status, invalid body, network, timeout); `GET` with the bearer header and `redirect: "manual"`; each status category; network error code; timeout; body discarded; nothing secret logged.
+- Controllers: GET renders the form and hosts; GET not-configured; POST invalid keeps the value and shows the errors; POST valid calls the check and sets audit metadata; Welsh content.
+- Templates (`*.njk.test.ts`): error summary present and absent; result block success and fail modifiers; summary list rows; not-configured inset; Welsh; locale-key parity for both pages.
+
+E2E: **no new spec**. The ticket owner decided against an E2E test for this page. The only E2E change is adding the Migration tile to `system-admin-dashboard.spec.ts`, which asserts the exact tile list. The real connection is checked by hand in aat (T28) and recorded in `write-up.md`.
+
+### As built (2026-11-25)
+
+- `requestAccessToken` now takes `TokenRequestConfig` (`tokenUrl`, `clientId`, `clientSecret`, `scope`), a `Pick` of `OauthConfig`, so callers don't need a `destinationUrl`. No behaviour change for #829.
+- The page's locale key for validation messages is `errorMessages`, not `errors`. Spreading the locale into the template with an `errors` key made `{% if errors %}` true and rendered an empty error summary.
+- `PIP_API_ALLOWED_HOSTS` in `apps/web/helm/values.yaml` renders empty for `prod`. Preview sets the staging hosts explicitly.
+- Audit: a successful check logs `PIP_CONNECTION_CHECK` with `Host; Path; Result; Status`. A validation failure logs `PIP_CONNECTION_CHECK` with the validation message. A POST when not configured is not logged.
+
+## 12. CLARIFICATIONS NEEDED (Part 2)
+
+13. PROD hostnames for PIP Data Management and Account Management (for `PIP_API_ALLOWED_HOSTS`)? **Decided:** prod empty until confirmed.
+14. Security: accept the client secret in the web pod for non-prod now? **Decided:** yes. PROD decided under clarification 8.
+15. Should the check be audit-logged? Default: yes (section 7).
+16. OK to remove the crons PoC from this PR now that the web page replaces it? **Decided:** yes, removed.

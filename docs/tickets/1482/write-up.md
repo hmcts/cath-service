@@ -73,7 +73,9 @@ Same shape. Differences:
 
 ## 5. Proof of concept
 
-**Code:** `apps/crons/src/pip-connectivity-check.ts` (`SCRIPT_NAME=pip-connectivity-check`), spike branch only, not merged to master. It:
+> **Superseded 2026-11-25.** The crons script below has been removed from the branch. The connection is now tested from the system admin page `/migration-connection-check` (see `plan.md` Part 2), which runs in the web pod. Evidence from either is valid.
+
+**Code (removed):** `apps/crons/src/pip-connectivity-check.ts` (`SCRIPT_NAME=pip-connectivity-check`). It:
 
 - reads `AZURE_TENANT_ID`, `CATH_SERVICE_API_CLIENT_ID`, `CATH_SERVICE_API_CLIENT_SECRET` and `CATH_SERVICE_API_CLIENT_SCOPE` (mounted from `cath-aat`), plus `PIP_API_URL` and `PIP_API_CHECK_PATH`;
 - gets a client-credentials token, then makes one `GET` to the SDS endpoint with a 10-second timeout;
