@@ -1,4 +1,5 @@
 {% extends "layouts/base-template.njk" %}
+{% from "components/back-button-history.njk" import backButtonHistory %}
 {% from "govuk/components/radios/macro.njk" import govukRadios %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
@@ -15,34 +16,33 @@
     {% endif %}
 
     <form method="post" novalidate>
-      <div class="govuk-form-group{% if errors %} govuk-form-group--error{% endif %}">
-        {{ govukRadios({
-          name: "viewOption",
-          fieldset: {
-            legend: {
-              text: title,
-              isPageHeading: true,
-              classes: "govuk-fieldset__legend--l"
+      {{ govukRadios({
+        name: "viewOption",
+        fieldset: {
+          legend: {
+            text: title,
+            isPageHeading: true,
+            classes: "govuk-fieldset__legend--l"
+          }
+        },
+        errorMessage: { text: errors[0].text } if errors else false,
+        items: [
+          {
+            value: "court-tribunal",
+            html: courtTribunalLabel,
+            hint: {
+              text: courtTribunalHint
             }
           },
-          items: [
-            {
-              value: "court-tribunal",
-              html: courtTribunalLabel,
-              hint: {
-                text: courtTribunalHint
-              }
-            },
-            {
-              value: "sjp-case",
-              html: sjpCaseLabel,
-              hint: {
-                text: sjpCaseHint
-              }
+          {
+            value: "sjp-case",
+            html: sjpCaseLabel,
+            hint: {
+              text: sjpCaseHint
             }
-          ]
-        }) }}
-      </div>
+          }
+        ]
+      }) }}
 
       {{ govukButton({
         text: continueButton
@@ -51,4 +51,9 @@
 
   </div>
 </div>
+{% endblock %}
+
+{% block bodyEnd %}
+  {{ super() }}
+  {{ backButtonHistory(cspNonce) }}
 {% endblock %}

@@ -138,6 +138,17 @@ test.describe("Create Media Account", () => {
       buffer: Buffer.from("fake image data")
     });
 
+    // Submit without accepting the terms to get an error, then fix it
+    await page.getByRole("button", { name: /continue/i }).click();
+    const errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toBeVisible();
+    await expect(page.locator("#termsAccepted-error")).toBeVisible();
+
+    await fileInput.setInputFiles({
+      name: "press-card.jpg",
+      mimeType: "image/jpeg",
+      buffer: Buffer.from("fake image data")
+    });
     await page.check('input[name="termsAccepted"]');
     await page.getByRole("button", { name: /continue/i }).click();
 
@@ -146,6 +157,15 @@ test.describe("Create Media Account", () => {
     await expect(page.locator(".govuk-panel__title")).toContainText("Details submitted");
     await expect(page.getByRole("heading", { name: "What happens next" })).toBeVisible();
     await expect(page.locator("main .govuk-body").first()).toContainText("HMCTS will review your details");
+
+    // Press back: the fixed error must not reappear, and the answers entered are still shown
+    await page.goBack();
+    await expect(page).toHaveURL(/\/create-media-account/);
+    await expect(errorSummary).toBeHidden();
+    await expect(page.locator("#termsAccepted-error")).toBeHidden();
+    await expect(page.locator("#fullName")).toHaveValue("Jane Doe");
+    await expect(page.locator("#email")).toHaveValue("jane.doe@example.com");
+    await expect(page.locator("#employer")).toHaveValue("The Guardian");
   });
 
   test("should verify database record created after successful submission @nightly", async ({ page }) => {

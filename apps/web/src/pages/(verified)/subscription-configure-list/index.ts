@@ -2,6 +2,7 @@ import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmct
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres-prisma";
 import { getAllSubscriptionsByUserId, getSubscriptionListTypesByUserId } from "@hmcts/subscriptions";
+import { noStore } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -116,8 +117,8 @@ const postHandler = async (req: Request, res: Response) => {
   res.redirect("/subscription-configure-list-language");
 };
 
-export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];
-export const POST: RequestHandler[] = [requireAuth(), blockUserAccess(), postHandler];
+export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), noStore(), getHandler];
+export const POST: RequestHandler[] = [requireAuth(), blockUserAccess(), noStore(), postHandler];
 
 interface ListTypeGroup {
   letter: string;

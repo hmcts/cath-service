@@ -95,7 +95,7 @@ test.describe("Search Page", () => {
     await expect(errorSummaryHeading).toBeVisible();
 
     // Verify error message link
-    const errorLink = errorSummary.getByRole("link", { name: /there is nothing matching your criteria/i });
+    const errorLink = errorSummary.getByRole("link", { name: /please enter a court or tribunal name/i });
     await expect(errorLink).toBeVisible();
     await expect(errorLink).toHaveAttribute("href", "#location");
 
@@ -107,9 +107,25 @@ test.describe("Search Page", () => {
     const autocompleteInput = page.getByRole("combobox");
     await expect(autocompleteInput).toHaveClass(/govuk-input--error/);
 
+    // Verify inline error is shown above the hint
+    const inlineError = page.locator("#location-error");
+    await expect(inlineError).toContainText(/please enter a court or tribunal name/i);
+
     // Accessibility check with error state
     const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
+
+    // Recover from the error, then press back: as in pip-frontend, the search page comes back empty with no error
+    await autocompleteInput.fill(testLocationName);
+    await page.getByRole("option", { name: testLocationName }).click();
+    await continueButton.click();
+    await expect(page).toHaveURL(/\/summary-of-publications\?locationId=/);
+
+    await page.goBack();
+    await expect(page).toHaveURL("/search");
+    await expect(errorSummary).toBeHidden();
+    await expect(page.locator("#location-error")).toBeHidden();
+    await expect(autocompleteInput).toHaveValue("");
   });
 
   test("user can search in Welsh and sees Welsh validation errors @nightly", async ({ page }) => {
@@ -154,7 +170,7 @@ test.describe("Search Page", () => {
     await expect(errorSummary).toBeVisible();
 
     // Verify Welsh error message
-    const errorLink = errorSummary.getByRole("link", { name: /nid oes dim sy'n cyfateb i'ch meini prawf/i });
+    const errorLink = errorSummary.getByRole("link", { name: /rhowch enw'r llys neu'r tribiwnlys/i });
     await expect(errorLink).toBeVisible();
 
     // Verify language toggle still shows English (still in Welsh mode)

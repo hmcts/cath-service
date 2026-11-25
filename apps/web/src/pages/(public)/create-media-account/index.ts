@@ -1,4 +1,5 @@
 import { createMediaApplication, type MulterRequest, saveIdProofFile, updateProofOfIdPath, validateForm } from "@hmcts/public-pages";
+import { NO_STORE_CACHE_CONTROL } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -25,6 +26,7 @@ export const GET = async (req: Request, res: Response) => {
 
   delete req.session.mediaApplicationSubmitted;
 
+  res.setHeader("Cache-Control", NO_STORE_CACHE_CONTROL);
   res.render("create-media-account/index", {
     ...content,
     errors: errors.length > 0 ? errors : undefined,
@@ -70,8 +72,14 @@ export const POST = async (req: MulterRequest, res: Response) => {
       await updateProofOfIdPath(applicationId, filePath, file.originalname);
     }
 
+    // Kept so that going back to the form shows the submitted answers without the old errors.
     req.session.mediaApplicationSubmitted = true;
-    delete req.session.mediaApplicationForm;
+    req.session.mediaApplicationForm = {
+      name: name!.trim(),
+      email: email!.trim(),
+      employer: employer!.trim(),
+      termsAccepted: true
+    };
     delete req.session.mediaApplicationErrors;
     await saveSession(req.session);
 

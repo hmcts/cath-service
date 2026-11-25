@@ -1,4 +1,5 @@
 {% extends "layouts/base-template.njk" %}
+{% from "components/back-button-history.njk" import backButtonHistory %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/input/macro.njk" import govukInput %}
 {% from "govuk/components/inset-text/macro.njk" import govukInsetText %}
@@ -68,4 +69,9 @@
 
   </div>
 </div>
+{% endblock %}
+
+{% block bodyEnd %}
+  {{ super() }}
+  {{ backButtonHistory(cspNonce) }}
 {% endblock %}

@@ -106,7 +106,8 @@ export const en = {
     locationLine3: "WC2A 2LL",
     importantInfoText:
       "Hearings in the Senior Courts Costs Office will be held in person unless the notice of hearing has directed otherwise.\n\nOpen justice is a fundamental principle of our justice system. You can attend a public hearing in person or you can apply for permission to observe remotely.\n\nRequests to observe remotely a hearing that is taking place at The Senior Courts Costs Office should be made in good time direct to: scco@justice.gov.uk putting the hearing date and time in the subject box. You may be asked to provide further details and you must provide an email address to be sent an appropriate link for access.\n\nThe judge hearing the case will decide if it is appropriate for you to observe remotely. They will have regard to the interests of justice, the technical capacity for remote observation and what is necessary to secure the proper administration of justice.\n\nSometimes it is necessary for hearings to be held in private and you will not be able to observe remotely or in person. Members of the press are able to attend some private hearings.",
-    moreInfoLinkText: "For more information, please visit",
+    moreInfoLinkPrefix: "For more information, please visit",
+    moreInfoLinkText: "Observe a court or tribunal hearing",
     moreInfoLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing"
   },
   common: {

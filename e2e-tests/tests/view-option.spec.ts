@@ -40,6 +40,11 @@ test.describe("View Option Page", () => {
     await expect(errorLink).toBeVisible();
     await expect(errorLink).toHaveAttribute("href", "#viewOption");
 
+    // Verify inline error under the heading, linked to the radio group
+    const inlineError = page.locator("#viewOption-error");
+    await expect(inlineError).toContainText("An option must be selected");
+    await expect(page.getByRole("group", { name: /what do you want to do/i })).toHaveAttribute("aria-describedby", /viewOption-error/);
+
     // Accessibility check with error state
     let accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
@@ -58,6 +63,13 @@ test.describe("View Option Page", () => {
     // Accessibility check on search page
     accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
+
+    // Press back: the fixed error must not reappear, and the option chosen after the error stays selected
+    await page.goBack();
+    await expect(page).toHaveURL("/view-option");
+    await expect(errorSummary).toBeHidden();
+    await expect(inlineError).toBeHidden();
+    await expect(courtTribunalRadio).toBeChecked();
 
     // STEP 4: Test Welsh language support
     await page.goto("/view-option");
@@ -82,8 +94,9 @@ test.describe("View Option Page", () => {
     await welshContinueButton.click();
     await expect(page).toHaveURL(/.*\/view-option.*lng=cy/);
 
-    // Verify error summary in Welsh
+    // Verify error summary and inline error in Welsh
     await expect(errorSummary).toBeVisible();
+    await expect(page.locator("#viewOption-error")).toContainText("Rhaid dewis opsiwn");
 
     // Verify language is preserved after validation error
     await expect(languageToggle).toContainText("English");

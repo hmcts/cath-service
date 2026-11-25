@@ -10,6 +10,8 @@ export const cy = {
   backToTop: "Yn ôl i frig y dudalen",
   showFilters: "Dangos hidlwyr",
   hideFilters: "Cuddio hidlwyr",
+  azNavigationLabel: "A i Y o lysoedd a thribiwnlysoedd",
+  azNoResults: "(dim llysoedd na thribiwnlysoedd)",
   subJurisdictionLabels: {
     1: "Math o llys sifil",
     2: "Math o llys teulu",

@@ -84,16 +84,13 @@
   margin-top: 10px;
 }
 
-// Selected-filter tags: restyle MOJ's tag links back to the old solid blue pills
-// (previously .filter-tag / .filter-tag-remove) while keeping MOJ's accessible
-// remove-link semantics (a real link with a visually-hidden "Remove this filter").
+// Selected-filter tags: white background, black text and border, as MOJ's default and
+// pip-frontend (agreed a11y mock-up, #1621 item 2.4). MOJ's own rules supply the colours,
+// the black hover state and the remove cross; only layout is adjusted here.
 .moj-filter__tag {
   display: inline-flex;
   align-items: center;
   padding: 5px 10px;
-  border-radius: 3px;
-  background-color: #1d70b8;
-  color: #ffffff;
   font-size: 16px;
   font-weight: 400;
   line-height: 1.25;
@@ -102,11 +99,6 @@
   // box: cap the tag at the container width and break the string to fit.
   max-width: 100%;
   overflow-wrap: anywhere;
-}
-
-.moj-filter__tag:hover {
-  color: #ffffff;
-  background-color: #003078;
 }
 
 .moj-filter__tag:focus {

@@ -100,9 +100,9 @@
       <p>{{ court.inPersonHearingsText }}</p>
     {% endif %}
 
-    {# Senior Courts Costs Office - moreInfoLinkText #}
-    {% if court.moreInfoLinkText %}
-      <p>{{ court.moreInfoLinkText }} <a href="{{ court.moreInfoLinkUrl }}">{{ court.moreInfoLinkUrl }}</a></p>
+    {# Senior Courts Costs Office - moreInfoLinkPrefix #}
+    {% if court.moreInfoLinkPrefix %}
+      <p>{{ court.moreInfoLinkPrefix }} <a href="{{ court.moreInfoLinkUrl }}">{{ court.moreInfoLinkText }}</a>.</p>
     {% endif %}
   </div>
 

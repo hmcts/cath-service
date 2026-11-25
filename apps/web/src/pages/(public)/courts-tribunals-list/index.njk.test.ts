@@ -177,6 +177,32 @@ describe("courts-tribunals-list template", () => {
       expect($(".az-navigation__letter--disabled").length).toBeGreaterThan(0);
     });
 
+    it("should label the A-Z navigation and announce letters with no courts in English", () => {
+      const data = buildData(en, "en");
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("nav.az-navigation").attr("aria-label")).toBe(en.azNavigationLabel);
+      expect($(".az-navigation__letter--disabled")).toHaveLength(25);
+      $(".az-navigation__letter--disabled").each((_, el) => {
+        expect($(el).find(".govuk-visually-hidden").text().trim()).toBe(en.azNoResults);
+      });
+      expect($('.az-navigation a[href="#letter-A"] .govuk-visually-hidden')).toHaveLength(0);
+    });
+
+    it("should label the A-Z navigation and announce letters with no courts in Welsh", () => {
+      const data = buildData(cy, "cy");
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("nav.az-navigation").attr("aria-label")).toBe(cy.azNavigationLabel);
+      expect($(".az-navigation__letter--disabled").first().find(".govuk-visually-hidden").text().trim()).toBe(cy.azNoResults);
+    });
+
+    it("should keep English and Welsh locale keys in parity", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+    });
+
     it("should render selected filter tags as MOJ filter tags with accessible remove links", () => {
       const data = buildData(en, "en", {
         selectedJurisdictions: [1],

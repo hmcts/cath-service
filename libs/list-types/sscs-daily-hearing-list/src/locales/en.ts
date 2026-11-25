@@ -27,6 +27,7 @@ export const en = {
   factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
   importantInformationTitle: "Important information",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
+  importantInformationLinkText: "Observe a court or tribunal hearing",
   searchCasesTitle: "Search Cases",
   searchCasesLabel: "Search by appeal reference, hearing type, appellant, or other details",
   tableHeaders: {

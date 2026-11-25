@@ -18,7 +18,7 @@ export const cy = {
   restrictedReportingOrdersText:
     "Nid yw'r ffaith bod achos wedi ei gynnwys yn Rhestr y Wasg yn gwarantu na fydd yn destun gorchymyn adrodd cyfyngedig. Dylai aelodau'r Wasg sicrhau nad oes gorchymyn yn bodoli ar achos unigol cyn cyflwyno deunydd i'w gyhoeddi.",
   importantInformationLinkPrefix: "Am fwy o wybodaeth, ewch i",
-  importantInformationLinkText: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
+  importantInformationLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   searchCasesTitle: "Chwilio achosion",
   searchCasesLabel: "Chwilio yn ôl cyfeirnod achos, enw achos, lleoliad, neu fanylion eraill",

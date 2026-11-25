@@ -22,7 +22,7 @@ export const en = {
     "Sometimes it is necessary for hearings to be held in private and you will not be able to observe remotely or in person. Members of the press are able to attend some private hearings.",
   openJusticeMoreInfo: "For more information, please visit",
   openJusticeLink: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
-  openJusticeLinkText: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
+  openJusticeLinkText: "Observe a court or tribunal hearing",
   beforeJudge: "Before",
   startTime: "Start Time",
   caseRef: "Case Ref",

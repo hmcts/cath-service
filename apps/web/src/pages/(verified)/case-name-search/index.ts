@@ -1,5 +1,6 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { searchByCaseName } from "@hmcts/subscriptions";
+import { noStore } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -69,5 +70,5 @@ const postHandler = async (req: Request, res: Response) => {
   return res.redirect("/case-search-results");
 };
 
-export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];
-export const POST: RequestHandler[] = [requireAuth(), blockUserAccess(), postHandler];
+export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), noStore(), getHandler];
+export const POST: RequestHandler[] = [requireAuth(), blockUserAccess(), noStore(), postHandler];

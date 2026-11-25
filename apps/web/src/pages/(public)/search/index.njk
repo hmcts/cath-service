@@ -1,5 +1,8 @@
 {% extends "layouts/base-template.njk" %}
-{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "components/back-button-history.njk" import backButtonHistory %}
+{% from "govuk/components/label/macro.njk" import govukLabel %}
+{% from "govuk/components/hint/macro.njk" import govukHint %}
+{% from "govuk/components/error-message/macro.njk" import govukErrorMessage %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
@@ -17,26 +20,32 @@
     <h1 class="govuk-heading-l">{{ title }}</h1>
 
     <form method="post" novalidate>
-      {{ govukInput({
-        id: "location",
-        name: "locationId",
-        type: "text",
-        label: {
+      {#- Built by hand rather than with govukInput: the agreed design puts the
+          inline error above the hint, and govukInput always renders the hint first. -#}
+      <div class="govuk-form-group{% if errors %} govuk-form-group--error{% endif %}">
+        {{ govukLabel({
           text: "Search",
-          classes: "govuk-visually-hidden"
-        },
-        hint: {
+          classes: "govuk-visually-hidden",
+          for: "location"
+        }) }}
+        {% if errors %}
+          {{ govukErrorMessage({
+            id: "location-error",
+            text: errors[0].text
+          }) }}
+        {% endif %}
+        {{ govukHint({
+          id: "location-hint",
           text: searchHint
-        },
-        errorMessage: { text: "" } if errors else undefined,
-        value: (preselectedLocation.welshName if locale === "cy" else preselectedLocation.name) if preselectedLocation else "",
-        attributes: {
-          "data-location-id": preselectedLocation.id if preselectedLocation else "",
-          "data-autocomplete": "true",
-          "data-locale": locale,
-          "data-no-results-message": noResultsFound
-        }
-      }) }}
+        }) }}
+        <input class="govuk-input{% if errors %} govuk-input--error{% endif %}" id="location" name="locationId" type="text"
+          value="{{ ((preselectedLocation.welshName if locale === "cy" else preselectedLocation.name) if preselectedLocation else "") }}"
+          aria-describedby="{{ "location-error location-hint" if errors else "location-hint" }}"
+          data-location-id="{{ preselectedLocation.id if preselectedLocation else "" }}"
+          data-autocomplete="true"
+          data-locale="{{ locale }}"
+          data-no-results-message="{{ noResultsFound }}">
+      </div>
 
       {{ govukButton({
         text: continueButton
@@ -49,4 +58,9 @@
 
   </div>
 </div>
+{% endblock %}
+
+{% block bodyEnd %}
+  {{ super() }}
+  {{ backButtonHistory(cspNonce) }}
 {% endblock %}

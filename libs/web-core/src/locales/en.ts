@@ -2,6 +2,7 @@ export const en = {
   govUk: "GOV.UK",
   phase: "beta",
   back: "Back",
+  opensInNewTab: "(opens in new tab)",
   navigation: {
     signIn: "Sign in"
   },

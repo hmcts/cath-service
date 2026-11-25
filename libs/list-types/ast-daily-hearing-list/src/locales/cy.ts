@@ -15,7 +15,7 @@ export const cy = {
     "Bydd partïon a chynrychiolwyr y Tribiwnlys Cymorth i Geiswyr Lloches yn cael gwybod yn uniongyrchol am y trefniadau ar gyfer gwrando achosion o bell. Dylai unrhyw un arall sydd â diddordeb mewn ymuno â'r gwrandawiad o bell gysylltu â'r Swyddfa Tribiwnlys Cymorth i Geiswyr Lloches yn uniongyrchol, cyn dyddiad y gwrandawiad, trwy anfon e-bost at asylumsupporttribunals@justice.gov.uk fel y gellir gwneud trefniadau. Dylai'r manylion canlynol gael eu cynnwys yn llinell pwnc yr e-bost [OBSERVER/MEDIA] REQUEST – [case reference] – [hearing date]. Os yw'r achos yn cael ei wrando'n breifat neu os yw'n destun cyfyngiad adrodd, bydd pawb yn cael ei hysbysu am hyn."
   ],
   importantInformationLinkPrefix: "Am fwy o wybodaeth, ewch i",
-  importantInformationLinkText: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
+  importantInformationLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   searchCasesTitle: "Chwilio achosion",
   searchCasesLabel: "Chwilio yn ôl apelydd, cyfeirnod apêl, neu fanylion eraill",
