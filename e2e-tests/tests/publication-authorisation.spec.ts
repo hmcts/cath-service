@@ -167,7 +167,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       expect(await publicationLinks.count()).toBe(initialCount);
 
       // 8. Logout and verify loss of access to PRIVATE and CLASSIFIED publications
-      // The local session is destroyed before /logout hands a CFT_IDAM user to IDAM endSession, so the IDAM leg is not waited for
+      // /logout sends the id_token_hint to IDAM endSession, which returns the browser to /session-logged-out
       await page.goto("/logout");
 
       await page.goto(court.summaryUrl);
