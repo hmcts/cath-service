@@ -172,7 +172,7 @@ const CASES = [
     npmDep({ depName: "axios", currentValue: "1.18.1", currentVersion: "1.18.1", newValue: "1.19.0", updateType: "minor" })
   ],
 
-  // Node moves .nvmrc, the root Dockerfile base image and three workflow files at once.
+  // Node moves .nvmrc and the root Dockerfile base image at once; workflows read .nvmrc.
   [
     "node via nvm",
     false,

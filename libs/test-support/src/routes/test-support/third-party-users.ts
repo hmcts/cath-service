@@ -1,4 +1,5 @@
 import { prisma } from "@hmcts/postgres-prisma";
+import { isThirdPartyUserStatus } from "@hmcts/third-party-user";
 import type { Request, Response } from "express";
 
 export const GET = async (_req: Request, res: Response) => {
@@ -19,19 +20,24 @@ export const GET = async (_req: Request, res: Response) => {
 
 export const POST = async (req: Request, res: Response) => {
   try {
-    const { name } = req.body;
+    const { name, status } = req.body;
 
     if (!name || typeof name !== "string") {
       return res.status(400).json({ error: "name is required" });
     }
 
+    if (status !== undefined && !isThirdPartyUserStatus(status)) {
+      return res.status(400).json({ error: "status must be PENDING, ACTIVE or SUSPENDED" });
+    }
+
     const user = await prisma.thirdPartyUser.create({
-      data: { name }
+      data: { name, status }
     });
 
     return res.status(201).json({
       id: user.id,
       name: user.name,
+      status: user.status,
       createdAt: user.createdAt
     });
   } catch (error) {

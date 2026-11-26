@@ -12,12 +12,29 @@ on:
         type: string
         description: "GitHub Actions runner group"
         default: "azure-nonprod"
+      run-publication-smoke:
+        required: false
+        type: boolean
+        description: "Run the publication upload smoke spec (needs test-support enabled on the API)"
+        default: false
+      ui-baseline-url:
+        required: false
+        type: string
+        default: ""
+        description: "Where the hosted parity check is, when the deploy deployed it (a release of its own)"
+
+# The publication smoke step needs repo secrets AZURE_CLIENT_ID and AZURE_TENANT_ID (CI OIDC identity),
+# passed via secrets: inherit, plus Key Vault cath-bootstrap-aat secrets app-tenant,
+# cath-service-api-client-id and cath-service-api-client-secret (API client with api.publisher.user).
 
 jobs:
   smoke-test:
     name: Smoke Test
     runs-on:
       group: ${{ inputs.runner-group }}
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Decode deployment URLs
@@ -73,6 +90,26 @@ jobs:
             echo "No web URL found, skipping web health check"
           fi
 
+      # The hosted parity check (apps/ui-baseline), when this deploy deployed it. A failure is a warning:
+      # ui-baseline is a test tool, and its deploy never fails CaTH's either (job.helm-deploy.yml).
+      - name: Health check - UI baseline
+        if: inputs.ui-baseline-url != ''
+        env:
+          UI_BASELINE_URL: ${{ inputs.ui-baseline-url }}
+        run: |
+          HEALTH_URL="${UI_BASELINE_URL}/health"
+          echo "Checking ui-baseline health: ${HEALTH_URL}"
+          for i in $(seq 1 10); do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "${HEALTH_URL}" || echo "000")
+            echo "Attempt ${i}/10: HTTP Status ${HTTP_STATUS}"
+            if [ "${HTTP_STATUS}" = "200" ]; then
+              echo "ui-baseline is healthy"
+              exit 0
+            fi
+            if [ "${i}" -lt 10 ]; then sleep 10; fi
+          done
+          echo "::warning::The hosted parity check (ui-baseline) did not answer at ${HEALTH_URL}. CaTH itself is unaffected."
+
       - name: Health check - API
         run: |
           URLS_JSON='${{ steps.urls.outputs.urls }}'
@@ -104,9 +141,72 @@ jobs:
             echo "No API URL found, skipping API health check"
           fi
 
+      - name: Checkout code
+        if: inputs.run-publication-smoke
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        if: inputs.run-publication-smoke
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Enable Corepack
+        if: inputs.run-publication-smoke
+        run: corepack enable
+
+      # Install before Azure login so dependency install scripts never see the az session or API credentials
+      - name: Install dependencies
+        if: inputs.run-publication-smoke
+        run: yarn install --immutable
+
+      - name: Azure login (OIDC)
+        if: inputs.run-publication-smoke
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      # Credentials are fetched into this step's shell only, not $GITHUB_ENV, so no other step can read them
+      - name: Publication upload smoke test
+        id: publication-smoke
+        if: inputs.run-publication-smoke
+        run: |
+          set -euo pipefail
+
+          URLS_JSON='${{ steps.urls.outputs.urls }}'
+          CATH_SERVICE_API_URL=$(echo "${URLS_JSON}" | jq -r '.api // empty')
+          if [ -z "${CATH_SERVICE_API_URL}" ]; then
+            echo "::error::No API URL found in deployment"
+            exit 1
+          fi
+
+          KV="cath-bootstrap-aat"
+          fetch() { az keyvault secret show --vault-name "$KV" --name "$1" --query value -o tsv; }
+
+          CATH_SERVICE_API_CLIENT_SECRET=$(fetch cath-service-api-client-secret)
+          echo "::add-mask::${CATH_SERVICE_API_CLIENT_SECRET}"
+          AZURE_TENANT_ID=$(fetch app-tenant)
+          CATH_SERVICE_API_CLIENT_ID=$(fetch cath-service-api-client-id)
+
+          export CATH_SERVICE_API_URL AZURE_TENANT_ID CATH_SERVICE_API_CLIENT_ID CATH_SERVICE_API_CLIENT_SECRET
+          yarn workspace e2e-tests run test:smoke
+
+      - name: Upload smoke test results
+        uses: actions/upload-artifact@v6
+        if: always() && steps.publication-smoke.outcome == 'failure'
+        with:
+          name: smoke-test-results
+          path: e2e-tests/test-results/
+          retention-days: 7
+
       - name: Smoke test summary
         run: |
           echo "=========================================="
           echo "Smoke Test Summary"
           echo "=========================================="
           echo "All health checks passed successfully!"
+          if [ "${{ inputs.run-publication-smoke }}" = "true" ]; then
+            echo "Publication upload smoke test passed"
+          fi

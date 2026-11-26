@@ -1,11 +1,10 @@
-import { getBlobProperties } from "@hmcts/azure-blob";
 import { calculatePagination, determineListType, extractPressCases, type SjpJson } from "@hmcts/list-types-common";
-import { prisma } from "@hmcts/postgres-prisma";
-import { canAccessPublicationData, getPublicationJson, PROVENANCE_LABELS, resolveListType } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getPublicationJson, PROVENANCE_LABELS, resolveListType } from "@hmcts/publication";
 import { sjpPressListCy as cy, sjpPressListEn as en, validateSjpPressList } from "@hmcts/sjp-press-list";
 import type { Request, RequestHandler, Response } from "express";
 import type { ParsedQs } from "qs";
 import { renderAccessDenied } from "../publication-access.js";
+import { hasDownloadableFiles } from "../sjp-download-shared.js";
 import { createRequireVerifiedWithProvenance } from "./require-verified-with-provenance.js";
 
 const CASES_PER_PAGE = 1000;
@@ -23,7 +22,7 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   try {
-    const artefact = await prisma.artefact.findUnique({ where: { artefactId } });
+    const artefact = await getArtefactById(artefactId);
     if (!artefact) {
       return res.status(404).render("errors/404", { en, cy, locale });
     }
@@ -55,8 +54,8 @@ const getHandler = async (req: Request, res: Response) => {
     const { prosecutors, postcodes, hasLondonPostcodes, londonPostcodes } = extractFilterOptions(allCases);
 
     const isVerifiedUser = req.user?.role === "VERIFIED";
-    const [pdfProps, excelProps] = await Promise.all([getBlobProperties(`${artefactId}.pdf`), getBlobProperties(`${artefactId}.xlsx`)]);
-    const downloadDisclaimerUrl = isVerifiedUser && (pdfProps || excelProps) ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
+    const hasFiles = isVerifiedUser && (await hasDownloadableFiles(artefactId));
+    const downloadDisclaimerUrl = hasFiles ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
 
     res.render("sjp-press-list", {
       en,

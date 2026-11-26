@@ -31,6 +31,7 @@ export interface SjpCasePublic {
 
 export interface SjpCasePress extends Omit<SjpCasePublic, "offence"> {
   dateOfBirth: Date | null;
+  rawDateOfBirth: string | null;
   age: number | null;
   reference: string | null;
   address: string | null;
@@ -85,8 +86,8 @@ export async function getLatestSjpLists(): Promise<SjpListMetadata[]> {
  * Gets SJP list metadata by artefact ID
  */
 export async function getSjpListById(artefactId: string): Promise<SjpListMetadata | null> {
-  const artefact = await prisma.artefact.findUnique({
-    where: { artefactId }
+  const artefact = await prisma.artefact.findFirst({
+    where: { artefactId, listType: { isHidden: false } }
   });
 
   if (!artefact) return null;

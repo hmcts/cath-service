@@ -1,10 +1,16 @@
 import { expect, type Page, test } from "@playwright/test";
 import { axeCheck } from "../../utils/axe-helper.js";
-import { generateTestId } from "../../utils/dynamic-test-data.js";
+import { createUniqueTestLocation, generateTestId } from "../../utils/dynamic-test-data.js";
 import { switchLanguage } from "../../utils/language-helpers.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 import { prefixName } from "../../utils/test-prefix.js";
-import { createOrGetListType } from "../../utils/test-support-api.js";
+import { createOrGetListType, createTestArtefact } from "../../utils/test-support-api.js";
+
+// Mirror apps/web/src/pages/(system-admin)/manage-list-type/cy.ts and list-type-visibility/cy.ts.
+// Update these when the Welsh Language Unit supplies the translations.
+const WELSH_HIDE_BUTTON = "[WELSH TRANSLATION REQUIRED: 'Hide list type']";
+const WELSH_HIDE_TITLE = "[WELSH TRANSLATION REQUIRED: 'Are you sure you want to hide this list type?']";
+const WELSH_HIDE_ERROR = "[WELSH TRANSLATION REQUIRED: 'Select yes if you want to hide this list type']";
 
 // Real list types are read-only: the edit and delete journeys act on a prefixed list type each test creates,
 // which global-teardown deletes (TEST_* names would be neither cleaned up nor reconciled by the deploy seed)
@@ -224,5 +230,116 @@ test.describe("Manage List Types", () => {
     await page.getByRole("button", { name: "Confirm" }).click();
     await page.waitForURL(`**/manage-list-type?id=${listType.id}`);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  });
+
+  test("admin can hide and show a list type @nightly", async ({ page }) => {
+    const listType = await createOwnListType();
+    const location = await createUniqueTestLocation({ namePrefix: "Hide List Type Court", welshNamePrefix: "Llys Cuddio Math Rhestr" });
+    const now = Date.now();
+    const { artefactId } = await createTestArtefact({
+      locationId: location.locationId.toString(),
+      listTypeId: listType.id,
+      contentDate: new Date(now).toISOString(),
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: new Date(now - 24 * 60 * 60 * 1000).toISOString(),
+      displayTo: new Date(now + 24 * 60 * 60 * 1000).toISOString(),
+      isFlatFile: false,
+      provenance: "MANUAL_UPLOAD"
+    });
+    const summaryUrl = `/summary-of-publications?locationId=${location.locationId}`;
+    const publicationLink = () => page.getByRole("link", { name: new RegExp(listType.friendlyName) });
+    const ownRow = () => page.getByRole("row").filter({ has: page.getByRole("cell", { name: listType.friendlyName, exact: true }) });
+
+    // The publication is public while the list type is visible
+    await page.goto(summaryUrl);
+    await expect(publicationLink()).toHaveCount(1);
+    const originalLinkText = (await publicationLink().textContent())?.trim();
+
+    // The list shows the current state with a tag
+    await page.goto("/manage-list-types");
+    await expect(ownRow().getByText("Visible", { exact: true })).toBeVisible();
+    const listPageResults = await axeCheck(page).analyze();
+    expect(listPageResults.violations).toEqual([]);
+
+    await openOwnListType(page, listType);
+    await expect(page.getByText("Visible", { exact: true })).toBeVisible();
+
+    // Open the hide confirmation page
+    await page.getByRole("button", { name: "Hide list type" }).click();
+    await page.waitForURL(`**/list-type-visibility?id=${listType.id}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Are you sure you want to hide this list type?");
+    const confirmPageResults = await axeCheck(page).analyze();
+    expect(confirmPageResults.violations).toEqual([]);
+
+    // Welsh: switch on the list type page, then follow the Hide link without ?lng so the saved locale is used.
+    // Exact matches on the cy strings so the check fails if English is served instead.
+    await page.goto(`/manage-list-type?id=${listType.id}`);
+    await switchLanguage(page, "cy");
+    await page.getByRole("button", { name: WELSH_HIDE_BUTTON, exact: true }).click();
+    await page.waitForURL(`**/list-type-visibility?id=${listType.id}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(WELSH_HIDE_TITLE);
+    await expect(page.getByRole("button", { name: "Cadarnhau" })).toBeVisible();
+    await page.getByRole("button", { name: "Cadarnhau" }).click();
+    await expect(page.getByRole("alert")).toContainText(WELSH_HIDE_ERROR);
+    await switchLanguage(page, "en");
+
+    // Validation: no selection
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await expect(page.getByRole("alert")).toContainText("Select yes if you want to hide this list type");
+    const errorPageResults = await axeCheck(page).analyze();
+    expect(errorPageResults.violations).toEqual([]);
+
+    // Keyboard: the error summary link moves focus to the first radio
+    await page.getByRole("alert").getByRole("link", { name: "Select yes if you want to hide this list type" }).press("Enter");
+    await expect(page.getByLabel("Yes", { exact: true })).toBeFocused();
+
+    // No returns to the list type unchanged
+    await page.getByLabel("No", { exact: true }).check();
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await page.waitForURL(`**/manage-list-type?id=${listType.id}`);
+    await expect(page.getByText("Visible", { exact: true })).toBeVisible();
+
+    // Yes hides it
+    await page.getByRole("button", { name: "Hide list type" }).click();
+    await page.getByLabel("Yes", { exact: true }).check();
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await page.waitForURL("**/list-type-visibility-success?state=hidden");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("List type hidden");
+    const successPageResults = await axeCheck(page).analyze();
+    expect(successPageResults.violations).toEqual([]);
+
+    await page.getByRole("link", { name: "Manage list types" }).click();
+    await page.waitForURL("**/manage-list-types");
+    await expect(ownRow().getByText("Hidden", { exact: true })).toBeVisible();
+
+    // The publication is gone from the public site, including by direct URL
+    await page.goto(summaryUrl);
+    await expect(publicationLink()).toHaveCount(0);
+    const hiddenResponse = await page.goto(`/publication/${artefactId}`);
+    expect(hiddenResponse?.status()).toBe(404);
+
+    // The hide is audited
+    await page.goto("/audit-log-list?actions=HIDE_LIST_TYPE");
+    await expect(page.getByRole("cell", { name: "HIDE_LIST_TYPE" }).first()).toBeVisible();
+
+    // Show it again
+    await page.goto(`/manage-list-type?id=${listType.id}`);
+    await page.getByRole("button", { name: "Show list type" }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Are you sure you want to show this list type?");
+    await page.getByLabel("Yes", { exact: true }).check();
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await page.waitForURL("**/list-type-visibility-success?state=visible");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("List type shown");
+
+    await page.goto("/manage-list-types");
+    await expect(ownRow().getByText("Visible", { exact: true })).toBeVisible();
+
+    // The publication is restored unchanged
+    await page.goto(summaryUrl);
+    await expect(publicationLink()).toHaveCount(1);
+    expect((await publicationLink().textContent())?.trim()).toBe(originalLinkText);
+    const restoredResponse = await page.goto(`/publication/${artefactId}`);
+    expect(restoredResponse?.status()).not.toBe(404);
   });
 });

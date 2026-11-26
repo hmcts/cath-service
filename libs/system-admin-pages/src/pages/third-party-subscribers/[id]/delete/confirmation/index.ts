@@ -60,7 +60,7 @@ export const postHandler = async (req: Request, res: Response) => {
     return res.redirect(`/third-party-subscribers/${id}/manage${lngParam}`);
   }
 
-  await deleteSecrets(id);
+  await deleteSecrets(user.name, id);
   await deleteThirdPartyUser(id);
 
   req.auditMetadata = {

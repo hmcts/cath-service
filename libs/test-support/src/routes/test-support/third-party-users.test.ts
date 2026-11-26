@@ -69,20 +69,49 @@ describe("third-party-users routes", () => {
     it("should create a third party user", async () => {
       // Arrange
       mockRequest.body = { name: "New Corp" };
-      const mockUser = { id: "00000000-0000-0000-0000-000000000001", name: "New Corp", createdAt: new Date() };
+      const mockUser = { id: "00000000-0000-0000-0000-000000000001", name: "New Corp", status: "PENDING", createdAt: new Date() };
       vi.mocked(prisma.thirdPartyUser.create).mockResolvedValue(mockUser as any);
 
       // Act
       await POST(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(prisma.thirdPartyUser.create).toHaveBeenCalledWith({ data: { name: "New Corp" } });
+      expect(prisma.thirdPartyUser.create).toHaveBeenCalledWith({ data: { name: "New Corp", status: undefined } });
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(mockResponse.json).toHaveBeenCalledWith({
         id: "00000000-0000-0000-0000-000000000001",
         name: "New Corp",
+        status: "PENDING",
         createdAt: mockUser.createdAt
       });
+    });
+
+    it("should create a third party user with the given status", async () => {
+      // Arrange
+      mockRequest.body = { name: "New Corp", status: "ACTIVE" };
+      const mockUser = { id: "00000000-0000-0000-0000-000000000001", name: "New Corp", status: "ACTIVE", createdAt: new Date() };
+      vi.mocked(prisma.thirdPartyUser.create).mockResolvedValue(mockUser as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.thirdPartyUser.create).toHaveBeenCalledWith({ data: { name: "New Corp", status: "ACTIVE" } });
+      expect(mockResponse.status).toHaveBeenCalledWith(201);
+      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ status: "ACTIVE" }));
+    });
+
+    it.each([["active"], ["DELETED"], [""], [123]])("should return 400 when status is %j", async (status) => {
+      // Arrange
+      mockRequest.body = { name: "New Corp", status };
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({ error: "status must be PENDING, ACTIVE or SUSPENDED" });
+      expect(prisma.thirdPartyUser.create).not.toHaveBeenCalled();
     });
 
     it("should return 400 when name is missing", async () => {

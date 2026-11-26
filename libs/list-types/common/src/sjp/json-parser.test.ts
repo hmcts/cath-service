@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import type { SjpJson } from "./json-parser.js";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { SjpHearing, SjpJson } from "./json-parser.js";
 import { determineListType, extractAllHearings, extractCaseCount, extractPressCases, extractPublicCases } from "./json-parser.js";
 
 const createMockHearing = (includeDoB: boolean = false) => ({
@@ -61,9 +61,28 @@ const createMockJson = (includeDoB: boolean = false): SjpJson => ({
   ]
 });
 
+const createMockJsonWithDob = (dateOfBirth: string | undefined): SjpJson => {
+  const json = createMockJson(false);
+  const hearing = json.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0];
+  const accused = hearing.party[0];
+  const withDob: SjpHearing = {
+    ...hearing,
+    party: [{ ...accused, individualDetails: { ...accused.individualDetails, dateOfBirth, age: 35 } }, ...hearing.party.slice(1)]
+  };
+  return {
+    ...json,
+    courtLists: [{ courtHouse: { courtRoom: [{ session: [{ sittings: [{ hearing: [withDob] }] }] }] } }]
+  };
+};
+
 describe("determineListType", () => {
   it("should return press when hearing has date of birth", () => {
     const json = createMockJson(true);
+    expect(determineListType(json)).toBe("press");
+  });
+
+  it("should return press when the accused's date of birth can't be parsed", () => {
+    const json = createMockJsonWithDob("unknown");
     expect(determineListType(json)).toBe("press");
   });
 
@@ -206,6 +225,7 @@ describe("extractPressCases", () => {
     expect(cases[0].reference).toBe("REF123");
     expect(cases[0].address).toBe("123 Test Street, London, Greater London, SW1A 1AA");
     expect(cases[0].dateOfBirth).toBeInstanceOf(Date);
+    expect(cases[0].rawDateOfBirth).toBe("01/01/1990");
     expect(cases[0].age).toBeGreaterThan(0);
     expect(cases[0].offences).toHaveLength(1);
     expect(cases[0].offences[0].offenceTitle).toBe("Speeding");
@@ -532,6 +552,65 @@ describe("extractPressCases", () => {
     expect(cases[0].offences).toHaveLength(2);
     expect(cases[0].offences[0].offenceTitle).toBe("Speeding");
     expect(cases[0].offences[1].offenceTitle).toBe("No insurance");
+  });
+
+  describe("date of birth parsing", () => {
+    it.each([
+      { input: "13/01/1990", expected: [1990, 1, 13], raw: "13/01/1990" },
+      { input: "1/2/1990", expected: [1990, 2, 1], raw: "1/2/1990" },
+      { input: "1990-01-13", expected: [1990, 1, 13], raw: "1990-01-13" },
+      { input: "01-01-1901", expected: [1901, 1, 1], raw: "01-01-1901" },
+      { input: "01-02-1990", expected: [1990, 2, 1], raw: "01-02-1990" },
+      { input: "13-01-1990", expected: [1990, 1, 13], raw: "13-01-1990" },
+      { input: "29/02/1992", expected: [1992, 2, 29], raw: "29/02/1992" },
+      { input: " 13/01/1990 ", expected: [1990, 1, 13], raw: "13/01/1990" },
+      { input: "31/02/1990", expected: null, raw: "31/02/1990" },
+      { input: "29/02/1991", expected: null, raw: "29/02/1991" },
+      { input: "00/01/1990", expected: null, raw: "00/01/1990" },
+      { input: "13/13/1990", expected: null, raw: "13/13/1990" },
+      { input: "1990-01-13T00:00:00Z", expected: null, raw: "1990-01-13T00:00:00Z" },
+      { input: "01/02/90", expected: null, raw: "01/02/90" },
+      { input: "unknown", expected: null, raw: "unknown" },
+      { input: "   ", expected: null, raw: null },
+      { input: "", expected: null, raw: null },
+      { input: undefined, expected: null, raw: null }
+    ])("should parse $input as $expected and keep $raw as sent", ({ input, expected, raw }) => {
+      // Arrange
+      const json = createMockJsonWithDob(input);
+
+      // Act
+      const [pressCase] = extractPressCases(json);
+
+      // Assert
+      const parsed = pressCase.dateOfBirth && [pressCase.dateOfBirth.getFullYear(), pressCase.dateOfBirth.getMonth() + 1, pressCase.dateOfBirth.getDate()];
+      expect(parsed).toEqual(expected);
+      expect(pressCase.rawDateOfBirth).toBe(raw);
+    });
+
+    describe("in a timezone behind UTC", () => {
+      const originalTz = process.env.TZ;
+
+      beforeEach(() => {
+        // Behind UTC, a UTC-midnight date would fall on the previous local day
+        process.env.TZ = "America/New_York";
+      });
+
+      afterEach(() => {
+        process.env.TZ = originalTz;
+      });
+
+      it.each(["13/01/1990", "1990-01-13", "13-01-1990"])("should build %s at local midnight on the same day", (input) => {
+        // Arrange
+        const json = createMockJsonWithDob(input);
+
+        // Act
+        const [pressCase] = extractPressCases(json);
+
+        // Assert
+        expect(pressCase.dateOfBirth?.getTime()).toBe(new Date(1990, 0, 13).getTime());
+        expect(pressCase.dateOfBirth?.getDate()).toBe(13);
+      });
+    });
   });
 });
 
