@@ -1,7 +1,7 @@
 {% from "govuk/components/phase-banner/macro.njk" import govukPhaseBanner %}
 
 {% set bannerHtml %}
-  <span class="app-phase-banner__feedback">{{ feedback.part1 }}<a class="govuk-link" href="{{ feedback.link }}{{ pageUrl }}" target="_blank" rel="noopener noreferrer">{{ feedback.part2 }}</a> {{ feedback.newTab }}{{ feedback.part3 }}</span>
+  <span class="app-phase-banner__feedback">{{ feedback.part1 }}<a class="govuk-link" href="{{ feedback.link }}{{ pageUrl }}" target="_blank" rel="noopener noreferrer">{{ feedback.part2 }} {{ feedback.newTab }}</a>{{ feedback.part3 }}</span>
   {% if languageToggle and language %}
     <a class="govuk-link app-phase-banner__language" href="{{ languageToggle.link }}" lang="{{ otherLocale }}">{{ language.switch }}</a>
   {% endif %}

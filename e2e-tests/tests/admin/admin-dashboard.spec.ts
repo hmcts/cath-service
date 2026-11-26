@@ -57,7 +57,7 @@ test.describe("Admin Dashboard", () => {
 
     // Admin phase banner: feedback link warns about the new tab; admins get no language toggle
     const phaseBanner = page.locator(".govuk-phase-banner");
-    await expect(phaseBanner.getByRole("link", { name: "feedback", exact: true })).toHaveAttribute("target", "_blank");
+    await expect(phaseBanner.getByRole("link", { name: "feedback (opens in a new tab)", exact: true })).toHaveAttribute("target", "_blank");
     await expect(phaseBanner).toContainText("feedback (opens in a new tab)");
     await expect(phaseBanner.locator(".app-phase-banner__language")).toHaveCount(0);
 

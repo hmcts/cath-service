@@ -28,8 +28,8 @@ test.describe("Page Structure", () => {
     await expect(phaseBanner).toBeVisible();
     const betaTag = phaseBanner.locator(".govuk-phase-banner__content__tag");
     await expect(betaTag).toHaveText("beta");
-    // Only "feedback" is the link; the new tab warning is plain text after it
-    const feedbackLink = phaseBanner.getByRole("link", { name: "feedback", exact: true });
+    // The new tab warning is part of the link text, per the GOV.UK Design System
+    const feedbackLink = phaseBanner.getByRole("link", { name: "feedback (opens in a new tab)", exact: true });
     await expect(phaseBanner).toContainText("feedback (opens in a new tab) will help us to improve it.");
     await expect(feedbackLink).toBeVisible();
     await expect(feedbackLink).toHaveAttribute("href", /smartsurvey\.co\.uk/);
@@ -135,8 +135,8 @@ test.describe("Page Structure", () => {
     await expect(englishToggle).toHaveAttribute("lang", "en");
     await expect(englishToggle).not.toHaveAttribute("aria-label");
 
-    // Welsh feedback link, with the new tab warning as plain text after it
-    await expect(page.locator(".govuk-phase-banner").getByRole("link", { name: "adborth", exact: true })).toBeVisible();
+    // Welsh feedback link, with the new tab warning in the link text
+    await expect(page.locator(".govuk-phase-banner").getByRole("link", { name: "adborth (yn agor mewn tab newydd)", exact: true })).toBeVisible();
     await expect(page.locator(".govuk-phase-banner")).toContainText("adborth (yn agor mewn tab newydd)");
 
     // Verify footer links are in Welsh

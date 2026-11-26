@@ -56,12 +56,12 @@ describe("phase-banner-content template", () => {
   });
 
   describe("feedback link", () => {
-    it("should link only the word feedback and show the new tab warning as text after it", () => {
+    it("should include the new tab warning in the link text", () => {
       const { $ } = renderBanner(en);
       const link = $(".app-phase-banner__feedback a");
 
       expect(link).toHaveLength(1);
-      expect(link.text().trim()).toBe("feedback");
+      expect(link.text().trim()).toBe("feedback (opens in a new tab)");
       expect(link.attr("aria-label")).toBeUndefined();
       expect($(".app-phase-banner__feedback").text().trim()).toBe("This is a new service – your feedback (opens in a new tab) will help us to improve it.");
     });
@@ -79,8 +79,7 @@ describe("phase-banner-content template", () => {
       const { $ } = renderBanner(cy);
       const link = $(".app-phase-banner__feedback a");
 
-      expect(link.text().trim()).toBe(cy.feedback.part2);
-      expect($(".app-phase-banner__feedback").text()).toContain(`${cy.feedback.part2} ${cy.feedback.newTab}`);
+      expect(link.text().trim()).toBe(`${cy.feedback.part2} ${cy.feedback.newTab}`);
       expect(link.attr("aria-label")).toBeUndefined();
     });
 
