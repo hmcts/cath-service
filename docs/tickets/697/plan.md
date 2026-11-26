@@ -166,7 +166,7 @@ No pages, API endpoints or Prisma schema changes are needed.
 
 ### Stage 3: remove the old Azure Cache for Redis (one Terraform PR)
 
-- **Before you start.** The stage 2 release must be running in every environment (`/health` `X-Git-Sha`). Any running release that still maps `redis-url` would fail to mount its secrets once the secret is deleted. Open PRs must be rebased too, because their previews mount from `cath-aat`.
+- **Before you start.** The stage 2 release must be running in every environment. `/health` sends no `X-Git-Sha` header, so check that the image tag in cnp-flux-config `apps/cath/cath-{web,api}/cath-{web,api}.yaml` contains the merge commit (`git merge-base --is-ancestor`). Any running release that still maps `redis-url` would fail to mount its secrets once the secret is deleted. Open PRs must be rebased too, because their previews mount from `cath-aat`.
 - **What the PR removes.**
   - `module "redis"` (cnp-module-redis) and `data.azurerm_subnet.redis_private_endpoint`
   - `redis_subnet_override`, if nothing else uses it
@@ -182,7 +182,7 @@ No pages, API endpoints or Prisma schema changes are needed.
   - `createRedisClient(url)` in `@hmcts/redis`, used by `getRedisClient()` and the `apps/web/src/app.ts` session client.
   - Pinned `@redis/entraid` 5.12.1 and `@azure/identity` 4.10.0.
   - It does nothing until `REDIS_MI` is `"true"`.
-  - Before PR B, confirm it is running everywhere (`/health` `X-Git-Sha`).
+  - Before PR B, confirm it is running everywhere (the deployed image tag contains the PR A merge).
 - **PR B: aat only (`cnp-flux-config`).** Add `REDIS_MI: "true"` to `apps/cath/cath-web/aat.yaml` and `apps/cath/cath-api/aat.yaml`.
   - Flux redeploys aat. The client drops the key from `managed-redis-url` and authenticates as `cath-aat-mi`.
   - Soak for 1-2 days past the token's `exp` claim. This is the one staged step, because a refresh bug only shows after the token lifetime.
@@ -326,7 +326,7 @@ No stage changes `state.tf` (azurerm `~> 4.57` satisfies `>= 4.0.0`, and the mod
 - **A token refresh fails mid-life (stage 4).** The provider retries and calls `onReAuthenticationError`. If the token then expires, the proxy drops the connection and node-redis reconnects with a fresh token. Only the aat soak past `exp` shows this.
 - **`REDIS_MI=true` with a non-TLS URL.** The client fails fast at startup with a clear message, because Entra ID needs TLS.
 - **`REDIS_MI` set to something other than `true`/`false`.** `__format: boolean` decides how it parses. The unit test pins `"true"`, `"false"` and unset, and the chart and Flux always use the quoted `"true"`.
-- **`REDIS_MI=true` set before PR A is running.** The old image ignores it and keeps using the key, so it fails safe. The check is `/health` `X-Git-Sha` before PR B.
+- **`REDIS_MI=true` set before PR A is running.** The old image ignores it and keeps using the key, so it fails safe. The check before PR B is that the deployed image tag contains the PR A merge.
 - **Disabling keys plans as a replace (stage 5).** Only `~ update in-place` is acceptable. If it shows `-/+`, stop and escalate.
 - **Transactions and pub/sub during re-AUTH.** Neither is used. Do not add raw `MULTI`/`EXEC` through `sendCommand`.
 - **Memory pressure.** The eviction policy is `VolatileLRU`, and every CaTH key has a TTL. Prod on B3 is 3 GB, about 30 times the measured peak (Clarification 3). Re-check `usedmemory` once suppliers onboard (#1161).
@@ -363,7 +363,7 @@ The ticket has no formal acceptance criteria. I derived these from the ticket, t
 
    App Insights shows `*.redis.azure.net:10000`, and no `MOVED`, `CROSSSLOT`, `NOAUTH` or `WRONGPASS`. After 25 idle minutes there are 0 `SocketClosedUnexpectedlyError` (the PR #1402 check). After the prod release, the PROD smoke test and app health are green.
 4. **Stage 2 rollback rehearsal (aat).** Revert the mapping PR on a branch and deploy it to aat with a manual Flux deploy. The app runs on the old instance through `redis-url`. Then restore it. Skip this if stage 3 has already merged.
-5. **Old instance removed (stage 3).** Confirm `X-Git-Sha` shows the stage 2 release everywhere and open PRs are rebased. The plans destroy only the legacy cache, its private endpoint, its resource group and the four old secrets. After apply, E2E on aat passes.
+5. **Old instance removed (stage 3).** Confirm the deployed image tag contains the stage 2 merge everywhere and open PRs are rebased. The plans destroy only the legacy cache, its private endpoint, its resource group and the four old secrets. After apply, E2E on aat passes.
 6. **The client honours `REDIS_MI` (unit, stage 4 PR A).**
    - `false` and unset (default `false`): the URL is passed through and there is no provider.
    - `true`: credentials are stripped, the provider has the right scope and client id, and it is created once.
@@ -375,7 +375,7 @@ The ticket has no formal acceptance criteria. I derived these from the ticket, t
    - aat runs with `REDIS_MI=true` for 1-2 days past the token's `exp`, with no sustained Redis errors, and any `onReAuthenticationError` recovers.
    - A token failure on rollout shows as new pods crash-looping while old pods serve.
    - Rehearse the rollback: revert the Flux override, and aat goes back to key auth on the same image. Then reapply it.
-8. **Keys disabled (stage 5, every environment).** Confirm `X-Git-Sha` shows PR C everywhere and open PRs are rebased.
+8. **Keys disabled (stage 5, every environment).** Confirm the deployed image tag contains the PR C merge everywhere and open PRs are rebased.
    - Mandatory: the plans show only an in-place update of `access_keys_authentication_enabled` and the `managed-redis-url` destroy.
    - After apply, App Insights shows a short reconnect burst that recovers. E2E on aat and the PROD smoke test pass, and `az redisenterprise database show` (non-prod) reports keys disabled.
 

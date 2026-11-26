@@ -55,14 +55,14 @@ describe("generatePdfFromHtml", () => {
     });
   });
 
-  it("should set page content with networkidle0 wait", async () => {
+  it("should set page content and wait for the load event", async () => {
     const { generatePdfFromHtml } = await import("./generator.js");
     const html = "<html><body>Content</body></html>";
 
     await generatePdfFromHtml(html);
 
     expect(mockSetContent).toHaveBeenCalledWith(html, {
-      waitUntil: "networkidle0"
+      waitUntil: "load"
     });
   });
 

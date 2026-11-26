@@ -11,10 +11,15 @@ export const cy = {
   allowedProvenanceLabel: "[WELSH TRANSLATION REQUIRED: 'Allowed provenance']",
   isNonStrategicLabel: "[WELSH TRANSLATION REQUIRED: 'Is non-strategic']",
   subJurisdictionsLabel: "[WELSH TRANSLATION REQUIRED: 'Sub-jurisdictions']",
+  statusLabel: "[WELSH TRANSLATION REQUIRED: 'Status']",
+  visibleTag: "[WELSH TRANSLATION REQUIRED: 'Visible']",
+  hiddenTag: "[WELSH TRANSLATION REQUIRED: 'Hidden']",
   yesText: "[WELSH TRANSLATION REQUIRED: 'Yes']",
   noText: "[WELSH TRANSLATION REQUIRED: 'No']",
   editButton: "[WELSH TRANSLATION REQUIRED: 'Edit list type']",
   deleteButton: "[WELSH TRANSLATION REQUIRED: 'Delete list type']",
+  hideButton: "[WELSH TRANSLATION REQUIRED: 'Hide list type']",
+  showButton: "[WELSH TRANSLATION REQUIRED: 'Show list type']",
   notSet: "[WELSH TRANSLATION REQUIRED: 'Not set']",
   noneSelected: "[WELSH TRANSLATION REQUIRED: 'None selected']"
 };

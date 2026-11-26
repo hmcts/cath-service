@@ -3,6 +3,7 @@
   "description": "packageRules are order-dependent and last-match-wins, so a rule's position matters as much as its content. Changes here are asserted by scripts/verify-renovate-automerge.mjs, which resolves this file through Renovate's own applyPackageRules; it runs in .github/workflows/renovate-config.yml. Run it after editing.",
   "extends": ["config:recommended"],
   "automerge": false,
+  "labels": ["dependencies"],
   "platformAutomerge": false,
   "ignoreTests": false,
   "node": {
@@ -32,14 +33,6 @@
       "matchStrings": ["ARG COREPACK_VERSION=(?<currentValue>\\S+)"],
       "depNameTemplate": "corepack",
       "datasourceTemplate": "npm"
-    },
-    {
-      "description": "Update Node.js version in GitHub Actions",
-      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["node-version:\\s*['\"]?(?<currentValue>[0-9]+(?:\\.[0-9]+)?(?:\\.[0-9]+)?)['\"]?"],
-      "depNameTemplate": "node",
-      "datasourceTemplate": "node-version",
-      "versioningTemplate": "node"
     }
   ],
   "packageRules": [
@@ -78,12 +71,13 @@
       "automerge": false
     },
     {
-      "description": "Node.js version updates always need manual review - a single update moves .nvmrc, the root Dockerfile base image and three workflow files together.",
+      "description": "Node.js version updates always need manual review - a single update moves .nvmrc and the root Dockerfile base image together. Workflows read .nvmrc via node-version-file, so they follow without being edited. Capped below 25 to keep the service on the Node 24 LTS line; moving to a new major (26 is LTS and hmctspublic.azurecr.io/base/node:26-alpine exists) is a deliberate upgrade, not a Renovate bump. The cap is also needed because the Dockerfile regex manager resolves tags against Docker Hub, which publishes majors the HMCTS mirror may not (it needs auth to list tags, so Renovate cannot read it).",
       "matchPackageNames": ["node"],
+      "allowedVersions": "<25",
       "automerge": false
     }
   ],
   "constraints": {
-    "node": ">=22"
+    "node": ">=24"
   }
 }

@@ -1,5 +1,6 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/tag/macro.njk" import govukTag %}
 
 {% block page_content %}
   <div class="govuk-grid-row">
@@ -18,13 +19,21 @@
         <thead class="govuk-table__head">
         <tr class="govuk-table__row">
           <th scope="col" class="govuk-table__header">{{ nameColumnHeading }}</th>
-          <th scope="col" class="govuk-table__header"></th>
+          <th scope="col" class="govuk-table__header">{{ statusColumnHeading }}</th>
+          <th scope="col" class="govuk-table__header"><span class="govuk-visually-hidden">{{ actionColumnHeading }}</span></th>
         </tr>
         </thead>
         <tbody class="govuk-table__body">
         {% for listType in listTypes %}
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">{{ listType.name }}</td>
+            <td class="govuk-table__cell">
+              {% if listType.isHidden %}
+                {{ govukTag({ text: hiddenTag, classes: "govuk-tag--grey" }) }}
+              {% else %}
+                {{ govukTag({ text: visibleTag, classes: "govuk-tag--green" }) }}
+              {% endif %}
+            </td>
             <td class="govuk-table__cell govuk-table__cell--numeric">
               <a href="{{ listType.configureUrl }}" class="govuk-link">{{ configureLink }}</a>
             </td>

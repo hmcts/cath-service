@@ -68,15 +68,12 @@ import { createSimpleRouter } from "@hmcts-cft/simple-router";
 import cookieParser from "cookie-parser";
 import type { Express } from "express";
 import express from "express";
-import { createClient } from "redis";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const isLocalDev = process.env.LOCAL_DEV === "true";
 const helmValues = isLocalDev ? "values.dev.yaml" : "values.yaml";
 const chartPath = path.join(__dirname, `../helm/${helmValues}`);
-// Under Azure Cache for Redis's 10-minute idle timeout.
-const REDIS_PING_INTERVAL_MS = 300_000;
 
 export async function createApp(): Promise<Express> {
   await getPropertiesVolumeSecrets({ chartPath, omit: localEnvOverrides(), vaultUriSuffix: process.env.VAULT_URI_SUFFIX });
@@ -86,6 +83,8 @@ export async function createApp(): Promise<Express> {
   // before getPropertiesVolumeSecrets() has set env vars from Key Vault. If imported statically,
   // config caches stale default values for APPLICATION_INSIGHTS_CONNECTION_STRING and other KV secrets.
   const { authNavigationMiddleware, cftIdamHealthCheck, configurePassport, sessionTimeoutMiddleware } = await import("@hmcts/auth");
+  // Dynamic for the same reason: @hmcts/redis loads `config` at module scope.
+  const { createRedisClient } = await import("@hmcts/redis");
 
   const app = express();
   app.set("trust proxy", 1);
@@ -112,7 +111,10 @@ export async function createApp(): Promise<Express> {
       }
     })
   );
-  const redisClient = await getRedisClient(config);
+  // Session store client. The flag comes from this file's own config instance,
+  // loaded after the Key Vault secrets.
+  const redisClient = createRedisClient(process.env.REDIS_URL ?? config.get("redis.url"), config.get<boolean>("redis.managedIdentity"));
+  await redisClient.connect();
   app.use(expressSessionRedis({ redisConnection: redisClient }));
   app.locals.redisClient = redisClient;
 
@@ -243,15 +245,3 @@ function localEnvOverrides(): string[] {
     .filter(([, value]) => value !== undefined && value.trim() !== "")
     .map(([key]) => key);
 }
-
-// Session store client. Azure Cache for Redis closes connections that are idle
-// for 10 minutes, which node-redis logs as SocketClosedUnexpectedlyError, so it
-// pings to keep the connection open (#1033).
-const getRedisClient = async (config: { get: (key: string) => any }) => {
-  const url = process.env.REDIS_URL ?? config.get("redis.url");
-  const redisClient = createClient({ url, pingInterval: REDIS_PING_INTERVAL_MS });
-  redisClient.on("error", (err) => console.error("Redis Client Error", err));
-
-  await redisClient.connect();
-  return redisClient;
-};

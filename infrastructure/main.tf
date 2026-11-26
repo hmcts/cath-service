@@ -17,8 +17,7 @@ provider "azurerm" {
 # back to var.subscription. Since #1065 ithc and perftest also apply from
 # DCD-CNP-QA, so the override now matches their var.subscription, but it is
 # kept so the lookup doesn't depend on where an environment applies from. The
-# Managed Redis subnet lookup reads this alias in every environment; the legacy
-# cache's lookup only where local.redis_subnet_override is true.
+# Managed Redis subnet lookup reads this alias in every environment.
 provider "azurerm" {
   alias           = "core_infra"
   subscription_id = local.core_infra_subscription_id != null ? local.core_infra_subscription_id : var.subscription
