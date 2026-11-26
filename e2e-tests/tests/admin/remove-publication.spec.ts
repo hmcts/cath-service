@@ -110,11 +110,12 @@ test.describe("Remove Publication Flow", () => {
     await expect(page.locator('button:has-text("Parhau")')).toBeVisible();
 
     // STEP 6: Navigate back to English and select location
-    await page.goto("/remove-list-search");
+    // The locale is persisted in the session, so English must be requested explicitly
+    await page.goto("/remove-list-search?lng=en");
     if (page.url().includes("login.microsoftonline.com")) {
       await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
       await page.waitForURL("/admin-dashboard");
-      await page.goto("/remove-list-search");
+      await page.goto("/remove-list-search?lng=en");
     }
 
     const courtInput = page.getByRole("combobox", { name: /search by court or tribunal name/i });

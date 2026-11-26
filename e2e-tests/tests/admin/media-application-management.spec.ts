@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
@@ -5,12 +6,16 @@ import { generateTestEmail, prefixName } from "../../utils/test-prefix.js";
 import { createTestMediaApplication, getTestMediaApplication } from "../../utils/test-support-api.js";
 
 test.describe("Media Application Management", () => {
-  const approvalApplicantName = prefixName("Test Media User");
+  let approvalApplicantName: string;
   let approvalApplicationId: string;
   let rejectionApplicationId: string;
   let proofOfIdApplicationId: string;
 
   test.beforeAll(async () => {
+    // fullyParallel runs this hook once per worker and again on retry, so the name must be unique per run
+    // of the hook, otherwise the "View application for <name>" link matches several rows
+    approvalApplicantName = prefixName(`Test Media User ${randomUUID().slice(0, 8)}`);
+
     const approvalApp = (await createTestMediaApplication({
       name: approvalApplicantName,
       email: generateTestEmail("media-approval"),
