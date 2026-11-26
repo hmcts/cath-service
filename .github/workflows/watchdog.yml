@@ -286,11 +286,16 @@ jobs:
             // than retrying on every detection. The workflow's concurrency group is
             // what makes the read-modify-write of that comment safe.
             //
-            // Re-triage pauses, while sightings are still recorded, in three cases:
-            // a fix is already in review; a person has commented since the last
-            // triage, because they have picked it up and their word outranks another
-            // report; or it has been triaged again MAX_RETRIAGES times, by which point
+            // A trusted person's comment restarts the count too, the same as a triage
+            // attempt: whoever wrote it gets a clear stretch to act, and if it keeps
+            // firing after that the re-triage reads what they said, which outranks any
+            // report. Re-triage pauses, while sightings are still recorded, when a fix is
+            // already in review, and stops for good after MAX_RETRIAGES, by which point
             // more of the same evidence has stopped helping and a person has to decide.
+            //
+            // The limits reach the prompt through prior.json rather than being repeated
+            // in its text, so changing one here cannot leave the prompt describing the
+            // old value.
             const SIGHTINGS_MARKER = '<!-- watchdog-sightings -->';
             const RETRIAGE_AFTER_SIGHTINGS = 6;
             const MAX_RETRIAGES = 3;
@@ -300,6 +305,10 @@ jobs:
             // GitHub rejects a comment over 65536 characters.
             const SIGHTINGS_COMMENT_CHARS = 60000;
             const TRIAGE_ATTEMPT_HEADINGS = [TRIAGE_REPORT_HEADING, '## ⚠️ Triage did not complete'];
+            // The line the comment step puts on a re-triage's report. Counting those as
+            // well as the stored count keeps the cap when the sightings comment has to
+            // be replaced, which loses the stored count with it.
+            const RETRIAGE_NOTE = 'Triaged again:';
             const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
 
             // Samples and stack traces are cut down; seen_at is kept whole, because the
@@ -384,19 +393,20 @@ jobs:
                   const attempts = comments.filter(c => c.user?.type === 'Bot'
                     && TRIAGE_ATTEMPT_HEADINGS.some(h => c.body?.startsWith(h)));
                   const lastAttemptCommentAt = attempts.length ? attempts[attempts.length - 1].created_at : null;
-                  const lastAttemptAt = latest(existing.created_at, lastAttemptCommentAt, state.claimedAt);
-                  const sinceAttempt = (state.countFrom === lastAttemptAt ? state.sinceAttempt : 0) + 1;
-
                   const conclusions = conclusionsFrom(comments);
                   const lastHumanAt = conclusions.humanComments.at(-1)?.createdAt;
+                  const lastAttemptAt = latest(existing.created_at, lastAttemptCommentAt, state.claimedAt, lastHumanAt);
+                  const sinceAttempt = (state.countFrom === lastAttemptAt ? state.sinceAttempt : 0) + 1;
+                  const retriagesSoFar = Math.max(
+                    state.retriages,
+                    attempts.filter(c => c.body.includes(RETRIAGE_NOTE)).length);
+
                   const coveringPr = openFixPrs.find(p => p.checkIds.includes(finding.checkId));
                   const pausedBecause = coveringPr
                     ? `fix in review in #${coveringPr.number}`
-                    : lastHumanAt && Date.parse(lastHumanAt) > Date.parse(lastAttemptAt)
-                      ? 'a person has commented since the last triage'
-                      : state.retriages >= MAX_RETRIAGES
-                        ? `already triaged again ${state.retriages} times, so it needs a person`
-                        : null;
+                    : retriagesSoFar >= MAX_RETRIAGES
+                      ? `already triaged again ${retriagesSoFar} times, so it needs a person`
+                      : null;
                   const isRetriage = !pausedBecause && sinceAttempt >= RETRIAGE_AFTER_SIGHTINGS;
                   const nowIso = new Date().toISOString();
 
@@ -405,7 +415,7 @@ jobs:
                     claimedAt: isRetriage ? nowIso : state.claimedAt,
                     countFrom: isRetriage ? nowIso : lastAttemptAt,
                     sinceAttempt: isRetriage ? 0 : sinceAttempt,
-                    retriages: state.retriages + (isRetriage ? 1 : 0),
+                    retriages: retriagesSoFar + (isRetriage ? 1 : 0),
                     sightings: [...state.sightings, {
                       at: nowIso,
                       run: runUrl,
@@ -451,7 +461,12 @@ jobs:
                       lastTriageAt: conclusions.reportAt,
                       lastTriage: conclusions.report,
                       humanComments: conclusions.humanComments,
-                      retriageNumber: state.retriages + 1,
+                      retriageNumber: retriagesSoFar + 1,
+                      limits: {
+                        sightingsKept: SIGHTINGS_KEPT,
+                        rowsPerSighting: SIGHTING_ROWS,
+                        maxRetriages: MAX_RETRIAGES,
+                      },
                       newSightingCount: sinceAttempt,
                       sightings: sightingsStateIn(body).sightings,
                     },
@@ -613,11 +628,13 @@ jobs:
             its tracking issue is still open, and it has kept firing since. `lastTriage`
             is the report that triage wrote, `humanComments` is what people have said on
             the issue, and `sightings` is the times the watchdog has seen the problem
-            again, each with the rows it returned. It is the most recent 30 that fit on
-            the issue, not the whole history, and each holds at most 5 rows
+            again, each with the rows it returned. It is only the most recent sightings
+            that fit on the issue, at most `limits.sightingsKept`, not the whole
+            history, and each holds at most `limits.rowsPerSighting` rows
             (`rowsOmitted` says how many more there were), so do not read a start date
             or a gap into where the list begins. `newSightingCount` is how many came
-            since the last triage, and `retriageNumber` is which re-triage this is.
+            since the last triage or the last comment from a person, and
+            `retriageNumber` is which re-triage this is.
 
             Each row carries `seen_at`: when each occurrence happened and on which pod.
             It holds at most 20 entries, and when a row's count is higher they are an
@@ -719,9 +736,9 @@ jobs:
             human decision and `alerted` is false — the channel has never been told about
             it. A re-triage that reaches the same conclusion on a problem the channel
             already knows about does not need repeating there; the issue holds it. The
-            exception is `retriageNumber` 3: the watchdog stops re-triaging after that,
-            so if it still needs a human decision, notify, and say it is now waiting on
-            a person.
+            exception is when `retriageNumber` equals `limits.maxRetriages`: the watchdog
+            stops re-triaging after that, so if it still needs a human decision, notify,
+            and say it is now waiting on a person.
 
             Set notify to true when someone should look. Then write `message` as if you
             were the engineer who just investigated — because you are:
@@ -866,6 +883,7 @@ jobs:
             const bodyFor = (finding) => [
               heading, '',
               finding.retriage
+                // The claim step counts reports carrying this line, so keep its opening.
                 ? 'Triaged again: this problem kept firing after the last triage, and this one also had the sightings gathered since.'
                 : null,
               process.env.PR_URL ? `Draft PR: ${process.env.PR_URL}` : null,
