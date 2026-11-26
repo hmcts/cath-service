@@ -155,6 +155,8 @@ jobs:
           push: false
           outputs: type=cacheonly
           cache-from: type=gha,scope=shared
+          # Written on PRs too: the per-app builds below need this commit's
+          # build stage, which master's cache can't have.
           cache-to: type=gha,mode=max,scope=shared
 
   build-and-publish:

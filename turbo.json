@@ -1,11 +1,11 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env", "**/.env.*"],
+  "globalDependencies": ["**/.env", "**/.env.*", "tsconfig.json", "types/**"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "build/**", "generated/**"],
-      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.ts", "!**/*.spec.ts", "!**/*.md"]
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.*", "!**/*.spec.*", "!**/__snapshots__/**", "!**/vitest.config.*", "!**/*.md"]
     },
     "test": {
       "outputs": ["coverage/**"],
