@@ -65,6 +65,12 @@ COPY --from=build --chown=hmcts:hmcts /opt/app/libs ./libs
 # condition resolves @hmcts/* to dist/ files the compile has not written yet.
 ENV NODE_ENV=production
 ENV NODE_OPTIONS='--conditions=production'
+# The commit the image was built from, reported by /health/deployment so the PROD smoke
+# test can tell when Flux has rolled out a promoted release (#1099). Built in, not set by
+# the chart, for the reason given in ui-baseline below. Last, so a new commit rebuilds no
+# layer before it.
+ARG GIT_COMMIT=unknown
+ENV GIT_COMMIT=${GIT_COMMIT}
 
 WORKDIR /opt/app/apps/web
 EXPOSE 8080
@@ -79,6 +85,9 @@ COPY --from=build --chown=hmcts:hmcts /opt/app/apps/api ./apps/api
 COPY --from=build --chown=hmcts:hmcts /opt/app/libs ./libs
 ENV NODE_ENV=production
 ENV NODE_OPTIONS='--conditions=production'
+# Reported by GET / (and through it /health/deployment and APIM), as for web above.
+ARG GIT_COMMIT=unknown
+ENV GIT_COMMIT=${GIT_COMMIT}
 
 WORKDIR /opt/app/apps/api
 EXPOSE 3001
