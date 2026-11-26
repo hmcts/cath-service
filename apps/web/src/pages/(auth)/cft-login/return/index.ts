@@ -57,7 +57,8 @@ export const GET = async (req: Request, res: Response) => {
       email: userInfo.email,
       displayName: userInfo.displayName,
       role: "VERIFIED",
-      provenance: "CFT_IDAM"
+      provenance: "CFT_IDAM",
+      idToken: tokenResponse.id_token
     };
 
     req.session.regenerate((err: Error | null) => {

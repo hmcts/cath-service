@@ -52,12 +52,11 @@
     "@hmcts/postgres-prisma": "workspace:*",
     "ajv": "8.20.0",
     "exceljs": "4.4.0",
-    "nunjucks": "3.2.4",
-    "zod": "3.25.76"
+    "nunjucks": "3.2.4"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
     "typescript": "6.0.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.12"
   }
 }

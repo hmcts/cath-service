@@ -74,17 +74,18 @@ describe("expiry-redirect", () => {
   describe("buildSessionExpiredRedirectUrl", () => {
     it("should wrap the expired page in the CFT IDAM endSession URL for CFT_IDAM", () => {
       // Act
-      const result = buildSessionExpiredRedirectUrl({ provenance: "CFT_IDAM", locale: "cy", origin: ORIGIN });
+      const result = buildSessionExpiredRedirectUrl({ provenance: "CFT_IDAM", locale: "cy", origin: ORIGIN, idToken: "cft-id-token" });
 
       // Assert
       const url = new URL(result);
       expect(`${url.origin}${url.pathname}`).toBe("https://idam.example.net/o/endSession");
       expect(url.searchParams.get("post_logout_redirect_uri")).toBe(`${ORIGIN}/session-expired?lng=cy&reSignInUrl=CFT`);
+      expect(url.searchParams.get("id_token_hint")).toBe("cft-id-token");
     });
 
     it("should use the B2C logout with an absolute post logout redirect URI for PI_AAD", () => {
       // Act
-      const result = buildSessionExpiredRedirectUrl({ provenance: "PI_AAD", locale: "en", origin: ORIGIN });
+      const result = buildSessionExpiredRedirectUrl({ provenance: "PI_AAD", locale: "en", origin: ORIGIN, idToken: undefined });
 
       // Assert
       const url = new URL(result);
@@ -94,16 +95,20 @@ describe("expiry-redirect", () => {
     });
 
     it("should redirect locally for CRIME_IDAM", () => {
-      expect(buildSessionExpiredRedirectUrl({ provenance: "CRIME_IDAM", locale: "en", origin: ORIGIN })).toBe("/session-expired?lng=en&reSignInUrl=CRIME");
+      expect(buildSessionExpiredRedirectUrl({ provenance: "CRIME_IDAM", locale: "en", origin: ORIGIN, idToken: undefined })).toBe(
+        "/session-expired?lng=en&reSignInUrl=CRIME"
+      );
     });
 
     it("should redirect locally for SSO without the Microsoft logout", () => {
-      expect(buildSessionExpiredRedirectUrl({ provenance: "SSO", locale: "cy", origin: ORIGIN })).toBe("/session-expired?lng=cy&reSignInUrl=SSO");
+      expect(buildSessionExpiredRedirectUrl({ provenance: "SSO", locale: "cy", origin: ORIGIN, idToken: undefined })).toBe(
+        "/session-expired?lng=cy&reSignInUrl=SSO"
+      );
     });
 
     it("should redirect locally to the CFT sign in for an unknown provenance without calling IDAM", () => {
       // Act
-      const result = buildSessionExpiredRedirectUrl({ provenance: undefined, locale: "en", origin: ORIGIN });
+      const result = buildSessionExpiredRedirectUrl({ provenance: undefined, locale: "en", origin: ORIGIN, idToken: undefined });
 
       // Assert
       expect(result).toBe("/session-expired?lng=en&reSignInUrl=CFT");

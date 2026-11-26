@@ -22,6 +22,11 @@
 #             currently produce more telemetry than the real deployment, so without
 #             this the watchdog mostly alerts on other people's open pull requests.
 #
+# Error checks also return seen_at: up to 20 "timestamp pod" entries. A count cannot
+# tell one pod failing every 10 minutes from every pod failing at once; the timing
+# can, once sightings build up on the tracking issue. No rule or fingerprint reads it.
+# Above 20 occurrences it is an arbitrary sample, not the first or last 20.
+#
 # Thresholds calibrated 2026-09-04 against cath-appinsights-aat: roughly 1800
 # non-health requests/day. Revisit when traffic changes materially.
 
@@ -49,7 +54,8 @@ checks:
       | where timestamp > ago({{window}})
       | where cloud_RoleInstance !has '-pr-'
       | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance)
-      | summarize occurrences = count(), sample = any(outerMessage)
+      | summarize occurrences = count(), sample = any(outerMessage),
+                  seen_at = array_sort_asc(make_list(strcat(format_datetime(timestamp, 'yyyy-MM-dd HH:mm:ss'), ' ', cloud_RoleInstance), 20))
           by problemId, app, type
 
   - id: server-errors
@@ -64,7 +70,8 @@ checks:
       | where toint(resultCode) >= 500
       | where name !startswith 'GET /health'
       | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance)
-      | summarize occurrences = count(), p95_ms = percentile(duration, 95)
+      | summarize occurrences = count(), p95_ms = percentile(duration, 95),
+                  seen_at = array_sort_asc(make_list(strcat(format_datetime(timestamp, 'yyyy-MM-dd HH:mm:ss'), ' ', cloud_RoleInstance), 20))
           by name, resultCode, app
 
   # Grouped by the SDK's operation name rather than target: blob targets carry the
@@ -85,7 +92,8 @@ checks:
       | extend operation = trim_end(@':\d+$', tostring(name))
       | summarize failures = count(),
                   sample = any(resultCode),
-                  sample_target = any(target)
+                  sample_target = any(target),
+                  seen_at = array_sort_asc(make_list(strcat(format_datetime(timestamp, 'yyyy-MM-dd HH:mm:ss'), ' ', cloud_RoleInstance), 20))
           by type, operation, app
 
   - id: error-traces
@@ -102,7 +110,8 @@ checks:
       // First line only, digits masked: a stack trace makes the fingerprint
       // unreadable, and line numbers would make it churn on every deploy.
       | extend messageShape = replace_regex(tostring(split(message, '\n')[0]), @'\d+', 'N')
-      | summarize occurrences = count(), sample = any(message)
+      | summarize occurrences = count(), sample = any(message),
+                  seen_at = array_sort_asc(make_list(strcat(format_datetime(timestamp, 'yyyy-MM-dd HH:mm:ss'), ' ', cloud_RoleInstance), 20))
           by messageShape, app
 
   # Depends on the standard web test added in VIBE-552.
@@ -115,7 +124,8 @@ checks:
       availabilityResults
       | where timestamp > ago({{window}})
       | where success == false
-      | summarize failures = count() by name, location
+      | summarize failures = count(), seen_at = array_sort_asc(make_list(format_datetime(timestamp, 'yyyy-MM-dd HH:mm:ss'), 20))
+          by name, location
 
   # CaTH's crons ingest publications and send subscriber notifications, so a silent
   # failure here has more user impact than a 500 on a page.
@@ -129,7 +139,9 @@ checks:
       | where timestamp > ago({{window}})
       | where cloud_RoleInstance !has '-pr-'
       | where cloud_RoleInstance has '-crons-'
-      | summarize failures = count(), sample = any(outerMessage) by problemId
+      | summarize failures = count(), sample = any(outerMessage),
+                  seen_at = array_sort_asc(make_list(strcat(format_datetime(timestamp, 'yyyy-MM-dd HH:mm:ss'), ' ', cloud_RoleInstance), 20))
+          by problemId
 
   # ---------------------------------------------------------------------------
   # Liveness — fires on an empty result.

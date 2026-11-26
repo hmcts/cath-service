@@ -23,7 +23,8 @@ export function sessionTimeoutMiddleware(req: Request, res: Response, next: Next
       provenance,
       locale: res.locals.locale,
       origin: `${req.protocol}://${req.get("host")}`,
-      returnPath: buildSessionExpiredPath(getRedirectType(provenance), res.locals.locale)
+      returnPath: buildSessionExpiredPath(getRedirectType(provenance), res.locals.locale),
+      idToken: req.user?.idToken
     });
 
     req.logout(() => {

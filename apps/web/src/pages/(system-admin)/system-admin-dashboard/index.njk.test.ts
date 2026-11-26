@@ -37,7 +37,7 @@ describe("system-admin-dashboard template", () => {
 
       expect($("h1").text()).toContain(en.title);
       const tiles = $("div.admin-tile");
-      expect(tiles).toHaveLength(11);
+      expect(tiles).toHaveLength(12);
       expect(tiles).toHaveLength(en.tiles.length);
       en.tiles.forEach((tile) => {
         const link = $(`a.admin-tile__link[href="${tile.href}"]`);

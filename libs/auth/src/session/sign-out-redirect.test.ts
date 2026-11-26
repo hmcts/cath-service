@@ -36,7 +36,7 @@ describe("buildSignOutRedirectUrl", () => {
 
   it("should end the CFT IDAM session and return to /session-logged-out in English", () => {
     // Act
-    const result = buildSignOutRedirectUrl({ provenance: "CFT_IDAM", locale: "en", origin: ORIGIN });
+    const result = buildSignOutRedirectUrl({ provenance: "CFT_IDAM", locale: "en", origin: ORIGIN, idToken: undefined });
 
     // Assert
     expect(result).toBe("https://idam.example.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Fcath.example.net%2Fsession-logged-out%3Flng%3Den");
@@ -44,15 +44,23 @@ describe("buildSignOutRedirectUrl", () => {
 
   it("should keep Welsh for CFT IDAM", () => {
     // Act
-    const result = buildSignOutRedirectUrl({ provenance: "CFT_IDAM", locale: "cy", origin: ORIGIN });
+    const result = buildSignOutRedirectUrl({ provenance: "CFT_IDAM", locale: "cy", origin: ORIGIN, idToken: undefined });
 
     // Assert
     expect(result).toContain("session-logged-out%3Flng%3Dcy");
   });
 
+  it("should pass the CFT IDAM id token to endSession as id_token_hint", () => {
+    // Act
+    const result = new URL(buildSignOutRedirectUrl({ provenance: "CFT_IDAM", locale: "en", origin: ORIGIN, idToken: "cft-id-token" }));
+
+    // Assert
+    expect(result.searchParams.get("id_token_hint")).toBe("cft-id-token");
+  });
+
   it("should sign a Crime IDAM user out locally", () => {
     // Act
-    const result = buildSignOutRedirectUrl({ provenance: "CRIME_IDAM", locale: "en", origin: ORIGIN });
+    const result = buildSignOutRedirectUrl({ provenance: "CRIME_IDAM", locale: "en", origin: ORIGIN, idToken: undefined });
 
     // Assert
     expect(result).toBe("/session-logged-out?lng=en");
@@ -60,7 +68,7 @@ describe("buildSignOutRedirectUrl", () => {
 
   it("should keep Welsh for Crime IDAM", () => {
     // Act
-    const result = buildSignOutRedirectUrl({ provenance: "CRIME_IDAM", locale: "cy", origin: ORIGIN });
+    const result = buildSignOutRedirectUrl({ provenance: "CRIME_IDAM", locale: "cy", origin: ORIGIN, idToken: undefined });
 
     // Assert
     expect(result).toBe("/session-logged-out?lng=cy");
@@ -68,7 +76,7 @@ describe("buildSignOutRedirectUrl", () => {
 
   it("should end the B2C session for a PI_AAD user", () => {
     // Act
-    const result = new URL(buildSignOutRedirectUrl({ provenance: "PI_AAD", locale: "en", origin: ORIGIN }));
+    const result = new URL(buildSignOutRedirectUrl({ provenance: "PI_AAD", locale: "en", origin: ORIGIN, idToken: undefined }));
 
     // Assert
     expect(`${result.origin}${result.pathname}`).toBe("https://b2c.example.net/tenant/oauth2/v2.0/logout");
@@ -78,7 +86,7 @@ describe("buildSignOutRedirectUrl", () => {
 
   it("should keep Welsh in the B2C post logout redirect", () => {
     // Act
-    const result = new URL(buildSignOutRedirectUrl({ provenance: "PI_AAD", locale: "cy", origin: ORIGIN }));
+    const result = new URL(buildSignOutRedirectUrl({ provenance: "PI_AAD", locale: "cy", origin: ORIGIN, idToken: undefined }));
 
     // Assert
     expect(result.searchParams.get("post_logout_redirect_uri")).toBe(`${ORIGIN}/session-logged-out?lng=cy`);
@@ -86,7 +94,7 @@ describe("buildSignOutRedirectUrl", () => {
 
   it("should end the Microsoft session for an SSO user", () => {
     // Act
-    const result = buildSignOutRedirectUrl({ provenance: "SSO", locale: "en", origin: ORIGIN });
+    const result = buildSignOutRedirectUrl({ provenance: "SSO", locale: "en", origin: ORIGIN, idToken: undefined });
 
     // Assert
     expect(result).toBe(
@@ -99,7 +107,7 @@ describe("buildSignOutRedirectUrl", () => {
     vi.mocked(getSsoConfig).mockReturnValue({ issuerUrl: "https://issuer.example.net" } as ReturnType<typeof getSsoConfig>);
 
     // Act
-    const result = buildSignOutRedirectUrl({ provenance: "SSO", locale: "en", origin: ORIGIN });
+    const result = buildSignOutRedirectUrl({ provenance: "SSO", locale: "en", origin: ORIGIN, idToken: undefined });
 
     // Assert
     expect(result).toBe("/session-logged-out?lng=en");
@@ -107,14 +115,20 @@ describe("buildSignOutRedirectUrl", () => {
 
   it("should keep Welsh in the Microsoft post logout redirect", () => {
     // Act
-    const result = new URL(buildSignOutRedirectUrl({ provenance: "SSO", locale: "cy", origin: ORIGIN }));
+    const result = new URL(buildSignOutRedirectUrl({ provenance: "SSO", locale: "cy", origin: ORIGIN, idToken: undefined }));
 
     // Assert
     expect(result.searchParams.get("post_logout_redirect_uri")).toBe(`${ORIGIN}/session-logged-out?lng=cy`);
   });
   it("should return to the given path for a Crime IDAM user", () => {
     // Act
-    const result = buildSignOutRedirectUrl({ provenance: "CRIME_IDAM", locale: "en", origin: ORIGIN, returnPath: "/session-expired?lng=en&reSignInUrl=CRIME" });
+    const result = buildSignOutRedirectUrl({
+      provenance: "CRIME_IDAM",
+      locale: "en",
+      origin: ORIGIN,
+      idToken: undefined,
+      returnPath: "/session-expired?lng=en&reSignInUrl=CRIME"
+    });
 
     // Assert
     expect(result).toBe("/session-expired?lng=en&reSignInUrl=CRIME");
@@ -122,7 +136,13 @@ describe("buildSignOutRedirectUrl", () => {
 
   it("should end the Microsoft session and return to the given path for an SSO admin", () => {
     // Act
-    const result = buildSignOutRedirectUrl({ provenance: "SSO", locale: "cy", origin: ORIGIN, returnPath: "/session-expired?lng=cy&reSignInUrl=SSO" });
+    const result = buildSignOutRedirectUrl({
+      provenance: "SSO",
+      locale: "cy",
+      origin: ORIGIN,
+      idToken: undefined,
+      returnPath: "/session-expired?lng=cy&reSignInUrl=SSO"
+    });
 
     // Assert
     const url = new URL(result);
