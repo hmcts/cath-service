@@ -161,8 +161,7 @@ jobs:
             // again, the sighting is recorded on the issue, and once enough have built up
             // since the last triage the problem is triaged again on the same thread. A
             // problem that never stops firing never closes its issue, so without this one
-            // inconclusive triage was the only look it ever got: #1033 sat open for eight
-            // weeks behind an ESCALATE that more sightings would have settled.
+            // inconclusive triage would be the only look it ever got.
             //
             // A problem that recurs after someone closed its issue still gets a new
             // issue rather than reopening a thread that was deliberately ended. Closed
