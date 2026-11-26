@@ -23,6 +23,8 @@
 
     {% if tableRows.length > 0 %}
       {{ govukTable({
+        caption: locationsTableCaption,
+        captionClasses: "govuk-visually-hidden",
         head: [
           {
             text: locationsTableHeadingLocation

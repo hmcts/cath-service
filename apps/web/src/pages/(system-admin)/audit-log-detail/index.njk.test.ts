@@ -23,6 +23,7 @@ const log = {
 
 const buildData = (content: typeof en) => ({
   title: content.detailTitle,
+  tableCaption: content.detailTableCaption,
   log,
   userIdLabel: content.detailLabels.userId,
   emailLabel: content.detailLabels.email,
@@ -36,6 +37,10 @@ const buildData = (content: typeof en) => ({
 });
 
 describe("audit-log-detail template", () => {
+  it("should have matching English and Welsh locale keys", () => {
+    expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+  });
+
   let env: nunjucks.Environment;
 
   beforeEach(() => {
@@ -72,6 +77,29 @@ describe("audit-log-detail template", () => {
       assertNoErrors($);
     });
 
+    it("should render a visually hidden caption and use the labels as row headers", () => {
+      const { $ } = render(env, TEMPLATE, buildData(en));
+
+      const caption = $("table caption");
+      expect(caption).toHaveLength(1);
+      expect(caption.text().trim()).toBe(en.detailTableCaption);
+      expect(caption.hasClass("govuk-visually-hidden")).toBe(true);
+
+      const rowHeaders = $("table tbody th[scope='row']")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(rowHeaders).toEqual([
+        en.detailLabels.userId,
+        en.detailLabels.email,
+        en.detailLabels.role,
+        en.detailLabels.provenance,
+        en.detailLabels.timestamp,
+        en.detailLabels.action,
+        en.detailLabels.details
+      ]);
+      expect($("table tbody td")).toHaveLength(7);
+    });
+
     it("should render N/A when details are missing", () => {
       const data = buildData(en);
       data.log = { ...log, details: "" };
@@ -94,6 +122,7 @@ describe("audit-log-detail template", () => {
       expect(tableText).toContain(cy.detailLabels.userId);
       expect(tableText).toContain(cy.detailLabels.provenance);
       expect(tableText).toContain(cy.detailLabels.role);
+      expect($("table caption").text().trim()).toBe(cy.detailTableCaption);
 
       expect($('a[href="/audit-log-list"]').text()).toContain(cy.backToList);
       expect($('a[href="#top"]').text()).toContain(cy.backToTop);

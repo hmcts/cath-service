@@ -51,7 +51,28 @@ describe("reference-data-upload-summary template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("h1").text()).toContain(en.pageTitle);
-      expect($("h2.govuk-heading-l").text()).toContain(en.previewTitle);
+      expect($("table caption").text().trim()).toBe(en.previewTitle);
+    });
+
+    it("should use the preview title as a visible table caption instead of a separate heading", () => {
+      const { $ } = render(env, TEMPLATE, buildData(en));
+
+      const caption = $("table caption");
+      expect(caption).toHaveLength(1);
+      expect(caption.hasClass("govuk-table__caption--l")).toBe(true);
+      expect(caption.hasClass("govuk-visually-hidden")).toBe(false);
+      expect($("h2.govuk-heading-l")).toHaveLength(0);
+    });
+
+    it("should wrap the preview table in a focusable, labelled scroll region", () => {
+      const { $ } = render(env, TEMPLATE, buildData(en));
+
+      const region = $(".app-table-scroll");
+      expect(region).toHaveLength(1);
+      expect(region.attr("tabindex")).toBe("0");
+      expect(region.attr("role")).toBe("region");
+      expect(region.attr("aria-label")).toBe(en.previewTitle);
+      expect(region.children("table")).toHaveLength(1);
     });
 
     it("should render the file name summary row with a change link", () => {
@@ -111,7 +132,7 @@ describe("reference-data-upload-summary template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("h1").text()).toContain(cy.pageTitle);
-      expect($("h2.govuk-heading-l").text()).toContain(cy.previewTitle);
+      expect($("table caption").text().trim()).toBe(cy.previewTitle);
     });
   });
 });

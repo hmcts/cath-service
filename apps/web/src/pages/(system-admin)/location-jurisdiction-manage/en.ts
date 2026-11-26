@@ -6,5 +6,6 @@ export const en = {
   jurisdictionColumn: "Jurisdiction",
   subJurisdictionColumn: "Sub-Jurisdiction",
   updateButton: "Update",
-  deleteButton: "Delete"
+  deleteButton: "Delete",
+  tableCaption: "Jurisdictions for this location"
 };

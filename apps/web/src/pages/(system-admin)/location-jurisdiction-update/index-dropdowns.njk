@@ -20,6 +20,7 @@
     <form method="post" novalidate>
       {% for group in subJurisdictionGroups %}
         {{ govukCheckboxes({
+          idPrefix: "subJurisdictionIds-" + loop.index,
           name: "subJurisdictionIds",
           fieldset: {
             legend: {
@@ -32,6 +33,7 @@
       {% endfor %}
 
       {{ govukCheckboxes({
+        idPrefix: "regionIds",
         name: "regionIds",
         fieldset: {
           legend: {

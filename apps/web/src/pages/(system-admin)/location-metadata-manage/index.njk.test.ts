@@ -22,7 +22,23 @@ const baseData = (content: typeof en | typeof cy, overrides: Record<string, unkn
   welshNoListMessage: "",
   hasExistingMetadata: false,
   errors: undefined,
+  fieldErrors: {},
   ...overrides
+});
+
+const FIELDS = [
+  { id: "cautionMessage", requiredKey: "cautionMessageRequired" },
+  { id: "welshCautionMessage", requiredKey: "welshCautionMessageRequired" },
+  { id: "noListMessage", requiredKey: "noListMessageRequired" },
+  { id: "welshNoListMessage", requiredKey: "welshNoListMessageRequired" }
+] as const;
+
+const emptyFormErrors = (content: typeof en | typeof cy) => ({
+  errors: [
+    { text: content.atLeastOneMessageRequired, href: "#cautionMessage" },
+    ...FIELDS.map((field) => ({ text: content[field.requiredKey], href: `#${field.id}` }))
+  ],
+  fieldErrors: Object.fromEntries(FIELDS.map((field) => [field.id, { text: content[field.requiredKey] }]))
 });
 
 describe("location-metadata-manage template", () => {
@@ -155,6 +171,80 @@ describe("location-metadata-manage template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       assertErrorSummary($, [cy.atLeastOneMessageRequired]);
+    });
+  });
+
+  describe("Empty form errors", () => {
+    it("should list the five agreed messages in the error summary in order", () => {
+      const { $ } = render(env, TEMPLATE, baseData(en, emptyFormErrors(en)));
+
+      assertErrorSummary($, [
+        "Enter at least one message",
+        "Enter English caution message",
+        "Enter Welsh caution message",
+        "Enter English no list message",
+        "Enter Welsh no list message"
+      ]);
+      const links = $(".govuk-error-summary__list a")
+        .map((_, el) => ({ text: $(el).text().trim(), href: $(el).attr("href") }))
+        .get();
+      expect(links.map((link) => link.href)).toEqual(["#cautionMessage", "#cautionMessage", "#welshCautionMessage", "#noListMessage", "#welshNoListMessage"]);
+      expect($(".govuk-error-summary__title").text().trim()).toBe(en.errorSummaryTitle);
+    });
+
+    it("should link every summary item to an existing textarea", () => {
+      const { $ } = render(env, TEMPLATE, baseData(en, emptyFormErrors(en)));
+
+      $(".govuk-error-summary__list a").each((_, el) => {
+        expect($(`textarea${$(el).attr("href")}`)).toHaveLength(1);
+      });
+    });
+
+    it("should show each required message inline under its own field and link it with aria-describedby", () => {
+      const { $ } = render(env, TEMPLATE, baseData(en, emptyFormErrors(en)));
+
+      for (const field of FIELDS) {
+        const errorMessage = $(`#${field.id}-error`);
+        expect(errorMessage).toHaveLength(1);
+        expect(errorMessage.text()).toContain(en[field.requiredKey]);
+        expect(errorMessage.closest(".govuk-form-group").find(`textarea#${field.id}`)).toHaveLength(1);
+        expect($(`textarea#${field.id}`).attr("aria-describedby")).toContain(`${field.id}-error`);
+        expect($(`textarea#${field.id}`).hasClass("govuk-textarea--error")).toBe(true);
+      }
+      expect($(".govuk-error-message")).toHaveLength(4);
+    });
+
+    it("should show an HTML tag error only on the affected field", () => {
+      const tagError = en.htmlTagsNotAllowed(en.noListMessageLabel, ["script"]);
+      const { $ } = render(
+        env,
+        TEMPLATE,
+        baseData(en, { errors: [{ text: tagError, href: "#noListMessage" }], fieldErrors: { noListMessage: { text: tagError } } })
+      );
+
+      expect($("#noListMessage-error").text()).toContain(tagError);
+      expect($(".govuk-error-message")).toHaveLength(1);
+      expect($("textarea#cautionMessage").attr("aria-describedby")).toBeUndefined();
+    });
+
+    it("should not show inline errors for a summary-only error", () => {
+      const { $ } = render(env, TEMPLATE, baseData(en, { errors: [{ text: "Database error", href: "#cautionMessage" }] }));
+
+      assertErrorSummary($, ["Database error"]);
+      expect($(".govuk-error-message")).toHaveLength(0);
+    });
+
+    it("should render the five messages in Welsh", () => {
+      const { $ } = render(env, TEMPLATE, baseData(cy, emptyFormErrors(cy)));
+
+      assertErrorSummary($, [cy.atLeastOneMessageRequired, ...FIELDS.map((field) => cy[field.requiredKey])]);
+      expect($("#welshCautionMessage-error").text()).toContain(cy.welshCautionMessageRequired);
+    });
+  });
+
+  describe("Locale files", () => {
+    it("should have matching keys in English and Welsh", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
     });
   });
 });

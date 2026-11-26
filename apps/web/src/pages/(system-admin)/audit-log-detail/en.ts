@@ -45,5 +45,6 @@ export const en = {
   entryNotFound: "Audit log entry could not be found",
 
   // Access Control
-  accessDenied: "You do not have permission to access this service"
+  accessDenied: "You do not have permission to access this service",
+  detailTableCaption: "Audit log entry details"
 };

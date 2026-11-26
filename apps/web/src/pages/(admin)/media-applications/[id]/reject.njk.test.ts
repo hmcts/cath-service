@@ -102,6 +102,15 @@ describe("reject template", () => {
       expect(proofLink.text()).toContain(en.viewLinkText);
     });
 
+    it("should escape the proof of ID filename", () => {
+      const data = buildData(en, { application: { ...mockApplication, proofOfIdOriginalName: "<i>id</i>.pdf" } });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($(".govuk-summary-list i")).toHaveLength(0);
+      expect($(".govuk-summary-list").text()).toContain("<i>id</i>.pdf");
+    });
+
     it("should render the email preview details with the applicant name", () => {
       const data = buildData(en);
 

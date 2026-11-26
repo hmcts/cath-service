@@ -90,8 +90,9 @@ describe("media-application approve page", () => {
             dateApplied: "Date applied",
             proofOfId: "Proof of ID"
           },
-          proofOfIdText: "(opens in a new window)",
+          proofOfIdText: "(opens in new tab)",
           viewProofOfId: "View",
+          viewProofOfIdHidden: "proof of ID",
           fileNotAvailable: "File not available",
           radioLegend: "Confirm approval",
           radioOptions: {
@@ -125,8 +126,9 @@ describe("media-application approve page", () => {
             dateApplied: "Dyddiad gwneud cais",
             proofOfId: "Prawf o ID"
           },
-          proofOfIdText: "(yn agor mewn ffenestr newydd)",
+          proofOfIdText: "(opens in new tab)",
           viewProofOfId: "Gweld",
+          viewProofOfIdHidden: "proof of ID",
           fileNotAvailable: "Ffeil ar gael ddim",
           radioLegend: "Cadarnhau cymeradwyaeth",
           radioOptions: {

@@ -6,5 +6,6 @@ export const en = {
   publicationsTableHeadingListType: "List type",
   publicationsTableHeadingDisplayFrom: "Display from",
   publicationsTableHeadingDisplayTo: "Display to",
+  publicationsTableCaption: "Publications for this location",
   publicationsError: "We could not load publications for this location."
 };

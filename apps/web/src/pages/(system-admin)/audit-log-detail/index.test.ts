@@ -90,6 +90,7 @@ describe("audit-log-detail page", () => {
         expect.objectContaining({
           log: mockLog,
           title: expect.any(String),
+          tableCaption: "Audit log entry details",
           userIdLabel: expect.any(String),
           emailLabel: expect.any(String),
           roleLabel: expect.any(String),

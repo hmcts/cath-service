@@ -7,6 +7,7 @@ export const cy = {
     action: "Gweithred",
     view: "Gweld"
   },
+  tableCaption: "Audit log entries",
   timestampFormat: "Dyddiad (dd/mm/yyyy) Amser (hh:mm:ss)",
   filters: {
     heading: "Hidlo",

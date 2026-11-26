@@ -19,35 +19,43 @@ function initTable(table: HTMLTableElement): void {
     const button = document.createElement("button");
     button.setAttribute("type", "button");
     button.textContent = header.textContent?.trim() ?? "";
-    button.insertAdjacentHTML("beforeend", upDownArrow);
+    button.insertAdjacentHTML("beforeend", arrowFor(header.getAttribute("aria-sort")));
     header.textContent = "";
     header.appendChild(button);
 
-    button.addEventListener("click", () => handleSort(table, headers, header));
+    button.addEventListener("click", () => handleSort(table, headers, header, button));
   }
 }
 
-function handleSort(table: HTMLTableElement, headers: NodeListOf<HTMLTableCellElement>, clickedHeader: HTMLTableCellElement): void {
+function arrowFor(sort: string | null): string {
+  if (sort === "ascending") return upArrow;
+  if (sort === "descending") return downArrow;
+  return upDownArrow;
+}
+
+function handleSort(
+  table: HTMLTableElement,
+  headers: NodeListOf<HTMLTableCellElement>,
+  clickedHeader: HTMLTableCellElement,
+  clickedButton: HTMLButtonElement
+): void {
   const currentSort = clickedHeader.getAttribute("aria-sort");
   const newSort = currentSort === "ascending" ? "descending" : "ascending";
 
   for (const header of headers) {
-    header.setAttribute("aria-sort", "none");
+    const sort = header === clickedHeader ? newSort : "none";
+    header.setAttribute("aria-sort", sort);
     const btn = header.querySelector("button");
     if (btn) {
       btn.querySelector("svg")?.remove();
-      btn.insertAdjacentHTML("beforeend", upDownArrow);
+      btn.insertAdjacentHTML("beforeend", arrowFor(sort));
     }
   }
 
-  clickedHeader.setAttribute("aria-sort", newSort);
-  const activeBtn = clickedHeader.querySelector("button");
-  if (activeBtn) {
-    activeBtn.querySelector("svg")?.remove();
-    activeBtn.insertAdjacentHTML("beforeend", newSort === "ascending" ? upArrow : downArrow);
-  }
-
   sortRows(table, clickedHeader, newSort === "ascending");
+
+  // Rows are re-appended to the tbody; keep keyboard and screen reader users on the control they used.
+  clickedButton.focus();
 }
 
 function sortRows(table: HTMLTableElement, header: HTMLTableCellElement, ascending: boolean): void {
@@ -58,12 +66,20 @@ function sortRows(table: HTMLTableElement, header: HTMLTableCellElement, ascendi
   const rows = Array.from(tbody.querySelectorAll<HTMLTableRowElement>("tr"));
 
   rows.sort((a, b) => {
-    const aValue = a.cells[columnIndex]?.textContent?.trim() ?? "";
-    const bValue = b.cells[columnIndex]?.textContent?.trim() ?? "";
-    return ascending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+    const comparison = compareValues(getSortValue(a.cells[columnIndex]), getSortValue(b.cells[columnIndex]));
+    return ascending ? comparison : -comparison;
   });
 
   for (const row of rows) {
     tbody.appendChild(row);
   }
+}
+
+function getSortValue(cell: HTMLTableCellElement | undefined): string {
+  if (!cell) return "";
+  return (cell.dataset.sortValue ?? cell.textContent ?? "").trim();
+}
+
+function compareValues(aValue: string, bValue: string): number {
+  return aValue.localeCompare(bValue, undefined, { numeric: true });
 }

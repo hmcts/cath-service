@@ -60,19 +60,19 @@
     items: [
       {
         name: "day",
-        classes: "govuk-input--width-2",
+        classes: "govuk-input--width-2" + (" govuk-input--error" if errors and errors.date else ""),
         label: dayLabel,
         value: filters.day
       },
       {
         name: "month",
-        classes: "govuk-input--width-2",
+        classes: "govuk-input--width-2" + (" govuk-input--error" if errors and errors.date else ""),
         label: monthLabel,
         value: filters.month
       },
       {
         name: "year",
-        classes: "govuk-input--width-2",
+        classes: "govuk-input--width-2" + (" govuk-input--error" if errors and errors.date else ""),
         label: yearLabel,
         value: filters.year
       }
@@ -174,18 +174,20 @@
       {% for log in logs %}
         {% set tableRows = (tableRows.push([
           { text: log.timestamp },
-          { html: "<span class='audit-log-layout__word-break'>" + log.userEmail + "</span>" },
+          { html: "<span class='audit-log-layout__word-break'>" + (log.userEmail | escape) + "</span>" },
           { text: log.action },
           { html: '<a href="/audit-log-detail?id=' + log.id + '" class="govuk-link">' + viewLinkText + '</a>' }
         ]), tableRows) %}
       {% endfor %}
 
       {{ govukTable({
+        caption: tableCaption,
+        captionClasses: "govuk-visually-hidden",
         head: [
           { text: timestampHeader },
           { text: emailHeader },
           { text: actionHeader },
-          { html: '<span class="govuk-visually-hidden">' + viewHeader + '</span>', classes: 'audit-log-layout__view-header' }
+          { text: viewHeader, classes: "audit-log-layout__view-header" }
         ],
         rows: tableRows
       }) }}

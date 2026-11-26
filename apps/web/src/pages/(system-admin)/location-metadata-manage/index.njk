@@ -29,7 +29,8 @@
           text: cautionMessageLabel,
           classes: "govuk-label--m"
         },
-        value: cautionMessage
+        value: cautionMessage,
+        errorMessage: fieldErrors.cautionMessage if fieldErrors else undefined
       }) }}
 
       {{ govukTextarea({
@@ -39,7 +40,8 @@
           text: welshCautionMessageLabel,
           classes: "govuk-label--m"
         },
-        value: welshCautionMessage
+        value: welshCautionMessage,
+        errorMessage: fieldErrors.welshCautionMessage if fieldErrors else undefined
       }) }}
 
       {{ govukTextarea({
@@ -49,7 +51,8 @@
           text: noListMessageLabel,
           classes: "govuk-label--m"
         },
-        value: noListMessage
+        value: noListMessage,
+        errorMessage: fieldErrors.noListMessage if fieldErrors else undefined
       }) }}
 
       {{ govukTextarea({
@@ -59,7 +62,8 @@
           text: welshNoListMessageLabel,
           classes: "govuk-label--m"
         },
-        value: welshNoListMessage
+        value: welshNoListMessage,
+        errorMessage: fieldErrors.welshNoListMessage if fieldErrors else undefined
       }) }}
 
       <div class="govuk-button-group">

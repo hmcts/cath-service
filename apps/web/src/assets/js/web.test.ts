@@ -40,6 +40,10 @@ vi.mock("./sjp-filter-search.js", () => ({
 
 vi.mock("./session-timeout.js", () => ({}));
 
+vi.mock("./restore-file-upload.js", () => ({
+  initRestoreFileUpload: vi.fn(() => Promise.resolve())
+}));
+
 vi.mock("./sortable-table.js", () => ({
   initSortableTable: vi.fn()
 }));

@@ -19,7 +19,8 @@ const sampleRows = [
     contentDate: "1 January 2026",
     displayDates: "1 January 2026 to 2 January 2026",
     language: "English",
-    sensitivity: "Public"
+    sensitivity: "Public",
+    contentDateSortValue: Date.UTC(2026, 0, 1)
   },
   {
     artefactId: "artefact-2",
@@ -28,7 +29,8 @@ const sampleRows = [
     contentDate: "3 January 2026",
     displayDates: "3 January 2026 to 4 January 2026",
     language: "Welsh",
-    sensitivity: "Private"
+    sensitivity: "Private",
+    contentDateSortValue: Date.UTC(2026, 0, 3)
   }
 ];
 
@@ -46,7 +48,6 @@ function buildData(t: typeof en, overrides: Record<string, unknown> = {}) {
     resultCount: sampleRows.length,
     sortBy: "contentDate",
     order: "desc",
-    isDefaultSort: true,
     ...overrides
   };
 }
@@ -65,7 +66,8 @@ describe("remove-list-search-results template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("h1").text()).toContain(en.heading);
-      expect($("h2").text()).toContain(en.subHeading);
+      expect($("table caption.govuk-table__caption--m").text().trim()).toBe(en.subHeading);
+      expect($("main h2")).toHaveLength(0);
       expect($("p.govuk-body").text()).toContain(en.showingResults);
       expect($("p.govuk-body").text()).toContain(String(sampleRows.length));
       expect($("p.govuk-body").text()).toContain(en.resultsText);
@@ -114,7 +116,7 @@ describe("remove-list-search-results template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("h2").text()).not.toContain(en.subHeading);
+      expect($("caption")).toHaveLength(0);
       expect($("table")).toHaveLength(0);
       expect($("form")).toHaveLength(0);
       expect($("p.govuk-body").text()).toContain(en.showingResults);
@@ -122,8 +124,49 @@ describe("remove-list-search-results template", () => {
   });
 
   describe("sorting state", () => {
+    it("should mark the table as a MoJ sortable table", () => {
+      const { $ } = render(env, TEMPLATE, buildData(en));
+
+      expect($('table[data-module="moj-sortable-table"]')).toHaveLength(1);
+    });
+
+    it("should mark the default content date column as sorted descending and the others as unsorted", () => {
+      const { $ } = render(env, TEMPLATE, buildData(en));
+
+      const sortStates = $("thead th[aria-sort]")
+        .map((_, el) => $(el).attr("aria-sort"))
+        .get();
+      expect(sortStates).toEqual(["none", "none", "descending", "none", "none"]);
+    });
+
+    it("should leave the display dates and select columns unsortable", () => {
+      const { $ } = render(env, TEMPLATE, buildData(en));
+
+      const unsortable = $("thead th:not([aria-sort])")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(unsortable).toEqual([en.tableHeaders.displayDates, en.tableHeaders.select]);
+    });
+
+    it("should keep a query-string link in each sortable header as the no-JavaScript fallback", () => {
+      const { $ } = render(env, TEMPLATE, buildData(en));
+
+      const contentDateLink = $("thead th[aria-sort] a").eq(2);
+      expect($("thead th[aria-sort] a")).toHaveLength(5);
+      expect(contentDateLink.attr("href")).toBe("?sort=contentDate&order=asc");
+    });
+
+    it("should put a numeric sort value on each content date cell", () => {
+      const { $ } = render(env, TEMPLATE, buildData(en));
+
+      const sortValues = $("tbody td[data-sort-value]")
+        .map((_, el) => $(el).attr("data-sort-value"))
+        .get();
+      expect(sortValues).toEqual([String(Date.UTC(2026, 0, 1)), String(Date.UTC(2026, 0, 3))]);
+    });
+
     it("should mark the active sorted column with aria-sort when not default sort", () => {
-      const data = buildData(en, { sortBy: "listType", order: "asc", isDefaultSort: false });
+      const data = buildData(en, { sortBy: "listType", order: "asc" });
 
       const { $ } = render(env, TEMPLATE, data);
 
@@ -155,7 +198,7 @@ describe("remove-list-search-results template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("h1").text()).toContain(cy.heading);
-      expect($("h2").text()).toContain(cy.subHeading);
+      expect($("table caption").text().trim()).toBe(cy.subHeading);
       const headerText = $("thead").text();
       expect(headerText).toContain(cy.tableHeaders.listType);
       expect(headerText).toContain(cy.tableHeaders.sensitivity);

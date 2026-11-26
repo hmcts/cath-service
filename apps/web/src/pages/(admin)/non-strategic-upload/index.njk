@@ -28,6 +28,8 @@
   }) }}
 {% endif %}
 
+<h1 class="govuk-heading-xl">{{ title }}</h1>
+
 <div class="manual-upload-warning">
   <h2 class="govuk-heading-m">{{ warningTitle }}</h2>
   <div class="manual-upload-warning__content">
@@ -41,23 +43,17 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
 
-    <h1 class="govuk-heading-xl">{{ title }}</h1>
-
     <form method="post" enctype="multipart/form-data" novalidate data-list-type-sensitivity="{{ listTypeSensitivityMap }}">
 
       {% set fileErrorText = getError(errors, "#file") %}
       <div class="govuk-inset-text">
-        <div class="govuk-form-group{% if (fileErrorText and fileErrorText | length > 0) %} govuk-form-group--error{% endif %}">
-          <label class="govuk-label" for="file">
-            {{ fileUploadLabel }}
-          </label>
-          {% if (fileErrorText and fileErrorText | length > 0) %}
-            <p class="govuk-error-message">
-              <span class="govuk-visually-hidden">Error:</span> {{ fileErrorText }}
-            </p>
-          {% endif %}
-          <input class="govuk-file-upload{% if (fileErrorText and fileErrorText | length > 0) %} govuk-file-upload--error{% endif %}" id="file" name="file" type="file" accept=".xlsx" />
-        </div>
+        {{ govukFileUpload({
+            id: "file",
+            name: "file",
+            label: { text: fileUploadLabel },
+            errorMessage: { text: fileErrorText } if (fileErrorText and fileErrorText | length > 0),
+            attributes: { "data-pending-file-url": pendingFileUrl, "data-pending-file-name": pendingFileName, accept: ".xlsx" } if pendingFileUrl else { accept: ".xlsx" }
+        }) }}
       </div>
 
       {% set courtErrorText = getError(errors, "#court") %}
@@ -70,7 +66,7 @@
           text: courtLabel
         },
         value: data.locationName if data else "",
-        errorMessage: { text: courtErrorText } if (courtErrorText and courtErrorText | length > 0) else undefined,
+        errorMessage: { text: courtErrorText } if (courtErrorText and courtErrorText | length > 0),
         attributes: {
           "data-autocomplete": "true",
           "data-locale": locale,
@@ -80,7 +76,7 @@
       }) }}
 
       {% set listTypeErrorText = getError(errors, "#listType") %}
-      {% set hearingStartDateErrorText = getError(errors, "#hearingStartDate") %}
+      {% set hearingStartDateErrorText = getError(errors, "#hearingStartDate-day") %}
       <div class="govuk-inset-text">
         <div class="govuk-form-group">
           {{ govukSelect({
@@ -91,7 +87,7 @@
               text: listTypeLabel
             },
             items: listTypes,
-            errorMessage: { text: listTypeErrorText } if (listTypeErrorText and listTypeErrorText | length > 0) else undefined
+            errorMessage: { text: listTypeErrorText } if (listTypeErrorText and listTypeErrorText | length > 0)
           }) }}
 
           {{ govukDateInput({
@@ -125,7 +121,7 @@
                 value: (data.hearingStartDate and data.hearingStartDate.year) or ""
               }
             ],
-            errorMessage: { text: hearingStartDateErrorText } if (hearingStartDateErrorText and hearingStartDateErrorText | length > 0) else undefined
+            errorMessage: { text: hearingStartDateErrorText } if (hearingStartDateErrorText and hearingStartDateErrorText | length > 0)
           }) }}
         </div>
       </div>
@@ -139,7 +135,7 @@
           text: sensitivityLabel
         },
         items: sensitivityOptions,
-        errorMessage: { text: sensitivityErrorText } if (sensitivityErrorText and sensitivityErrorText | length > 0) else undefined
+        errorMessage: { text: sensitivityErrorText } if (sensitivityErrorText and sensitivityErrorText | length > 0)
       }) }}
 
       {% set languageErrorText = getError(errors, "#language") %}
@@ -151,10 +147,10 @@
           text: languageLabel
         },
         items: languageOptions,
-        errorMessage: { text: languageErrorText } if (languageErrorText and languageErrorText | length > 0) else undefined
+        errorMessage: { text: languageErrorText } if (languageErrorText and languageErrorText | length > 0)
       }) }}
 
-      {% set displayFromErrorText = getError(errors, "#displayFrom") %}
+      {% set displayFromErrorText = getError(errors, "#displayFrom-day") %}
       {{ govukDateInput({
         id: "displayFrom",
         namePrefix: "displayFrom",
@@ -186,10 +182,10 @@
             value: (data.displayFrom and data.displayFrom.year) or ""
           }
         ],
-        errorMessage: { text: displayFromErrorText } if (displayFromErrorText and displayFromErrorText | length > 0) else undefined
+        errorMessage: { text: displayFromErrorText } if (displayFromErrorText and displayFromErrorText | length > 0)
       }) }}
 
-      {% set displayToErrorText = getError(errors, "#displayTo") %}
+      {% set displayToErrorText = getError(errors, "#displayTo-day") %}
       {{ govukDateInput({
         id: "displayTo",
         namePrefix: "displayTo",
@@ -221,7 +217,7 @@
             value: (data.displayTo and data.displayTo.year) or ""
           }
         ],
-        errorMessage: { text: displayToErrorText } if (displayToErrorText and displayToErrorText | length > 0) else undefined
+        errorMessage: { text: displayToErrorText } if (displayToErrorText and displayToErrorText | length > 0)
       }) }}
 
       {{ govukButton({
@@ -230,6 +226,7 @@
       }) }}
 
     </form>
+
 
   </div>
 
@@ -243,20 +240,14 @@
       <h3 class="govuk-heading-s">{{ pageHelpSensitivity }}</h3>
       <p class="govuk-body">{{ pageHelpSensitivityText }}</p>
 
-      <p class="govuk-body">
-        <strong>{{ pageHelpSensitivityPublic }}</strong><br>
-        {{ pageHelpSensitivityPublicText }}
-      </p>
+      <h4 class="govuk-heading-s govuk-!-margin-bottom-1">{{ pageHelpSensitivityPublic }}</h4>
+      <p class="govuk-body">{{ pageHelpSensitivityPublicText }}</p>
 
-      <p class="govuk-body">
-        <strong>{{ pageHelpSensitivityPrivate }}</strong><br>
-        {{ pageHelpSensitivityPrivateText }}
-      </p>
+      <h4 class="govuk-heading-s govuk-!-margin-bottom-1">{{ pageHelpSensitivityPrivate }}</h4>
+      <p class="govuk-body">{{ pageHelpSensitivityPrivateText }}</p>
 
-      <p class="govuk-body">
-        <strong>{{ pageHelpSensitivityClassified }}</strong><br>
-        {{ pageHelpSensitivityClassifiedText }}
-      </p>
+      <h4 class="govuk-heading-s govuk-!-margin-bottom-1">{{ pageHelpSensitivityClassified }}</h4>
+      <p class="govuk-body">{{ pageHelpSensitivityClassifiedText }}</p>
 
       <h3 class="govuk-heading-s">{{ pageHelpDisplayFrom }}</h3>
       <p class="govuk-body">{{ pageHelpDisplayFromText }}</p>

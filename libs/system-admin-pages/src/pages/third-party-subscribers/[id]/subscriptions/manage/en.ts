@@ -18,5 +18,6 @@ export const en = {
   nextButton: "Next",
   previousButton: "Previous",
   back: "Back",
-  pageOf: (current: number, total: number) => `Page ${current} of ${total}`
+  pageOf: (current: number, total: number) => `Page ${current} of ${total}`,
+  tableCaption: "List type subscriptions"
 };

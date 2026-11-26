@@ -10,8 +10,6 @@ import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-const LOCATION_JURISDICTION_UPDATE_VARIANT: "dropdowns" | "accordions" = "dropdowns";
-
 const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
@@ -43,6 +41,7 @@ const getHandler = async (req: Request, res: Response) => {
     .map((j) => ({
       heading: jurisdictionLabelMap[j.name] || j.name,
       items: j.subJurisdictions.map((s) => ({
+        id: `subJurisdiction-${s.subJurisdictionId}`,
         value: s.subJurisdictionId.toString(),
         text: s.name,
         checked: currentSubJurisdictionIds.includes(s.subJurisdictionId)
@@ -50,15 +49,13 @@ const getHandler = async (req: Request, res: Response) => {
     }));
 
   const regionCheckboxes = regions.map((r) => ({
+    id: `region-${r.regionId}`,
     value: r.regionId.toString(),
     text: r.name,
     checked: currentRegionIds.includes(r.regionId)
   }));
 
-  const template =
-    LOCATION_JURISDICTION_UPDATE_VARIANT === "dropdowns" ? "location-jurisdiction-update/index-dropdowns" : "location-jurisdiction-update/index-accordions";
-
-  res.render(template, {
+  res.render("location-jurisdiction-update/index-dropdowns", {
     en,
     cy,
     t,

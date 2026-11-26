@@ -140,9 +140,6 @@ test.describe("Manual Upload", () => {
     await page.waitForTimeout(1000);
 
     await page.selectOption('select[name="listType"]', { label: listTypeLabels.crownDaily });
-    await page.fill('input[name="hearingStartDate-day"]', "23");
-    await page.fill('input[name="hearingStartDate-month"]', "10");
-    await page.fill('input[name="hearingStartDate-year"]', "2025");
     await page.selectOption('select[name="sensitivity"]', "PUBLIC");
     await page.selectOption('select[name="language"]', "ENGLISH");
     await page.fill('input[name="displayFrom-day"]', "20");
@@ -157,6 +154,27 @@ test.describe("Manual Upload", () => {
       mimeType: "application/pdf",
       buffer: Buffer.from("%PDF-1.4\nTest hearing list content")
     });
+
+    // Submit without a hearing start date: the valid file is kept and the date error link moves focus to the day input
+    await page.getByRole("button", { name: /continue/i }).click();
+    await expect(page).toHaveURL(/\/manual-upload/);
+
+    errorSummary = page.locator(".govuk-error-summary");
+    await errorSummary.getByRole("link", { name: /please enter a valid hearing start date/i }).click();
+    await expect(page.locator("#hearingStartDate-day")).toBeFocused();
+
+    const keptFileInput = page.locator("input#file");
+    await expect.poll(() => keptFileInput.evaluate((input: HTMLInputElement) => input.files?.[0]?.name)).toBe("test-hearing-list.pdf");
+    await expect(page.locator("#file-uploaded")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Remove file" })).toHaveCount(0);
+
+    accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+
+    // Fix the date and resubmit without choosing the file again
+    await page.fill('input[name="hearingStartDate-day"]', "23");
+    await page.fill('input[name="hearingStartDate-month"]', "10");
+    await page.fill('input[name="hearingStartDate-year"]', "2025");
 
     await page.getByRole("button", { name: /continue/i }).click();
     await page.waitForURL(/\/manual-upload-summary\?uploadId=/, { timeout: 10000 });

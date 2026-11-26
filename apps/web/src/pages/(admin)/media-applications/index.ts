@@ -14,6 +14,8 @@ const getHandler = async (req: Request, res: Response) => {
       pageTitle: lang.pageTitle,
       tableHeaders: lang.tableHeaders,
       viewLink: lang.viewLink,
+      viewLinkHidden: lang.viewLinkHidden,
+      tableCaption: lang.tableCaption,
       noApplications: lang.noApplications,
       applications
     });

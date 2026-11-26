@@ -13,5 +13,6 @@ export const en = {
   radioNo: "No",
   continueButton: "Continue",
   errorSummaryTitle: "There is a problem",
-  errorNoSelection: "Please select an option"
+  errorNoSelection: "Please select an option",
+  tableCaption: "Content to remove"
 };

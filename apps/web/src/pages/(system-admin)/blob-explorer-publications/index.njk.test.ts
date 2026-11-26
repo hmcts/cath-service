@@ -21,6 +21,10 @@ const buildTableRows = () => [
 ];
 
 describe("blob-explorer-publications template", () => {
+  it("should have matching English and Welsh locale keys", () => {
+    expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+  });
+
   let env: nunjucks.Environment;
 
   beforeEach(() => {
@@ -55,6 +59,38 @@ describe("blob-explorer-publications template", () => {
       const link = $('a[href="/blob-explorer-flat-file?artefactId=abc-123"]');
       expect(link).toHaveLength(1);
       expect(link.text()).toBe("abc-123");
+    });
+
+    it("should render a visually hidden table caption", () => {
+      const data = { ...en, tableRows: buildTableRows(), locationId: "123", locale: "en" };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const caption = $("table caption");
+      expect(caption).toHaveLength(1);
+      expect(caption.text().trim()).toBe(en.publicationsTableCaption);
+      expect(caption.hasClass("govuk-visually-hidden")).toBe(true);
+    });
+
+    it("should wrap the table in a focusable, labelled scroll region", () => {
+      const data = { ...en, tableRows: buildTableRows(), locationId: "123", locale: "en" };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const region = $(".app-table-scroll");
+      expect(region).toHaveLength(1);
+      expect(region.attr("tabindex")).toBe("0");
+      expect(region.attr("role")).toBe("region");
+      expect(region.attr("aria-label")).toBe(en.publicationsTableCaption);
+      expect(region.children("table.govuk-table")).toHaveLength(1);
+    });
+
+    it("should not render the scroll region when there are no publications", () => {
+      const data = { ...en, tableRows: [], locationId: "123", locale: "en" };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($(".app-table-scroll")).toHaveLength(0);
     });
 
     it("should not render an error summary when there is no error", () => {

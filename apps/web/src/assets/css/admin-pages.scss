@@ -138,6 +138,18 @@
   white-space: nowrap;
 }
 
+// Only the table scrolls sideways when it is wider than the page (WCAG 1.4.10 reflow).
+// The wrapper is focusable so keyboard users can scroll it.
+.app-table-scroll {
+  overflow-x: auto;
+
+  &:focus-visible {
+    outline: 3px solid #ffdd00;
+    outline-offset: 0;
+    box-shadow: inset 0 0 0 2px #0b0c0c;
+  }
+}
+
 // Sortable table headers
 .govuk-table__header--sortable {
   a {

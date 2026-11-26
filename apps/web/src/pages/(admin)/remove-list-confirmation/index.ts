@@ -73,6 +73,7 @@ async function renderConfirmationPage(
     pageTitle: lang.pageTitle,
     heading: lang.heading,
     tableHeaders: lang.tableHeaders,
+    tableCaption: lang.tableCaption,
     radioYes: lang.radioYes,
     radioNo: lang.radioNo,
     continueButton: lang.continueButton,

@@ -26,6 +26,7 @@ const buildData = (lang: typeof en | typeof cy) => ({
   tableHeaders: lang.tableHeaders,
   proofOfIdText: lang.proofOfIdText,
   viewProofOfId: lang.viewProofOfId,
+  viewProofOfIdHidden: lang.viewProofOfIdHidden,
   approveButton: lang.approveButton,
   rejectButton: lang.rejectButton,
   fileNotAvailable: lang.fileNotAvailable,
@@ -34,6 +35,10 @@ const buildData = (lang: typeof en | typeof cy) => ({
 });
 
 describe("media-applications/[id] template", () => {
+  it("should have matching English and Welsh locale keys", () => {
+    expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+  });
+
   let env: nunjucks.Environment;
 
   beforeEach(() => {
@@ -67,27 +72,53 @@ describe("media-applications/[id] template", () => {
       expect(summaryText).toContain(application.employer);
     });
 
-    it("should render a proof of id link opening in a new window", () => {
+    it("should render a proof of id link whose name starts with View and says it opens in a new tab", () => {
       const data = buildData(en);
 
       const { $ } = render(env, TEMPLATE, data);
 
       const proofLink = $(`a[href="/media-applications/${application.id}/proof-of-id"]`);
       expect(proofLink).toHaveLength(1);
-      expect(proofLink.text()).toContain(en.viewProofOfId);
+      expect(proofLink.attr("aria-label")).toBeUndefined();
+      expect(proofLink.text().replace(/\s+/g, " ").trim()).toBe("View proof of ID (opens in new tab)");
+      expect(proofLink.find(".govuk-visually-hidden").text().trim()).toBe(en.viewProofOfIdHidden);
       expect(proofLink.attr("target")).toBe("_blank");
+      expect(proofLink.attr("rel")).toBe("noopener noreferrer");
     });
 
-    it("should render approve and reject forms pointing to the correct actions", () => {
+    it("should show the proof of id filename next to the link without inline styles", () => {
       const data = buildData(en);
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($(`form[action="/media-applications/${application.id}/approve"]`)).toHaveLength(1);
-      expect($(`form[action="/media-applications/${application.id}/reject-reasons"]`)).toHaveLength(1);
-      const buttonText = $(".govuk-button").text();
-      expect(buttonText).toContain(en.approveButton);
-      expect(buttonText).toContain(en.rejectButton);
+      expect($(".govuk-summary-list p.govuk-body").text()).toBe(application.proofOfIdOriginalName);
+      expect($("main [style]")).toHaveLength(0);
+    });
+
+    it("should escape the proof of id filename", () => {
+      const data = { ...buildData(en), proofOfIdFilename: '<img src=x onerror="alert(1)">.pdf' };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($(".govuk-summary-list img")).toHaveLength(0);
+      expect($(".govuk-summary-list p.govuk-body").text()).toBe('<img src=x onerror="alert(1)">.pdf');
+    });
+
+    it("should group the approve and reject buttons together in that order", () => {
+      const data = buildData(en);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const group = $(".govuk-button-group");
+      expect(group).toHaveLength(1);
+      const buttons = group.find(".govuk-button");
+      expect(buttons).toHaveLength(2);
+      expect($(buttons[0]).text().trim()).toBe(en.approveButton);
+      expect($(buttons[0]).attr("href")).toBe(`/media-applications/${application.id}/approve`);
+      expect($(buttons[0]).hasClass("govuk-button--warning")).toBe(false);
+      expect($(buttons[1]).text().trim()).toBe(en.rejectButton);
+      expect($(buttons[1]).attr("href")).toBe(`/media-applications/${application.id}/reject-reasons`);
+      expect($(buttons[1]).hasClass("govuk-button--warning")).toBe(true);
     });
 
     it("should not render an error summary for a valid application", () => {
@@ -119,6 +150,7 @@ describe("media-applications/[id] template", () => {
       expect($("h1").text()).toContain(cy.pageTitle);
       expect($(".govuk-summary-list").text()).toContain(cy.tableHeaders.email);
       expect($(".govuk-button").text()).toContain(cy.approveButton);
+      expect($(`a[href="/media-applications/${application.id}/proof-of-id"]`).text()).toContain(cy.proofOfIdText);
     });
   });
 

@@ -17,6 +17,10 @@ const mockApplications = [
 ];
 
 describe("media-applications index template", () => {
+  it("should have matching English and Welsh locale keys", () => {
+    expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+  });
+
   let env: nunjucks.Environment;
 
   beforeEach(() => {
@@ -35,6 +39,8 @@ describe("media-applications index template", () => {
         pageTitle: en.pageTitle,
         tableHeaders: en.tableHeaders,
         viewLink: en.viewLink,
+        viewLinkHidden: en.viewLinkHidden,
+        tableCaption: en.tableCaption,
         noApplications: en.noApplications,
         applications: mockApplications
       };
@@ -56,10 +62,59 @@ describe("media-applications index template", () => {
       const viewLinks = $(".govuk-table__body a.govuk-link");
       expect(viewLinks).toHaveLength(2);
       expect($(viewLinks[0]).attr("href")).toBe("/media-applications/app-1");
-      expect($(viewLinks[0]).text().trim()).toBe(en.viewLink);
+      expect($(viewLinks[0]).text().trim()).toBe("View application for John Smith");
+      expect($(viewLinks[0]).find(".govuk-visually-hidden").text()).toBe(" application for John Smith");
+      expect($(viewLinks[1]).text().trim()).toBe("View application for Jane Doe");
       expect($(viewLinks[1]).attr("href")).toBe("/media-applications/app-2");
 
       assertNoErrors($);
+    });
+
+    it("should render a visually hidden table caption", () => {
+      const { $ } = render(env, TEMPLATE, {
+        pageTitle: en.pageTitle,
+        tableHeaders: en.tableHeaders,
+        viewLink: en.viewLink,
+        viewLinkHidden: en.viewLinkHidden,
+        tableCaption: en.tableCaption,
+        applications: mockApplications
+      });
+
+      const caption = $("table caption");
+      expect(caption).toHaveLength(1);
+      expect(caption.text().trim()).toBe(en.tableCaption);
+      expect(caption.hasClass("govuk-visually-hidden")).toBe(true);
+    });
+
+    it("should give every View link a unique accessible name", () => {
+      const { $ } = render(env, TEMPLATE, {
+        pageTitle: en.pageTitle,
+        tableHeaders: en.tableHeaders,
+        viewLink: en.viewLink,
+        viewLinkHidden: en.viewLinkHidden,
+        tableCaption: en.tableCaption,
+        applications: mockApplications
+      });
+
+      const linkTexts = $(".govuk-table__body a.govuk-link")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(new Set(linkTexts).size).toBe(linkTexts.length);
+    });
+
+    it("should escape the applicant name inside the View link", () => {
+      const { $ } = render(env, TEMPLATE, {
+        pageTitle: en.pageTitle,
+        tableHeaders: en.tableHeaders,
+        viewLink: en.viewLink,
+        viewLinkHidden: en.viewLinkHidden,
+        tableCaption: en.tableCaption,
+        applications: [{ id: "app-3", name: '<b>Bold</b> & "Co"', employer: "BBC", appliedDate: new Date("2024-01-03") }]
+      });
+
+      const link = $(".govuk-table__body a.govuk-link");
+      expect(link.find("b")).toHaveLength(0);
+      expect(link.find(".govuk-visually-hidden").text()).toBe(' application for <b>Bold</b> & "Co"');
     });
 
     it("should show the no-applications message when the list is empty", () => {
@@ -67,6 +122,8 @@ describe("media-applications index template", () => {
         pageTitle: en.pageTitle,
         tableHeaders: en.tableHeaders,
         viewLink: en.viewLink,
+        viewLinkHidden: en.viewLinkHidden,
+        tableCaption: en.tableCaption,
         noApplications: en.noApplications,
         applications: []
       };
@@ -100,6 +157,8 @@ describe("media-applications index template", () => {
         pageTitle: cy.pageTitle,
         tableHeaders: cy.tableHeaders,
         viewLink: cy.viewLink,
+        viewLinkHidden: cy.viewLinkHidden,
+        tableCaption: cy.tableCaption,
         noApplications: cy.noApplications,
         applications: mockApplications
       };
@@ -113,7 +172,8 @@ describe("media-applications index template", () => {
         .get();
       expect(headers).toEqual([cy.tableHeaders.name, cy.tableHeaders.employer, cy.tableHeaders.dateApplied, cy.tableHeaders.action]);
 
-      expect($(".govuk-table__body a.govuk-link").first().text().trim()).toBe(cy.viewLink);
+      expect($(".govuk-table__body a.govuk-link").first().text().trim()).toBe(`${cy.viewLink} ${cy.viewLinkHidden} John Smith`);
+      expect($("table caption").text().trim()).toBe(cy.tableCaption);
     });
   });
 });

@@ -55,6 +55,21 @@ describe("audit-log-list page", () => {
   });
 
   describe("GET handler", () => {
+    it("should pass the View header and table caption in the current locale", async () => {
+      // Arrange
+      mockResponse.locals = { locale: "cy" };
+      const handler = GET[1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "audit-log-list/index",
+        expect.objectContaining({ viewHeader: "Gweld", tableCaption: "Audit log entries" })
+      );
+    });
+
     it("should render audit log list with no filters", async () => {
       const handler = GET[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
@@ -203,7 +218,7 @@ describe("audit-log-list page", () => {
           errors: expect.objectContaining({
             date: expect.objectContaining({
               text: expect.any(String),
-              href: "#day"
+              href: "#date-day"
             })
           })
         })
@@ -223,7 +238,7 @@ describe("audit-log-list page", () => {
           errors: expect.objectContaining({
             date: expect.objectContaining({
               text: expect.any(String),
-              href: "#day"
+              href: "#date-day"
             })
           })
         })

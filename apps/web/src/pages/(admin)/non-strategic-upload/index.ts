@@ -8,7 +8,15 @@ import "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list"; // Register UTL
 import "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"; // Register UTAAC converter
 import "@hmcts/business-and-property-division-rolls-building-daily-cause-list"; // Register Business and Property Division Rolls Building converter
 import "@hmcts/interim-applications-daily-cause-list"; // Register Interim Applications converter
-import { LANGUAGE_LABELS, SENSITIVITY_LABELS, storeNonStrategicUpload, type UploadFormData, validateNonStrategicUploadForm } from "@hmcts/admin-pages";
+import {
+  deletePendingFile,
+  LANGUAGE_LABELS,
+  retainPendingFile,
+  SENSITIVITY_LABELS,
+  storeNonStrategicUpload,
+  type UploadFormData,
+  validateNonStrategicUploadForm
+} from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language } from "@hmcts/publication";
@@ -17,6 +25,8 @@ import { saveSession } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
+
+const PENDING_FILE_PREFIX = "non-strategic-upload";
 
 async function getListTypesData() {
   const nonStrategicListTypes = await findNonStrategicListTypes();
@@ -83,6 +93,12 @@ const getHandler = async (req: Request, res: Response) => {
 
   delete req.session.nonStrategicUploadErrors;
 
+  // The kept file is only offered straight after a failed submit; a refresh or the summary "Change" link drops it.
+  const pendingFile = errors.length > 0 ? req.session.nonStrategicUploadPendingFile : undefined;
+  if (!pendingFile) {
+    await discardPendingFile(req);
+  }
+
   // Clear form data on refresh if not successfully submitted
   if (!wasSubmitted) {
     delete req.session.nonStrategicUploadForm;
@@ -109,6 +125,8 @@ const getHandler = async (req: Request, res: Response) => {
     sensitivityOptions: selectOption(SENSITIVITY_OPTIONS, formData.sensitivity),
     languageOptions: selectOption(LANGUAGE_OPTIONS, formData.language || Language.ENGLISH),
     listTypeSensitivityMap: JSON.stringify(sensitivityMap),
+    pendingFileName: pendingFile?.fileName,
+    pendingFileUrl: pendingFile ? "/non-strategic-upload/pending-file" : undefined,
     locale
   });
 };
@@ -121,7 +139,8 @@ const postHandler = async (req: Request, res: Response) => {
 
   // Check for multer errors (e.g., file too large)
   const fileUploadError = req.fileUploadError;
-  let errors = await validateNonStrategicUploadForm(formData, req.file, t);
+  const file = req.file;
+  let errors = await validateNonStrategicUploadForm(formData, file, t);
 
   // If multer threw a file size error, replace the "fileRequired" error with the file size error
   if (fileUploadError && fileUploadError.code === "LIMIT_FILE_SIZE") {
@@ -130,6 +149,7 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   if (errors.length > 0) {
+    req.session.nonStrategicUploadPendingFile = await retainPendingFile(PENDING_FILE_PREFIX, req.session.nonStrategicUploadPendingFile, req.file, errors);
     req.session.nonStrategicUploadErrors = errors;
     req.session.nonStrategicUploadForm = formData;
     await saveSession(req.session);
@@ -139,7 +159,7 @@ const postHandler = async (req: Request, res: Response) => {
   // Validate Excel file for non-strategic lists that require validation
   const listTypeId = formData.listType ? Number.parseInt(formData.listType, 10) : null;
   const selectedListType = listTypeId ? await findListTypeById(listTypeId) : null;
-  const isExcelFile = req.file!.originalname?.endsWith(".xlsx") || req.file!.originalname?.endsWith(".xls");
+  const isExcelFile = file!.originalname?.endsWith(".xlsx") || file!.originalname?.endsWith(".xls");
 
   if (selectedListType?.isNonStrategic && isExcelFile) {
     try {
@@ -147,11 +167,12 @@ const postHandler = async (req: Request, res: Response) => {
       const listTypeName = selectedListType.name;
 
       if (listTypeName && hasConverterForListTypeName(listTypeName)) {
-        await convertExcelForListTypeName(listTypeName, req.file!.buffer);
+        await convertExcelForListTypeName(listTypeName, file!.buffer);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Invalid Excel file format";
       errors = [{ text: errorMessage, href: "#file" }];
+      await discardPendingFile(req);
       req.session.nonStrategicUploadErrors = errors;
       req.session.nonStrategicUploadForm = formData;
       await saveSession(req.session);
@@ -160,9 +181,9 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   const uploadId = await storeNonStrategicUpload({
-    file: req.file!.buffer,
-    fileName: req.file!.originalname,
-    fileType: req.file!.mimetype,
+    file: file!.buffer,
+    fileName: file!.originalname,
+    fileType: file!.mimetype,
     locationId: formData.locationId!,
     listType: formData.listType!,
     hearingStartDate: formData.hearingStartDate!,
@@ -172,12 +193,21 @@ const postHandler = async (req: Request, res: Response) => {
     displayTo: formData.displayTo!
   });
 
+  await discardPendingFile(req);
   req.session.nonStrategicUploadForm = formData;
   req.session.nonStrategicUploadSubmitted = true;
   await saveSession(req.session);
 
   res.redirect(`/non-strategic-upload-summary?uploadId=${uploadId}`);
 };
+
+async function discardPendingFile(req: Request) {
+  const reference = req.session.nonStrategicUploadPendingFile;
+  if (reference) {
+    await deletePendingFile(PENDING_FILE_PREFIX, reference.id);
+    delete req.session.nonStrategicUploadPendingFile;
+  }
+}
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), getHandler];
 export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), postHandler];

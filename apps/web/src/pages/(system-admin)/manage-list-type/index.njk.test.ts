@@ -42,6 +42,15 @@ describe("manage-list-type template", () => {
     env = createTestEnvironment([path.join(__dirname, "../../"), path.join(__dirname, "../../../../../../libs/web-core/src/views")]);
   });
 
+  it("should render a visually hidden table caption", () => {
+    const { $ } = render(env, TEMPLATE, { t: en, listType: buildListType(), subJurisdictionsText: "Civil" });
+
+    const caption = $("table caption");
+    expect(caption).toHaveLength(1);
+    expect(caption.text().trim()).toBe(en.tableCaption);
+    expect(caption.hasClass("govuk-visually-hidden")).toBe(true);
+  });
+
   it("should render a green Visible tag and a Hide button for a visible list type", () => {
     const { $ } = render(env, TEMPLATE, { t: en, listType: buildListType(), subJurisdictionsText: "Civil" });
 

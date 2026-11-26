@@ -57,9 +57,12 @@ test.describe("Search Page", () => {
     await continueButton.focus();
     await expect(continueButton).toBeFocused();
 
-    // Accessibility check
+    // Accessibility check after the autocomplete has loaded: one label and one element per id
     const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
+    const inputId = await locationInput.getAttribute("id");
+    await expect(page.locator(`[id="${inputId}"]`)).toHaveCount(1);
+    await expect(page.locator(`label[for="${inputId}"]`)).toHaveCount(1);
 
     // Navigate to A-Z list
     await page.goto("/search");

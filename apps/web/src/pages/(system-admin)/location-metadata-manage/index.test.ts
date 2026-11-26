@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 import { GET as _GET, POST as _POST } from "./index.js";
 
 const getHandler = _GET[_GET.length - 1];
@@ -167,7 +169,8 @@ describe("location-metadata-manage page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/location-metadata-delete-confirmation?lng=cy");
     });
 
-    it("should show error when no message is provided", async () => {
+    it("should show the five agreed errors in order when no message is provided", async () => {
+      // Arrange
       req.session = {
         locationMetadata: {
           locationId: 123,
@@ -184,14 +187,98 @@ describe("location-metadata-manage page", () => {
       };
       (getLocationMetadataByLocationId as any).mockResolvedValue(null);
 
+      // Act
       await postHandler(req as Request, res as Response);
 
+      // Assert
+      expect(createLocationMetadata).not.toHaveBeenCalled();
       expect(res.render).toHaveBeenCalledWith(
         "location-metadata-manage/index",
         expect.objectContaining({
-          errors: [expect.objectContaining({ href: "#cautionMessage" })]
+          errors: [
+            { text: "Enter at least one message", href: "#cautionMessage" },
+            { text: "Enter English caution message", href: "#cautionMessage" },
+            { text: "Enter Welsh caution message", href: "#welshCautionMessage" },
+            { text: "Enter English no list message", href: "#noListMessage" },
+            { text: "Enter Welsh no list message", href: "#welshNoListMessage" }
+          ],
+          fieldErrors: {
+            cautionMessage: { text: "Enter English caution message" },
+            welshCautionMessage: { text: "Enter Welsh caution message" },
+            noListMessage: { text: "Enter English no list message" },
+            welshNoListMessage: { text: "Enter Welsh no list message" }
+          }
         })
       );
+    });
+
+    it("should treat whitespace-only messages as empty on update", async () => {
+      // Arrange
+      req.session = { locationMetadata: { locationId: 123, locationName: "Test Court", locationWelshName: "Llys Prawf" } } as any;
+      req.body = { action: "update", cautionMessage: "   ", welshCautionMessage: "\n", noListMessage: "", welshNoListMessage: "" };
+      (getLocationMetadataByLocationId as any).mockResolvedValue({ cautionMessage: "Existing" });
+
+      // Act
+      await postHandler(req as Request, res as Response);
+
+      // Assert
+      expect(updateLocationMetadata).not.toHaveBeenCalled();
+      const renderData = vi.mocked(res.render!).mock.calls[0][1] as any;
+      expect(renderData.errors).toHaveLength(5);
+      expect(Object.keys(renderData.fieldErrors)).toEqual(["cautionMessage", "welshCautionMessage", "noListMessage", "welshNoListMessage"]);
+    });
+
+    it("should show the five errors in Welsh when the language is Welsh", async () => {
+      // Arrange
+      req.query = { lng: "cy" };
+      req.session = { locationMetadata: { locationId: 123, locationName: "Test Court", locationWelshName: "Llys Prawf" } } as any;
+      req.body = { action: "create" };
+      (getLocationMetadataByLocationId as any).mockResolvedValue(null);
+
+      // Act
+      await postHandler(req as Request, res as Response);
+
+      // Assert
+      const renderData = vi.mocked(res.render!).mock.calls[0][1] as any;
+      expect(renderData.errors.map((error: { text: string }) => error.text)).toEqual([
+        cy.atLeastOneMessageRequired,
+        cy.cautionMessageRequired,
+        cy.welshCautionMessageRequired,
+        cy.noListMessageRequired,
+        cy.welshNoListMessageRequired
+      ]);
+      expect(renderData.fieldErrors.welshNoListMessage).toEqual({ text: cy.welshNoListMessageRequired });
+    });
+
+    it("should not show required errors when only one message is filled in", async () => {
+      // Arrange
+      req.session = { locationMetadata: { locationId: 123, locationName: "Test Court", locationWelshName: "Llys Prawf" } } as any;
+      req.body = { action: "create", welshNoListMessage: "Dim rhestr" };
+      (createLocationMetadata as any).mockResolvedValue(undefined);
+
+      // Act
+      await postHandler(req as Request, res as Response);
+
+      // Assert
+      expect(res.render).not.toHaveBeenCalled();
+      expect(createLocationMetadata).toHaveBeenCalled();
+      expect(res.redirect).toHaveBeenCalledWith("/location-metadata-success");
+    });
+
+    it("should report a disallowed tag error on every field that has one, inline and in the summary", async () => {
+      // Arrange
+      req.session = { locationMetadata: { locationId: 123, locationName: "Test Court", locationWelshName: "Llys Prawf" } } as any;
+      req.body = { action: "create", cautionMessage: "<script>x</script>", noListMessage: "Fine", welshNoListMessage: "<iframe></iframe>" };
+      (getLocationMetadataByLocationId as any).mockResolvedValue(null);
+
+      // Act
+      await postHandler(req as Request, res as Response);
+
+      // Assert
+      const renderData = vi.mocked(res.render!).mock.calls[0][1] as any;
+      expect(renderData.errors.map((error: { href: string }) => error.href)).toEqual(["#cautionMessage", "#welshNoListMessage"]);
+      expect(Object.keys(renderData.fieldErrors)).toEqual(["cautionMessage", "welshNoListMessage"]);
+      expect(renderData.fieldErrors.cautionMessage.text).toContain(en.cautionMessageLabel);
     });
 
     it.each([
@@ -222,7 +309,8 @@ describe("location-metadata-manage page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "location-metadata-manage/index",
         expect.objectContaining({
-          errors: [{ text: `${label} contains HTML tags which cannot be used: img`, href: `#${field}` }]
+          errors: [{ text: `${label} contains HTML tags which cannot be used: img`, href: `#${field}` }],
+          fieldErrors: { [field]: { text: `${label} contains HTML tags which cannot be used: img` } }
         })
       );
     });
@@ -390,7 +478,8 @@ describe("location-metadata-manage page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "location-metadata-manage/index",
         expect.objectContaining({
-          errors: [{ text: "Database error", href: "#cautionMessage" }]
+          errors: [{ text: "Database error", href: "#cautionMessage" }],
+          fieldErrors: {}
         })
       );
     });

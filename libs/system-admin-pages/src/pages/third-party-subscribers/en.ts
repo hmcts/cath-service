@@ -8,5 +8,6 @@ export const en = {
   createNewUserButton: "Create new subscriber",
   manageLink: "Manage",
   noUsersMessage: "There are no third party subscribers.",
-  back: "Back"
+  back: "Back",
+  tableCaption: "Third-party subscribers"
 };

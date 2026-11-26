@@ -89,7 +89,7 @@ describe("validateDate", () => {
       const result = validateDate(undefined, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Required message",
-        href: "#testField"
+        href: "#testField-day"
       });
     });
 
@@ -97,7 +97,7 @@ describe("validateDate", () => {
       const result = validateDate({ day: "", month: "06", year: "2025" }, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Required message",
-        href: "#testField"
+        href: "#testField-day"
       });
     });
 
@@ -105,7 +105,7 @@ describe("validateDate", () => {
       const result = validateDate({ day: "15", month: "", year: "2025" }, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Required message",
-        href: "#testField"
+        href: "#testField-day"
       });
     });
 
@@ -113,7 +113,7 @@ describe("validateDate", () => {
       const result = validateDate({ day: "15", month: "06", year: "" }, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Required message",
-        href: "#testField"
+        href: "#testField-day"
       });
     });
   });
@@ -123,7 +123,7 @@ describe("validateDate", () => {
       const result = validateDate({ day: "32", month: "01", year: "2025" }, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Invalid message",
-        href: "#testField"
+        href: "#testField-day"
       });
     });
 
@@ -131,7 +131,7 @@ describe("validateDate", () => {
       const result = validateDate({ day: "15", month: "13", year: "2025" }, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Invalid message",
-        href: "#testField"
+        href: "#testField-day"
       });
     });
 
@@ -139,7 +139,7 @@ describe("validateDate", () => {
       const result = validateDate({ day: "29", month: "02", year: "2025" }, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Invalid message",
-        href: "#testField"
+        href: "#testField-day"
       });
     });
 
@@ -147,7 +147,7 @@ describe("validateDate", () => {
       const result = validateDate({ day: "abc", month: "06", year: "2025" }, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Invalid message",
-        href: "#testField"
+        href: "#testField-day"
       });
     });
   });
@@ -410,7 +410,7 @@ describe("validateManualUploadForm", () => {
       const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "Hearing start date is invalid",
-        href: "#hearingStartDate"
+        href: "#hearingStartDate-day"
       });
     });
 
@@ -428,7 +428,7 @@ describe("validateManualUploadForm", () => {
       const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "Display from date is invalid",
-        href: "#displayFrom"
+        href: "#displayFrom-day"
       });
     });
 
@@ -446,7 +446,7 @@ describe("validateManualUploadForm", () => {
       const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "Display to date is invalid",
-        href: "#displayTo"
+        href: "#displayTo-day"
       });
     });
 
@@ -464,7 +464,7 @@ describe("validateManualUploadForm", () => {
       const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "Display to must be after display from",
-        href: "#displayTo"
+        href: "#displayTo-day"
       });
     });
 
@@ -659,7 +659,7 @@ describe("validateManualUploadForm", () => {
       const result = validateDate({ day: "5", month: "06", year: "2025" }, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Invalid message",
-        href: "#testField"
+        href: "#testField-day"
       });
     });
 
@@ -667,7 +667,7 @@ describe("validateManualUploadForm", () => {
       const result = validateDate({ day: "15", month: "6", year: "2025" }, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Invalid message",
-        href: "#testField"
+        href: "#testField-day"
       });
     });
   });

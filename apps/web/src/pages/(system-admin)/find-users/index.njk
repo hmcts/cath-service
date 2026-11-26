@@ -139,6 +139,8 @@
       <p class="govuk-body">{{ resultsCount(totalCount) }}</p>
 
       {{ govukTable({
+        caption: tableCaption,
+        captionClasses: "govuk-visually-hidden",
         head: [
           { text: tableHeadEmail },
           { text: tableHeadRole },

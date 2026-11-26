@@ -45,6 +45,30 @@ beforeEach(() => {
 });
 
 describe("manage third-party subscriptions template", () => {
+  it("should render a visually hidden caption on the dropdown table", () => {
+    const { $ } = render(env, TEMPLATE, baseData(en, { useDropdown: true }));
+
+    const caption = $("table caption");
+    expect(caption).toHaveLength(1);
+    expect(caption.text().trim()).toBe(en.tableCaption);
+    expect(caption.hasClass("govuk-visually-hidden")).toBe(true);
+  });
+
+  it("should render a visually hidden caption on the radios table", () => {
+    const { $ } = render(env, TEMPLATE, baseData(en, { useDropdown: false }));
+
+    const caption = $("table caption");
+    expect(caption).toHaveLength(1);
+    expect(caption.text().trim()).toBe(en.tableCaption);
+    expect(caption.hasClass("govuk-visually-hidden")).toBe(true);
+  });
+
+  it("should render the Welsh caption when the cy locale is used", () => {
+    const { $ } = render(env, TEMPLATE, baseData(cy));
+
+    expect($("table caption").text().trim()).toBe(cy.tableCaption);
+  });
+
   it("should render Save and a secondary Next inside a button group on a page that is not the last", () => {
     const { $ } = render(env, TEMPLATE, baseData(en, { currentPage: 1, totalPages: 3 }));
 

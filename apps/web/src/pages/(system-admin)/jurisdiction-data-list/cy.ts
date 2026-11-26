@@ -15,7 +15,8 @@ export const cy = {
   },
   nameColumn: "Enw",
   typeColumn: "Math",
-  actionColumn: "",
+  actionColumn: "Actions",
   modifyLinkText: "Addasu",
-  noResultsText: "Ni chanfuwyd unrhyw gofnodion"
+  noResultsText: "Ni chanfuwyd unrhyw gofnodion",
+  tableCaption: "Jurisdictions and sub-jurisdictions"
 };

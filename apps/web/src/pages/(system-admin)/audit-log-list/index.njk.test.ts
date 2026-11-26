@@ -55,6 +55,7 @@ const buildData = ({
   emailHeader: content.tableHeaders.email,
   actionHeader: content.tableHeaders.action,
   viewHeader: content.tableHeaders.view,
+  tableCaption: content.tableCaption,
   viewLinkText: content.viewLink,
   noResultsText: content.noResults,
   backToTopText: content.backToTop,
@@ -64,6 +65,11 @@ const buildData = ({
 });
 
 describe("audit-log-list template", () => {
+  it("should have matching English and Welsh locale keys", () => {
+    expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+    expect(Object.keys(en.tableHeaders).sort()).toEqual(Object.keys(cy.tableHeaders).sort());
+  });
+
   let env: nunjucks.Environment;
 
   beforeEach(() => {
@@ -111,6 +117,32 @@ describe("audit-log-list template", () => {
       expect($('a[href="/audit-log-detail?id=log-1"]').text()).toContain(en.viewLink);
     });
 
+    it("should render a visible Actions header and a visually hidden caption", () => {
+      const logs = [{ id: "log-1", timestamp: "01/01/2026 09:00:00", userEmail: "user1@example.com", action: "USER_LOGIN" }];
+      const { $ } = render(env, TEMPLATE, buildData({ logs }));
+
+      const headers = $("table thead th");
+      expect(headers).toHaveLength(4);
+      headers.each((_, el) => {
+        expect($(el).text().trim()).not.toBe("");
+        expect($(el).find(".govuk-visually-hidden")).toHaveLength(0);
+      });
+      expect(headers.last().text().trim()).toBe(en.tableHeaders.view);
+
+      const caption = $("table caption");
+      expect(caption).toHaveLength(1);
+      expect(caption.text().trim()).toBe(en.tableCaption);
+      expect(caption.hasClass("govuk-visually-hidden")).toBe(true);
+    });
+
+    it("should escape the user email in the table", () => {
+      const logs = [{ id: "log-1", timestamp: "t", userEmail: "<b>x</b>@example.com", action: "USER_LOGIN" }];
+      const { $ } = render(env, TEMPLATE, buildData({ logs }));
+
+      expect($("table tbody b")).toHaveLength(0);
+      expect($("table tbody .audit-log-layout__word-break").text()).toBe("<b>x</b>@example.com");
+    });
+
     it("should render the no results message when there are no logs", () => {
       const data = buildData({ logs: [] });
 
@@ -143,13 +175,34 @@ describe("audit-log-list template", () => {
     it("should render the error summary with validation messages", () => {
       const errors = {
         email: { text: en.invalidEmail, href: "#email" },
-        date: { text: en.invalidDate, href: "#day" }
+        date: { text: en.invalidDate, href: "#date-day" }
       };
       const data = buildData({ errors, errorList: Object.values(errors) });
 
       const { $ } = render(env, TEMPLATE, data);
 
       assertErrorSummary($, [en.invalidEmail, en.invalidDate]);
+    });
+
+    it("should link the date error to the day input and mark every date input as in error", () => {
+      const errors = { date: { text: en.invalidDate, href: "#date-day" } };
+      const data = buildData({ errors, errorList: Object.values(errors) });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const summaryHref = $(".govuk-error-summary__list a").attr("href");
+      expect(summaryHref).toBe("#date-day");
+      expect($(summaryHref as string)).toHaveLength(1);
+      expect($("#date .govuk-input--error")).toHaveLength(3);
+    });
+
+    it("should not mark the date inputs as in error when only the email is invalid", () => {
+      const errors = { email: { text: en.invalidEmail, href: "#email" } };
+      const data = buildData({ errors, errorList: Object.values(errors) });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("#date .govuk-input--error")).toHaveLength(0);
     });
   });
 
@@ -163,6 +216,14 @@ describe("audit-log-list template", () => {
       expect($("h2").text()).toContain(cy.filters.heading);
       expect($('a[href="/audit-log-list"]').text()).toContain(cy.filters.clearFilters);
       expect($(".govuk-body").text()).toContain(cy.noResults);
+    });
+
+    it("should render the Actions header in Welsh content", () => {
+      const logs = [{ id: "log-1", timestamp: "t", userEmail: "e", action: "a" }];
+      const { $ } = render(env, TEMPLATE, buildData({ content: cy, logs }));
+
+      expect($("table thead th").last().text().trim()).toBe(cy.tableHeaders.view);
+      expect($("table caption").text().trim()).toBe(cy.tableCaption);
     });
   });
 });

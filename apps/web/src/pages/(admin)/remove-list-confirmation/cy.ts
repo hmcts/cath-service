@@ -13,5 +13,6 @@ export const cy = {
   radioNo: "Na",
   continueButton: "Parhau",
   errorSummaryTitle: "Mae problem wedi codi",
-  errorNoSelection: "Dewiswch opsiwn"
+  errorNoSelection: "Dewiswch opsiwn",
+  tableCaption: "Content to remove"
 };

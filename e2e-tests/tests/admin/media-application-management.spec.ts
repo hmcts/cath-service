@@ -5,12 +5,14 @@ import { generateTestEmail, prefixName } from "../../utils/test-prefix.js";
 import { createTestMediaApplication, getTestMediaApplication } from "../../utils/test-support-api.js";
 
 test.describe("Media Application Management", () => {
+  const approvalApplicantName = prefixName("Test Media User");
   let approvalApplicationId: string;
   let rejectionApplicationId: string;
+  let proofOfIdApplicationId: string;
 
   test.beforeAll(async () => {
     const approvalApp = (await createTestMediaApplication({
-      name: prefixName("Test Media User"),
+      name: approvalApplicantName,
       email: generateTestEmail("media-approval"),
       employer: "Test News Corp",
       status: "PENDING",
@@ -25,8 +27,18 @@ test.describe("Media Application Management", () => {
       proofOfIdPath: null
     })) as { id: string };
 
+    // Only viewed, never approved or rejected, so the placeholder blob key is never deleted
+    const proofOfIdApp = (await createTestMediaApplication({
+      name: prefixName("Test Proof Of Id User"),
+      email: generateTestEmail("media-proof-of-id"),
+      employer: "Test Proof Corp",
+      status: "PENDING",
+      proofOfIdPath: "e2e-placeholder-proof-of-id.pdf"
+    })) as { id: string };
+
     approvalApplicationId = approvalApp.id;
     rejectionApplicationId = rejectionApp.id;
+    proofOfIdApplicationId = proofOfIdApp.id;
   });
 
   test("CTSC Admin can complete media application approval journey with validation, Welsh, and accessibility", async ({ page }) => {
@@ -45,7 +57,7 @@ test.describe("Media Application Management", () => {
     await page.waitForURL("/media-applications");
     await expect(page.locator("h1")).toContainText("Select application to assess");
 
-    let accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["target-size", "link-name", "region"]).analyze();
+    let accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["target-size", "region"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // STEP 3: Test Welsh on applications list
@@ -60,7 +72,9 @@ test.describe("Media Application Management", () => {
     await expect(approvalRow).toBeVisible();
 
     // STEP 5: View application details and test accessibility
-    const viewLink = page.locator(`a[href*="/media-applications/${approvalApplicationId}"]`).first();
+    // The View link's accessible name includes the applicant, so each link in the table is unique
+    const viewLink = page.getByRole("link", { name: `View application for ${approvalApplicantName}`, exact: true });
+    await expect(viewLink).toHaveAttribute("href", `/media-applications/${approvalApplicationId}`);
     await viewLink.click();
     await page.waitForURL(new RegExp(`/media-applications/${approvalApplicationId}`));
     await expect(page.locator("h1")).toContainText("Applicant's details");
@@ -68,7 +82,24 @@ test.describe("Media Application Management", () => {
     await expect(page.getByText("@test.hmcts.net")).toBeVisible();
     await expect(page.getByText("Test News Corp")).toBeVisible();
 
-    accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["target-size", "link-name", "region"]).analyze();
+    // Approve and Reject sit together, left-aligned, in that order
+    const buttonGroup = page.locator(".govuk-button-group").filter({ has: page.getByRole("button", { name: /approve application/i }) });
+    const groupedButtons = buttonGroup.getByRole("button");
+    await expect(groupedButtons).toHaveCount(2);
+    await expect(groupedButtons.nth(0)).toHaveText(/approve application/i);
+    await expect(groupedButtons.nth(1)).toHaveText(/reject application/i);
+
+    accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["target-size", "region"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+
+    // The proof of ID link starts with its visible text "View" and says it opens in a new tab
+    await page.goto(`/media-applications/${proofOfIdApplicationId}`);
+    const proofOfIdLink = page.getByRole("link", { name: "View proof of ID (opens in new tab)", exact: true });
+    await expect(proofOfIdLink).toBeVisible();
+    await expect(proofOfIdLink).not.toHaveAttribute("aria-label", /.*/);
+    await expect(proofOfIdLink).toHaveAttribute("target", "_blank");
+
+    accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["target-size", "region"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // STEP 6: Test Welsh on application details

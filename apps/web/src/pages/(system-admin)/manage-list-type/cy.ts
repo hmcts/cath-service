@@ -21,5 +21,6 @@ export const cy = {
   hideButton: "[WELSH TRANSLATION REQUIRED: 'Hide list type']",
   showButton: "[WELSH TRANSLATION REQUIRED: 'Show list type']",
   notSet: "[WELSH TRANSLATION REQUIRED: 'Not set']",
-  noneSelected: "[WELSH TRANSLATION REQUIRED: 'None selected']"
+  noneSelected: "[WELSH TRANSLATION REQUIRED: 'None selected']",
+  tableCaption: "List type details"
 };

@@ -92,8 +92,7 @@ describe("remove-list-search-results page", () => {
           artefactRows: expect.any(Array),
           resultCount: 1,
           sortBy: "contentDate",
-          order: "desc",
-          isDefaultSort: true
+          order: "desc"
         })
       );
     });
@@ -149,10 +148,69 @@ describe("remove-list-search-results page", () => {
         "remove-list-search-results/index",
         expect.objectContaining({
           sortBy: "language",
-          order: "asc",
-          isDefaultSort: false
+          order: "asc"
         })
       );
+    });
+
+    it("should fall back to the default sort when sort and order are not recognised", async () => {
+      // Arrange
+      const { GET } = await import("./index.js");
+      const handler = GET[1] as (req: Request, res: Response) => Promise<void>;
+      mockGetLocationById.mockReturnValue({ locationId: 1, name: "Test Court", welshName: "Test Court Welsh" });
+      mockGetArtefactsByLocation.mockResolvedValue([
+        {
+          artefactId: "art1",
+          listTypeId: 999,
+          contentDate: new Date("2025-01-01"),
+          displayFrom: new Date("2025-01-01"),
+          displayTo: new Date("2025-12-31"),
+          language: "ENGLISH",
+          sensitivity: "PUBLIC"
+        }
+      ]);
+      const mockReq = {
+        query: { sort: "foo", order: "sideways" },
+        session: { removalData: { locationId: "1" } }
+      } as unknown as Request;
+      const mockRes = { render: vi.fn(), locals: {} } as unknown as Response;
+
+      // Act
+      await handler(mockReq, mockRes);
+
+      // Assert
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "remove-list-search-results/index",
+        expect.objectContaining({ sortBy: "contentDate", order: "desc", resultCount: 1 })
+      );
+    });
+
+    it("should pass a numeric content date sort value for each row", async () => {
+      // Arrange
+      const { GET } = await import("./index.js");
+      const handler = GET[1] as (req: Request, res: Response) => Promise<void>;
+      const contentDate = new Date("2025-03-01T00:00:00Z");
+      mockGetLocationById.mockReturnValue({ locationId: 1, name: "Test Court", welshName: "Test Court Welsh" });
+      mockGetArtefactsByLocation.mockResolvedValue([
+        {
+          artefactId: "art1",
+          listTypeId: 999,
+          contentDate,
+          displayFrom: null,
+          displayTo: null,
+          language: "ENGLISH",
+          sensitivity: "PUBLIC"
+        }
+      ]);
+      const mockReq = { query: {}, session: { removalData: { locationId: "1" } } } as unknown as Request;
+      const mockRes = { render: vi.fn(), locals: {} } as unknown as Response;
+
+      // Act
+      await handler(mockReq, mockRes);
+
+      // Assert
+      const renderArgs = vi.mocked(mockRes.render).mock.calls[0][1] as { artefactRows: Array<{ contentDateSortValue: number }> };
+      expect(renderArgs.artefactRows[0].contentDateSortValue).toBe(contentDate.getTime());
     });
   });
 
@@ -199,7 +257,6 @@ describe("remove-list-search-results page", () => {
       expect(mockRes.render).toHaveBeenCalledWith(
         "remove-list-search-results/index",
         expect.objectContaining({
-          isDefaultSort: true,
           errors: expect.arrayContaining([
             expect.objectContaining({
               href: "#artefacts"

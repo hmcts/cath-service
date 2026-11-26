@@ -19,7 +19,7 @@ export const en = {
   tableHeadEmail: "Email",
   tableHeadRole: "Role",
   tableHeadProvenance: "Provenance",
-  tableHeadManage: "",
+  tableHeadManage: "Actions",
   manageLink: "Manage",
   paginationPrevious: "Previous",
   paginationNext: "Next",
@@ -34,5 +34,6 @@ export const en = {
   provenanceCftIdam: "CFT IdAM",
   provenanceSso: "SSO",
   provenanceB2c: "B2C",
-  provenanceCrimeIdam: "Crime IdAM"
+  provenanceCrimeIdam: "Crime IdAM",
+  tableCaption: "Users"
 };
