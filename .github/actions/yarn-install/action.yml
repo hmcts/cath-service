@@ -1,0 +1,31 @@
+name: Yarn install
+description: >
+  yarn install with yarn's package cache. Only master pushes save it; other refs
+  restore master's. Run after setup-node and corepack enable.
+
+runs:
+  using: composite
+  steps:
+    - name: Locate yarn cache
+      id: dir
+      shell: bash
+      run: echo "path=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+
+    - name: Restore yarn cache
+      id: restore
+      uses: actions/cache/restore@v5
+      with:
+        path: ${{ steps.dir.outputs.path }}
+        key: yarn-berry-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+        restore-keys: yarn-berry-${{ runner.os }}-
+
+    - name: Install dependencies
+      shell: bash
+      run: yarn install --immutable
+
+    - name: Save yarn cache
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master' && steps.restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: ${{ steps.dir.outputs.path }}
+        key: ${{ steps.restore.outputs.cache-primary-key }}
