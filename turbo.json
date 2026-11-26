@@ -1,11 +1,11 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env", "**/.env.*"],
+  "globalDependencies": ["**/.env", "**/.env.*", "tsconfig.json", "types/**", "libs/notifications/types/**"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", "build/**", "generated/**"],
-      "inputs": ["**/*.ts", "**/*.tsx", "**/*.prisma", "package.json"]
+      "outputs": ["dist/**", "build/**", "generated/**", "*.tsbuildinfo"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.*", "!**/*.spec.*", "!**/__snapshots__/**", "!**/vitest.config.*", "!**/*.md"]
     },
     "test": {
       "outputs": ["coverage/**"],
