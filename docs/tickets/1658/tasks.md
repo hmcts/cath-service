@@ -40,4 +40,4 @@
 ### Verification
 - [x] `yarn test` from the repo root (covers `@hmcts/list-types-common` and every touched list-type package). All list-type packages pass. The only failures are 30 tests in `@hmcts/web` (`app.test.ts`, `session-timeout.test.ts`), and those fail the same way on the base branch with these changes stashed.
 - [x] `yarn lint`
-- [ ] (Not done: Postgres/Redis not reachable from the dev shell) Manual check: upload the ticket's AST example (blank Additional information) through non-strategic upload locally. It should publish and `additionalInformation` should be stored as `""`. With Hearing time blank, it should still be rejected.
+- [x] Manual check (done 2026-11-26 with `yarn dev:ci`): upload the ticket's AST example (blank Additional information) through non-strategic upload locally. It should publish and `additionalInformation` should be stored as `""`. With Hearing time blank, it should still be rejected.
