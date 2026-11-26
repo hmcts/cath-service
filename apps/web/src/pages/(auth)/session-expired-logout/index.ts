@@ -13,7 +13,8 @@ export const GET = async (req: Request, res: Response) => {
     const redirectUrl = buildSessionExpiredRedirectUrl({
       provenance: req.user?.provenance,
       locale,
-      origin: `${req.protocol}://${req.get("host")}`
+      origin: `${req.protocol}://${req.get("host")}`,
+      idToken: req.user?.idToken
     });
 
     req.logout(() => {

@@ -5,13 +5,13 @@ import { getSsoConfig } from "../config/sso-config.js";
 
 const SESSION_LOGGED_OUT_PATH = "/session-logged-out";
 
-export function buildSignOutRedirectUrl({ provenance, locale, origin }: SignOutRedirectOptions): string {
+export function buildSignOutRedirectUrl({ provenance, locale, origin, idToken }: SignOutRedirectOptions): string {
   // The strict locale cookie is not sent on the cross-site return from B2C or Microsoft, so the language must travel in the URL
   const lng = locale === "cy" ? "cy" : "en";
   const loggedOutPath = `${SESSION_LOGGED_OUT_PATH}?lng=${lng}`;
 
   if (provenance === "CFT_IDAM") {
-    return buildCftIdamLogoutUrl(loggedOutPath, getCftIdamConfig());
+    return buildCftIdamLogoutUrl(loggedOutPath, getCftIdamConfig(), idToken);
   }
 
   if (provenance === "CRIME_IDAM") {
@@ -41,4 +41,5 @@ interface SignOutRedirectOptions {
   provenance: string | undefined;
   locale: string | undefined;
   origin: string;
+  idToken: string | undefined;
 }

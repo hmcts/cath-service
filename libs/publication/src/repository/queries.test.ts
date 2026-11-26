@@ -14,6 +14,7 @@ import {
   getArtefactType,
   getLatestSjpArtefacts,
   getLocationsWithPublicationCount,
+  isListTypeHidden,
   updateSourceArtefactId
 } from "./queries.js";
 
@@ -1011,12 +1012,12 @@ describe("getArtefactById", () => {
       supersededCount: 0
     } as any;
 
-    vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ ...mockArtefact, listType: { name: "CIVIL_DAILY_CAUSE_LIST" } } as any);
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue({ ...mockArtefact, listType: { name: "CIVIL_DAILY_CAUSE_LIST" } } as any);
 
     const result = await getArtefactById("550e8400-e29b-41d4-a716-446655440000");
 
-    expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
-      where: { artefactId: "550e8400-e29b-41d4-a716-446655440000" },
+    expect(prisma.artefact.findFirst).toHaveBeenCalledWith({
+      where: { artefactId: "550e8400-e29b-41d4-a716-446655440000", listType: { isHidden: false } },
       select: {
         artefactId: true,
         type: true,
@@ -1051,13 +1052,27 @@ describe("getArtefactById", () => {
     });
   });
 
+  it("should return null when the artefact's list type is hidden", async () => {
+    // Arrange
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
+
+    // Act
+    const result = await getArtefactById("hidden-artefact-id");
+
+    // Assert
+    expect(prisma.artefact.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { artefactId: "hidden-artefact-id", listType: { isHidden: false } } })
+    );
+    expect(result).toBeNull();
+  });
+
   it("should return null when artefact not found", async () => {
-    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
 
     const result = await getArtefactById("non-existent-id");
 
-    expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
-      where: { artefactId: "non-existent-id" },
+    expect(prisma.artefact.findFirst).toHaveBeenCalledWith({
+      where: { artefactId: "non-existent-id", listType: { isHidden: false } },
       select: {
         artefactId: true,
         type: true,
@@ -1095,7 +1110,7 @@ describe("getArtefactById", () => {
       supersededCount: 5
     } as any;
 
-    vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ ...mockArtefact, listType: { name: "FAMILY_DAILY_CAUSE_LIST" } } as any);
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue({ ...mockArtefact, listType: { name: "FAMILY_DAILY_CAUSE_LIST" } } as any);
 
     const result = await getArtefactById("550e8400-e29b-41d4-a716-446655440001");
 
@@ -1114,6 +1129,46 @@ describe("getArtefactById", () => {
       provenance: "API",
       supersededCount: 5
     });
+  });
+});
+
+describe("isListTypeHidden", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return true when the list type is hidden", async () => {
+    // Arrange
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ isHidden: true } as any);
+
+    // Act
+    const result = await isListTypeHidden(7);
+
+    // Assert
+    expect(prisma.listType.findUnique).toHaveBeenCalledWith({ where: { id: 7 }, select: { isHidden: true } });
+    expect(result).toBe(true);
+  });
+
+  it("should return false when the list type is visible", async () => {
+    // Arrange
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ isHidden: false } as any);
+
+    // Act
+    const result = await isListTypeHidden(7);
+
+    // Assert
+    expect(result).toBe(false);
+  });
+
+  it("should return false when the list type does not exist", async () => {
+    // Arrange
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
+
+    // Act
+    const result = await isListTypeHidden(7);
+
+    // Assert
+    expect(result).toBe(false);
   });
 });
 

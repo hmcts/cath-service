@@ -12,6 +12,7 @@ const getHandler = async (req: Request, res: Response) => {
     .map((listType) => ({
       id: listType.id,
       name: listType.friendlyName || listType.name,
+      isHidden: listType.isHidden,
       configureUrl: `/manage-list-type?id=${listType.id}`
     }))
     .sort((a, b) => a.name.localeCompare(b.name));

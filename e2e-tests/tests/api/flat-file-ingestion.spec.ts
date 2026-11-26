@@ -4,6 +4,8 @@ import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import { API_BASE_URL } from "../../utils/test-support-api.js";
 
 const ENDPOINT = `${API_BASE_URL}/publication`;
+// Mirrors MAX_BLOB_SIZE in libs/api/src/blob-ingestion/validation.ts, the multer fileSize limit on this endpoint
+const MAX_BLOB_SIZE_BYTES = 100 * 1024 * 1024;
 
 // All publication metadata travels in x-* headers; the multipart form carries only `file`.
 // x-court-id is this run's own court, set in beforeAll, so publications never land on a real court
@@ -187,5 +189,17 @@ test.describe("POST /publication - flat file publication", () => {
       expect(body.message).toBeTruthy();
       expect(body.timestamp).toBeTruthy();
     }
+
+    // STEP 4: A file one byte over the size limit is rejected by multer before any publication is created
+    response = await request.post(ENDPOINT, {
+      multipart: { file: { name: "oversized.pdf", mimeType: "application/pdf", buffer: Buffer.alloc(MAX_BLOB_SIZE_BYTES + 1) } },
+      headers: { ...REQUIRED_HEADERS, ...auth },
+      timeout: 120_000
+    });
+
+    expect(response.status()).toBe(400);
+    body = await response.json();
+    expect(body.message).toBe("File too large");
+    expect(body.timestamp).toBeTruthy();
   });
 });

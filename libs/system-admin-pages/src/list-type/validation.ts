@@ -1,6 +1,7 @@
 import { PUBLISHER_PROVENANCES } from "@hmcts/list-types-common/list-type-provenance";
 
 const SENSITIVITY_OPTIONS = ["Public", "Private", "Classified"] as const;
+const VISIBILITY_CONFIRMATION_OPTIONS = ["yes", "no"] as const;
 
 function getFieldLabel(fieldName: string): string {
   const labels: Record<string, string> = {
@@ -157,6 +158,12 @@ export function validateSubJurisdictions(subJurisdictionIds: number[]) {
 
   return errors;
 }
+
+export function validateVisibilityConfirmation(value: unknown): value is VisibilityConfirmation {
+  return VISIBILITY_CONFIRMATION_OPTIONS.includes(value as never);
+}
+
+export type VisibilityConfirmation = (typeof VISIBILITY_CONFIRMATION_OPTIONS)[number];
 
 export interface ListTypeDetailsInput {
   name: string;

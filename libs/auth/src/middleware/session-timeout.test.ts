@@ -184,13 +184,14 @@ describe("Session Timeout Middleware", () => {
       // Arrange
       idleFor(60);
       res.locals = { locale: "cy" };
+      req.user = { ...req.user!, idToken: "cft-id-token" };
 
       // Act
       sessionTimeoutMiddleware(req as Request, res as Response, next);
 
       // Assert
       expect(res.redirect).toHaveBeenCalledWith(
-        "https://hmcts-access.aat.platform.hmcts.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-logged-out%3Flng%3Dcy"
+        "https://hmcts-access.aat.platform.hmcts.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-logged-out%3Flng%3Dcy&id_token_hint=cft-id-token"
       );
     });
 

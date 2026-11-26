@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateMagistratesStandardListExcel } from "./excel-generator.js";
 
-vi.mock("@hmcts/list-types-common", () => ({
+vi.mock("@hmcts/list-types-common", async (importOriginal) => ({
+  formatDdMmYyyyDate: (await importOriginal<typeof import("@hmcts/list-types-common")>()).formatDdMmYyyyDate,
   autoFitColumns: vi.fn(),
   sanitiseCellValue: vi.fn((v: string) => v),
   saveExcelToStorage: vi.fn().mockResolvedValue({ excelPath: "test-id.xlsx" })
@@ -183,7 +184,7 @@ describe("generateMagistratesStandardListExcel", () => {
 
     await generateMagistratesStandardListExcel(baseOptions);
 
-    expect(sanitiseCellValue).toHaveBeenCalledWith("02/05/2026 - For the trial");
+    expect(sanitiseCellValue).toHaveBeenCalledWith("2 May 2026 - For the trial");
   });
 
   it("should use the Welsh adjourned text when locale is cy", async () => {
@@ -193,7 +194,49 @@ describe("generateMagistratesStandardListExcel", () => {
 
     await generateMagistratesStandardListExcel({ ...baseOptions, locale: "cy" });
 
-    expect(sanitiseCellValue).toHaveBeenCalledWith("02/05/2026 - Ar gyfer y treial");
+    expect(sanitiseCellValue).toHaveBeenCalledWith("2 Mai 2026 - Ar gyfer y treial");
+  });
+
+  it("should write the date of birth, plea date and conviction date in long format", async () => {
+    const hearing = makeHearing([makeOffence({ pleaDate: "05/01/2025", convictionDate: "06/01/2025" })]);
+
+    vi.mocked(renderMagistratesStandardListData).mockResolvedValue(makeRenderedData([hearing]) as any);
+
+    await generateMagistratesStandardListExcel(baseOptions);
+
+    expect(sanitiseCellValue).toHaveBeenCalledWith("1 January 1980");
+    expect(sanitiseCellValue).toHaveBeenCalledWith("5 January 2025");
+    expect(sanitiseCellValue).toHaveBeenCalledWith("6 January 2025");
+  });
+
+  it("should write the date of birth in long format when the hearing has no offences", async () => {
+    vi.mocked(renderMagistratesStandardListData).mockResolvedValue(makeRenderedData([makeHearing([])]) as any);
+
+    await generateMagistratesStandardListExcel(baseOptions);
+
+    expect(sanitiseCellValue).toHaveBeenCalledWith("1 January 1980");
+  });
+
+  it("should use Welsh month names in the dates when locale is cy", async () => {
+    const hearing = makeHearing([makeOffence({ convictionDate: "06/10/2025" })]);
+
+    vi.mocked(renderMagistratesStandardListData).mockResolvedValue(makeRenderedData([hearing]) as any);
+
+    await generateMagistratesStandardListExcel({ ...baseOptions, locale: "cy" });
+
+    expect(sanitiseCellValue).toHaveBeenCalledWith("1 Ionawr 1980");
+    expect(sanitiseCellValue).toHaveBeenCalledWith("6 Hydref 2025");
+  });
+
+  it("should write a date that cannot be parsed unchanged", async () => {
+    const hearing = makeHearing([makeOffence({ pleaDate: "2025-02-31T00:00:00Z" })]);
+
+    vi.mocked(renderMagistratesStandardListData).mockResolvedValue(makeRenderedData([hearing]) as any);
+
+    const result = await generateMagistratesStandardListExcel(baseOptions);
+
+    expect(result.success).toBe(true);
+    expect(sanitiseCellValue).toHaveBeenCalledWith("2025-02-31T00:00:00Z");
   });
 
   it("should leave the adjourned from column empty when there is no adjourned date", async () => {

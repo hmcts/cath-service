@@ -90,9 +90,13 @@ export async function createArtefact(data: Artefact): Promise<{ artefactId: stri
   return { artefactId: artefact.artefactId, isUpdate: false };
 }
 
+/**
+ * Public lookup of a single artefact. Artefacts whose list type is hidden resolve to null,
+ * so every public page and download built on this returns 404 for them.
+ */
 export async function getArtefactById(artefactId: string): Promise<ArtefactWithListType | null> {
-  const artefact = await prisma.artefact.findUnique({
-    where: { artefactId },
+  const artefact = await prisma.artefact.findFirst({
+    where: { artefactId, listType: { isHidden: false } },
     select: {
       artefactId: true,
       type: true,
@@ -113,6 +117,14 @@ export async function getArtefactById(artefactId: string): Promise<ArtefactWithL
   if (!artefact) return null;
   const { listType, ...rest } = artefact;
   return { ...rest, listTypeName: listType?.name };
+}
+
+export async function isListTypeHidden(listTypeId: number): Promise<boolean> {
+  const listType = await prisma.listType.findUnique({
+    where: { id: listTypeId },
+    select: { isHidden: true }
+  });
+  return listType?.isHidden === true;
 }
 
 export async function getArtefactsByLocation(locationId: string): Promise<Artefact[]> {

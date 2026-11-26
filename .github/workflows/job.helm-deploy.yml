@@ -61,6 +61,9 @@ on:
       namespace:
         description: "Kubernetes namespace"
         value: ${{ jobs.helm-deploy.outputs.namespace }}
+      ui-baseline-url:
+        description: "Where the hosted parity check is, when this deploy deployed it (empty otherwise)"
+        value: ${{ jobs.helm-deploy.outputs.ui-baseline-url }}
 
 env:
   CHANGE_ID: ${{ inputs.change-id }}
@@ -70,14 +73,16 @@ jobs:
   helm-deploy:
     name: Deploy to ${{ inputs.environment }}
     runs-on: ubuntu-latest
-    # Must exceed the 15m0s helm timeout below plus the recovery-timeout that
-    # helm-deploy allows itself, or the job is killed mid-install and leaves the
-    # release pending, which is the state the recovery then has to clean up.
-    timeout-minutes: 35
+    # Must exceed the helm timeouts below (15m0s for cath-service, 10m0s for
+    # ui-baseline) plus the recovery-timeout that helm-deploy allows itself
+    # for each, or the job is killed mid-install and leaves the release pending,
+    # which is the state the recovery then has to clean up.
+    timeout-minutes: 45
     outputs:
       urls: ${{ steps.urls.outputs.urls }}
       release-name: ${{ env.RELEASE_NAME }}
       namespace: ${{ env.TEAM_NAME }}
+      ui-baseline-url: ${{ steps.ui-baseline-url.outputs.url }}
     permissions:
       contents: read
       id-token: write
@@ -131,6 +136,17 @@ jobs:
               ;;
           esac
 
+          # The hosted parity check (apps/ui-baseline) runs where testers check CaTH against pip
+          # (aat), and in preview, to check a pull request's CaTH; nowhere else.
+          UI_BASELINE_ENABLED="false"
+          UI_BASELINE_VALUES=""
+          case "$ENVIRONMENT" in
+            aat|preview)
+              UI_BASELINE_ENABLED="true"
+              UI_BASELINE_VALUES="values.${ENVIRONMENT}.template.yaml"
+              ;;
+          esac
+
           # CNP cluster and resource group names are a pure function of the
           # environment, so no lookup table is needed.
           CLUSTER="cft-${ENVIRONMENT}-${{ inputs.cluster-suffix }}"
@@ -141,6 +157,8 @@ jobs:
             echo "GLOBAL_ENVIRONMENT=${GLOBAL_ENVIRONMENT}"
             echo "VALUES_TEMPLATE=${VALUES_TEMPLATE}"
             echo "ENABLE_TEST_SUPPORT=${ENABLE_TEST_SUPPORT}"
+            echo "UI_BASELINE_ENABLED=${UI_BASELINE_ENABLED}"
+            echo "UI_BASELINE_VALUES=${UI_BASELINE_VALUES}"
             echo "DNS_ZONE=${ENVIRONMENT}.platform.hmcts.net"
           } >> "$GITHUB_ENV"
 
@@ -149,6 +167,7 @@ jobs:
           echo "Global environment: ${GLOBAL_ENVIRONMENT}"
           echo "Values template:    ${VALUES_TEMPLATE}"
           echo "Test support:       ${ENABLE_TEST_SUPPORT}"
+          echo "UI baseline:        ${UI_BASELINE_ENABLED}"
 
       - name: Set environment variables
         run: |
@@ -204,6 +223,82 @@ jobs:
           business-area: Cross-Cutting
           timeout: 15m0s
 
+      # The hosted parity check (apps/ui-baseline) is a release of its own, deployed after
+      # cath-service's. helm-deploy is --atomic, so a ui-baseline pod that cannot start (a missing
+      # secret, an image that cannot be pulled, Chromium slow to be ready) rolls back only
+      # ui-baseline, to its last good release. Neither step fails the deploy: web and api are
+      # already out, and the warning below says ui-baseline was not.
+      #
+      # It is deployed by digest, not tag. A master merge that did not rebuild it deploys the
+      # floating aat tag, after one that did deployed aat-<sha>: the same image under another name,
+      # which would still replace the pod, and hand over the runs queued in it. A digest only
+      # changes when the image does.
+      - name: Pin the ui-baseline image
+        id: ui-baseline-image
+        if: env.UI_BASELINE_ENABLED == 'true'
+        continue-on-error: true
+        run: |
+          IMAGE="${REGISTRY}/cath/cath-ui-baseline:${UI_BASELINE_IMAGE}"
+          if ! DIGEST=$(docker buildx imagetools inspect "$IMAGE" --format '{{.Manifest.Digest}}' 2>/tmp/inspect.err); then
+            # A pull request builds ui-baseline only when it could have changed its image
+            # (detect-affected-apps.sh), so one that never has has no image of it to deploy. Any other
+            # failure (an expired token, the registry down) is an error, not taken for that.
+            if [ "${{ inputs.environment }}" = "preview" ] && grep -q ': not found$' /tmp/inspect.err; then
+              echo "::notice::ui-baseline is not deployed to preview: this pull request has not built its image (${IMAGE})"
+              echo "UI_BASELINE_ENABLED=false" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            echo "::error::Could not look up ${IMAGE}: $(tail -1 /tmp/inspect.err)"
+            exit 1
+          fi
+          if [ -z "$DIGEST" ]; then
+            echo "::error::Could not find the digest of ${IMAGE}"
+            exit 1
+          fi
+          echo "ui-baseline: ${IMAGE} is ${DIGEST}"
+          echo "UI_BASELINE_IMAGE_REF=@${DIGEST}" >> "$GITHUB_ENV"
+
+      - name: Deploy ui-baseline
+        id: ui-baseline
+        if: env.UI_BASELINE_ENABLED == 'true' && steps.ui-baseline-image.outcome == 'success'
+        continue-on-error: true
+        uses: hmcts/cnp-githubactions-library/helm-deploy@main
+        with:
+          environment: ${{ env.CLUSTER }}
+          team-name: ${{ env.TEAM_NAME }}
+          application-name: ${{ env.APPLICATION_NAME }}
+          azure-credentials: ${{ secrets[format('AZURE_CREDENTIALS_CFT_{0}', inputs.environment)] }}
+          # The resources keep the names, and the host, they had as part of cath-service's release
+          release-name: ${{ env.RELEASE_NAME }}-ui-baseline
+          namespace: ${{ env.TEAM_NAME }}
+          chart: apps/ui-baseline/helm
+          values-template: apps/ui-baseline/helm/${{ env.UI_BASELINE_VALUES }}
+          global-environment: ${{ env.GLOBAL_ENVIRONMENT }}
+          business-area: Cross-Cutting
+          timeout: 10m0s
+
+      # Output on its own rather than in the deployment URLs (below), for the PR comment and its own
+      # health check (job.smoke-test.yml)
+      - name: Report where ui-baseline is
+        id: ui-baseline-url
+        if: env.UI_BASELINE_ENABLED == 'true' && steps.ui-baseline.outcome == 'success'
+        # Only reports: like every ui-baseline step, it never fails CaTH's deploy
+        continue-on-error: true
+        run: |
+          HOST=$(kubectl get ingress -n "${TEAM_NAME}" -l "app.kubernetes.io/instance=${RELEASE_NAME}-ui-baseline" -o jsonpath='{.items[*].spec.rules[0].host}' | awk '{print $1}')
+          if [ -z "${HOST}" ]; then
+            echo "::warning::ui-baseline was deployed, but no ingress was found for it, so its address is not reported"
+            exit 0
+          fi
+          echo "ui-baseline (VPN only): https://${HOST}"
+          echo "**ui-baseline** (VPN only): https://${HOST}" >> "$GITHUB_STEP_SUMMARY"
+          echo "url=https://${HOST}" >> "$GITHUB_OUTPUT"
+
+      - name: Report a ui-baseline deploy that failed
+        if: env.UI_BASELINE_ENABLED == 'true' && (steps.ui-baseline-image.outcome == 'failure' || steps.ui-baseline.outcome == 'failure')
+        run: |
+          echo "::warning::The hosted parity check (ui-baseline) was not deployed; it keeps its last good release. CaTH itself was deployed. The steps above say why."
+
       # Preview hosts are registered by the preview platform, not here. Without
       # this step the release-scoped hosts have no A record and the smoke test
       # fails with HTTP 000, which reads like an app failure but is DNS.
@@ -221,9 +316,10 @@ jobs:
           SUBSCRIPTION="DTS-CFTPTL-INTSVC"
           TTL=300
 
-          # Get all ingress hostnames for this release
+          # Get all ingress hostnames for this release, and for ui-baseline's, a release
+          # of its own deployed beside this one
           HOSTNAMES=$(kubectl get ingress -n ${{ env.TEAM_NAME }} \
-            -l "app.kubernetes.io/instance=${{ env.RELEASE_NAME }}" \
+            -l "app.kubernetes.io/instance in (${{ env.RELEASE_NAME }},${{ env.RELEASE_NAME }}-ui-baseline)" \
             -o jsonpath='{.items[*].spec.rules[*].host}')
 
           for HOST in $HOSTNAMES; do
