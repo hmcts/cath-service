@@ -23,16 +23,17 @@ This follows the HMCTS cutover pattern: a new secret, then a mapping switch, so 
 - [ ] Scenario 2: in aat, demo and perftest, prove Entra ID and key auth without the app. Use `az redisenterprise test-connection --auth entra` and `--auth access-key` from inside the network, or a debug pod as `cath-<env>-mi` (`PING`, `SET`/`GET`, a single-key `EVAL` over TLS on 10000). There is no prod check because there is no prod access.
 
 ### Stage 2: switch to Managed Redis with keys (PR 2, cath-service)
-- [ ] In `apps/web/helm/values.yaml:62-63`, `apps/api/helm/values.yaml:19-20` and `helm/cath-service/values.preview.template.yaml:82-83`, change `redis-url` to `managed-redis-url`, keeping `alias: REDIS_URL`. Check that `apps/web/helm/values.yaml.test.ts` passes.
+- [x] In `apps/web/helm/values.yaml:62-63`, `apps/api/helm/values.yaml:19-20` and `helm/cath-service/values.preview.template.yaml:82-83`, change `redis-url` to `managed-redis-url`, keeping `alias: REDIS_URL`. Check that `apps/web/helm/values.yaml.test.ts` passes.
 - [ ] Scenario 3 on the PR preview, which mounts `managed-redis-url` from `cath-aat`: run E2E, then check App Insights shows `*.redis.azure.net:10000` and no `MOVED`/`CROSSSLOT`.
 - [ ] After merge, the release restarts aat. Repeat scenario 3 on aat, including 0 `SocketClosedUnexpectedlyError` over 25 idle minutes.
 - [ ] Scenario 4: rollback rehearsal on aat. Deploy a revert of the mapping with a manual Flux deploy, confirm the app works on the old instance, then restore it.
 - [ ] After the next promoted prod release (or a manual Flux deploy), confirm the PROD smoke test and app health are green.
 
 ### Stage 3: remove the old Azure Cache for Redis (PR 3, Terraform)
-- [ ] Confirm `/health` `X-Git-Sha` shows the stage 2 release in aat, demo, perftest and prod. Ask open PRs to rebase, because their previews mount from `cath-aat`.
-- [ ] `infrastructure/redis.tf`: remove `module "redis"`, `data.azurerm_subnet.redis_private_endpoint` and the `redis_url`, `redis_host`, `redis_port` and `redis_access_key` secrets.
-- [ ] `infrastructure/env-config.tf`: remove the `redis_sku_name`/`redis_family`/`redis_capacity` keys, and `redis_subnet_override` if nothing else uses it. Update the comments.
+- [x] Confirm the stage 2 release runs in aat, demo, perftest and prod. Checked 2026-11-23: cnp-flux-config pins `cath-web` and `cath-api` to `prod-f104c92-…`, no per-environment overlay overrides the image, and `f104c92` contains the stage 2 merge `b814b3a`. `/health` sends no `X-Git-Sha` header, so check the image tag in `apps/cath/cath-{web,api}/cath-{web,api}.yaml` with `git merge-base --is-ancestor <merge-sha> <image-sha>`.
+- [ ] Merge master into this PR, because its last CI run predates stage 2. Ask the authors of active open PRs to rebase, because their previews mount from `cath-aat`.
+- [x] `infrastructure/redis.tf`: remove `module "redis"`, `data.azurerm_subnet.redis_private_endpoint` and the `redis_url`, `redis_host`, `redis_port` and `redis_access_key` secrets.
+- [x] `infrastructure/env-config.tf`: remove the `redis_sku_name`/`redis_family`/`redis_capacity` keys, and `redis_subnet_override` if nothing else uses it. Update the comments.
 - [ ] Scenario 5: check the plans destroy only the legacy cache, its private endpoint, resource group `cath-cache-<env>` and those four secrets, with nothing changed on `module.managed_redis`. After apply, E2E on aat passes.
 
 ### Stage 4: switch to managed identity (our own design)
@@ -59,7 +60,7 @@ This follows the HMCTS cutover pattern: a new secret, then a mapping switch, so 
     Keep the `pingInterval: 300_000` assertions.
   - In `apps/web/src/app.test.ts`, mock `createRedisClient` and assert it is called with `REDIS_URL` and the flag, and connected.
 - [ ] `docs/ARCHITECTURE.md`: update the Redis section to cover Managed Redis, EnterpriseCluster, DB 0, `REDIS_MI=true` through `cath-<env>-mi`, TLS on 10000, and local `redis://localhost:6380` with no auth.
-- [ ] Run `yarn test` and `yarn lint:fix`, and confirm `yarn dev` works against docker Redis with no Azure login. After merge, confirm nightly CI and aat E2E are green and that every environment runs PR A (`/health` `X-Git-Sha`).
+- [ ] Run `yarn test` and `yarn lint:fix`, and confirm `yarn dev` works against docker Redis with no Azure login. After merge, confirm nightly CI and aat E2E are green and that every environment runs PR A (the image tag in cnp-flux-config contains the PR A merge).
 
 **PR B: aat only (PR 6, cnp-flux-config)**
 - [ ] Add `REDIS_MI: "true"` (quoted) under `spec.values.nodejs.environment` in `apps/cath/cath-web/aat.yaml` and `apps/cath/cath-api/aat.yaml`. After Flux redeploys aat, repeat scenario 3 on aat and check there is no `NOAUTH`/`WRONGPASS`.
@@ -71,7 +72,7 @@ This follows the HMCTS cutover pattern: a new secret, then a mapping switch, so 
 - [ ] PR 8: remove the aat `REDIS_MI` override from `cnp-flux-config`.
 
 ### Stage 5: turn off keys (PR 9, Terraform)
-- [ ] Confirm `/health` `X-Git-Sha` shows PR C in every environment, and ask open PRs to rebase.
+- [ ] Confirm the image tag in cnp-flux-config contains the PR C merge in every environment, and ask open PRs to rebase.
 - [ ] `infrastructure/redis.tf`: set `access_keys_authentication_enabled = false` and remove `azurerm_key_vault_secret.managed_redis_url`.
 - [ ] Scenario 8, a mandatory plan check in every environment including prod: `module.managed_redis.azurerm_managed_redis.redis` must show `~ update in-place`, changing only `access_keys_authentication_enabled` from true to false, plus the `managed-redis-url` destroy. Never apply on `-/+` or `must be replaced`.
 - [ ] After apply, App Insights shows a short reconnect burst that recovers, E2E on aat and the PROD smoke test pass, and `az redisenterprise database show` reports keys disabled in non-prod.

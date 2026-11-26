@@ -2,6 +2,8 @@ import { prisma } from "@hmcts/postgres-prisma";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   deleteAllSubscriptionListTypesByUserId,
+  findHiddenListTypeIds,
+  findSubscribableListTypesBySubJurisdictionIds,
   findSubscriptionListTypeByUserId,
   getListTypeIdsForLocation,
   upsertSubscriptionListType
@@ -10,6 +12,9 @@ import {
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listTypeSubJurisdiction: {
+      findMany: vi.fn()
+    },
+    listType: {
       findMany: vi.fn()
     },
     subscriptionListType: {
@@ -27,6 +32,55 @@ describe("Subscription List Type Queries", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  describe("findSubscribableListTypesBySubJurisdictionIds", () => {
+    it("should exclude hidden and deleted list types", async () => {
+      // Arrange
+      const records = [{ id: 1, name: "A_LIST", friendlyName: "A list", welshFriendlyName: "Rhestr A" }];
+      vi.mocked(prisma.listType.findMany).mockResolvedValue(records as any);
+
+      // Act
+      const result = await findSubscribableListTypesBySubJurisdictionIds([3, 4]);
+
+      // Assert
+      expect(prisma.listType.findMany).toHaveBeenCalledWith({
+        where: {
+          deletedAt: null,
+          isHidden: false,
+          subJurisdictions: { some: { subJurisdictionId: { in: [3, 4] } } }
+        },
+        orderBy: { friendlyName: "asc" },
+        select: { id: true, name: true, friendlyName: true, welshFriendlyName: true }
+      });
+      expect(result).toEqual(records);
+    });
+  });
+
+  describe("findHiddenListTypeIds", () => {
+    it("should return only the IDs whose list type is hidden", async () => {
+      // Arrange
+      vi.mocked(prisma.listType.findMany).mockResolvedValue([{ id: 9 }] as any);
+
+      // Act
+      const result = await findHiddenListTypeIds([2, 9]);
+
+      // Assert
+      expect(prisma.listType.findMany).toHaveBeenCalledWith({
+        where: { id: { in: [2, 9] }, isHidden: true },
+        select: { id: true }
+      });
+      expect(result).toEqual([9]);
+    });
+
+    it("should not query when no IDs are given", async () => {
+      // Act
+      const result = await findHiddenListTypeIds([]);
+
+      // Assert
+      expect(result).toEqual([]);
+      expect(prisma.listType.findMany).not.toHaveBeenCalled();
+    });
   });
 
   describe("findSubscriptionListTypeByUserId", () => {
@@ -107,6 +161,7 @@ describe("Subscription List Type Queries", () => {
       expect(result).toEqual([5, 6, 7]);
       expect(prisma.listTypeSubJurisdiction.findMany).toHaveBeenCalledWith({
         where: {
+          listType: { isHidden: false, deletedAt: null },
           subJurisdiction: {
             locationSubJurisdictions: {
               some: { locationId: 100 }

@@ -49,7 +49,7 @@ async function validateFileUpload(file: Express.Multer.File | undefined, errorMe
   return errors;
 }
 
-async function validateJsonFileSchema(file: Express.Multer.File, listType: string): Promise<ValidationError | null> {
+async function validateJsonFileSchema(file: Express.Multer.File, listType: string, listTypes: ListTypeSummary[]): Promise<ValidationError | null> {
   const isJsonFile = /\.json$/i.test(file.originalname);
   if (!isJsonFile || !listType) {
     return null;
@@ -58,7 +58,6 @@ async function validateJsonFileSchema(file: Express.Multer.File, listType: strin
   try {
     const fileContent = file.buffer.toString("utf-8");
     const jsonData = JSON.parse(fileContent);
-    const listTypes = await findAllListTypes();
     const listTypesInfo = listTypes.map((lt) => ({
       id: lt.id,
       name: lt.name,
@@ -136,6 +135,11 @@ function validateDateRange(
   return null;
 }
 
+function validateListTypeIsVisible(body: UploadFormData, listTypes: ListTypeSummary[], errorMessages: ErrorMessages): ValidationError | null {
+  const isHidden = listTypes.some((listType) => listType.id.toString() === body.listType && listType.isHidden);
+  return isHidden ? { text: errorMessages.listTypeRequired, href: "#listType" } : null;
+}
+
 async function validateUploadForm(
   body: UploadFormData,
   file: Express.Multer.File | undefined,
@@ -148,8 +152,10 @@ async function validateUploadForm(
   const fileErrors = await validateFileUpload(file, errorMessages, allowedExtensions);
   errors.push(...fileErrors);
 
+  const listTypes = body.listType ? await findAllListTypes() : [];
+
   if (validateJson && file && body.listType) {
-    const jsonError = await validateJsonFileSchema(file, body.listType);
+    const jsonError = await validateJsonFileSchema(file, body.listType, listTypes);
     if (jsonError) {
       errors.push(jsonError);
     }
@@ -161,6 +167,12 @@ async function validateUploadForm(
   }
 
   errors.push(...validateRequiredFields(body, errorMessages));
+
+  // Hidden list types are not offered in the dropdown; this rejects a tampered form submission.
+  const hiddenListTypeError = validateListTypeIsVisible(body, listTypes, errorMessages);
+  if (hiddenListTypeError) {
+    errors.push(hiddenListTypeError);
+  }
 
   const hearingStartDateError = validateDate(
     body.hearingStartDate,
@@ -219,3 +231,5 @@ export function validateDate(dateInput: DateInput | undefined, fieldName: string
 
   return null;
 }
+
+type ListTypeSummary = Awaited<ReturnType<typeof findAllListTypes>>[number];
