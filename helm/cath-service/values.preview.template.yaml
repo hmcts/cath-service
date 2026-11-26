@@ -120,6 +120,18 @@ cath-web:
             alias: AZURE_STORAGE_CONNECTION_STRING
           - name: storageaccount-name
             alias: AZURE_STORAGE_ACCOUNT_NAME
+          # PIP frontend's client for the system admin PIP connection check (#1482). It holds api.request.admin
+          # on PIP data and account management; CaTH's own client does not yet.
+          - name: app-tenant-id
+            alias: AZURE_TENANT_ID
+          - name: pip-frontend-id
+            alias: PIP_API_CLIENT_ID
+          - name: pip-frontend-pwd
+            alias: PIP_API_CLIENT_SECRET
+          - name: pip-data-management-scope
+            alias: PIP_DATA_MANAGEMENT_SCOPE
+          - name: pip-account-management-scope
+            alias: PIP_ACCOUNT_MANAGEMENT_SCOPE
 
 # API application configuration
 cath-api:

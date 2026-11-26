@@ -31,11 +31,11 @@ export function buildSessionExpiredPath(redirectType: RedirectType, locale: stri
   return `/session-expired?lng=${lng}&reSignInUrl=${redirectType}`;
 }
 
-export function buildSessionExpiredRedirectUrl({ provenance, locale, origin }: SessionExpiredRedirectOptions): string {
+export function buildSessionExpiredRedirectUrl({ provenance, locale, origin, idToken }: SessionExpiredRedirectOptions): string {
   const sessionExpiredPath = buildSessionExpiredPath(getRedirectType(provenance), locale);
 
   if (provenance === "CFT_IDAM") {
-    return buildCftIdamLogoutUrl(sessionExpiredPath, getCftIdamConfig());
+    return buildCftIdamLogoutUrl(sessionExpiredPath, getCftIdamConfig(), idToken);
   }
 
   if (provenance === "PI_AAD") {
@@ -51,4 +51,5 @@ interface SessionExpiredRedirectOptions {
   provenance: string | undefined;
   locale: string | undefined;
   origin: string;
+  idToken: string | undefined;
 }

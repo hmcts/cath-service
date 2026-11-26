@@ -19,7 +19,8 @@ export function sessionTimeoutMiddleware(req: Request, res: Response, next: Next
     const redirectUrl = buildSignOutRedirectUrl({
       provenance: req.user?.provenance,
       locale: res.locals.locale,
-      origin: `${req.protocol}://${req.get("host")}`
+      origin: `${req.protocol}://${req.get("host")}`,
+      idToken: req.user?.idToken
     });
 
     req.logout(() => {
