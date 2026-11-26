@@ -25,6 +25,9 @@ nodejs:
     POSTGRES_DATABASE: cath
     THIRD_PARTY_KEY_VAULT: 'cath-tp-{{ .Values.global.environment }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
+    # Authenticate to Managed Redis as cath-<env>-mi (Entra ID) rather than with
+    # an access key. REDIS_URL is managed-redis-entra-url, which has no credentials.
+    REDIS_MI: 'true'
     # Public hostname, not the ingress host. OIDC redirect URIs are built from
     # this (libs/auth/src/config/sso-config.ts, b2c-config.ts, crime-idam-config.ts),
     # so it must match what is registered on the app registrations and what the
@@ -59,7 +62,7 @@ nodejs:
           alias: APPLICATION_INSIGHTS_CONNECTION_STRING
         - name: session-secret
           alias: SESSION_SECRET
-        - name: managed-redis-url
+        - name: managed-redis-entra-url
           alias: REDIS_URL
         - name: postgres-url
           alias: DATABASE_URL
@@ -103,3 +106,15 @@ nodejs:
           alias: AZURE_STORAGE_CONNECTION_STRING
         - name: storageaccount-name
           alias: AZURE_STORAGE_ACCOUNT_NAME
+        # PIP frontend's client for the system admin PIP connection check (#1482). It holds api.request.admin
+        # on PIP data and account management; CaTH's own client does not yet.
+        - name: app-tenant-id
+          alias: AZURE_TENANT_ID
+        - name: pip-frontend-id
+          alias: PIP_API_CLIENT_ID
+        - name: pip-frontend-pwd
+          alias: PIP_API_CLIENT_SECRET
+        - name: pip-data-management-scope
+          alias: PIP_DATA_MANAGEMENT_SCOPE
+        - name: pip-account-management-scope
+          alias: PIP_ACCOUNT_MANAGEMENT_SCOPE

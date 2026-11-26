@@ -44,26 +44,15 @@ module "managed_redis" {
   # so a change to the default on ?ref=main can't alter it.
   eviction_policy = "VolatileLRU"
 
-  # Keys stay on until the apps authenticate as cath-<env>-mi; the Data Owner
-  # assignment is in place now so that path can be proven before any app change.
-  access_keys_authentication_enabled = true
+  # The apps authenticate only as cath-<env>-mi (REDIS_MI=true), so access keys
+  # are off. The plan for this change must be an in-place update; never apply
+  # one that replaces the instance.
+  access_keys_authentication_enabled = false
   redis_access_policy_assignments = {
     "Data Owner" = {
       cath = { object_id = module.key_vault.managed_identity_objectid[0] }
     }
   }
-}
-
-# urlencode because nothing guarantees the Managed Redis key is free of
-# URL-reserved characters.
-resource "azurerm_key_vault_secret" "managed_redis_url" {
-  name            = "managed-redis-url"
-  value           = "rediss://:${urlencode(module.managed_redis.primary_access_key)}@${module.managed_redis.hostname}:${module.managed_redis.port}"
-  key_vault_id    = module.key_vault.key_vault_id
-  expiration_date = local.secret_expiry
-  tags            = merge(local.common_tags, { source = "Redis" })
-
-  depends_on = [module.managed_redis]
 }
 
 # No credentials: with REDIS_MI=true the apps authenticate as cath-<env>-mi

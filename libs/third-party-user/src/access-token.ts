@@ -1,7 +1,7 @@
 import type { OauthConfig } from "./oauth-config.js";
 import { discardBody, type RequestFailure, readJsonBody, sendOutboundRequest } from "./outbound-request.js";
 
-export async function requestAccessToken(config: OauthConfig): Promise<AccessTokenResult> {
+export async function requestAccessToken(config: TokenRequestConfig): Promise<AccessTokenResult> {
   const result = await sendOutboundRequest(config.tokenUrl, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
@@ -37,6 +37,8 @@ function extractAccessToken(body: unknown): string | undefined {
   }
   return typeof body.access_token === "string" && body.access_token !== "" ? body.access_token : undefined;
 }
+
+export type TokenRequestConfig = Pick<OauthConfig, "tokenUrl" | "clientId" | "clientSecret" | "scope">;
 
 export type AccessTokenResult =
   | { kind: "token"; accessToken: string }

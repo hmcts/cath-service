@@ -20,7 +20,7 @@ vi.mock("@hmcts/publication", () => ({
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
-      findUnique: vi.fn()
+      findFirst: vi.fn()
     }
   }
 }));
@@ -42,6 +42,7 @@ const mockPressCases: SjpCasePress[] = [
     postcode: "SW1A",
     prosecutor: "CPS",
     dateOfBirth: new Date("1990-01-01"),
+    rawDateOfBirth: "01/01/1990",
     age: 35,
     reference: "REF123",
     address: "123 Test Street, London",
@@ -59,6 +60,7 @@ const mockPressCases: SjpCasePress[] = [
     postcode: "M1",
     prosecutor: "DVLA",
     dateOfBirth: new Date("1985-05-15"),
+    rawDateOfBirth: "15/05/1985",
     age: 40,
     reference: "REF456",
     address: "456 Test Road, Manchester",
@@ -178,7 +180,7 @@ describe("getSjpListById", () => {
       locationId: "1"
     };
 
-    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as never);
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue(mockArtefact as never);
     vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(determineListType).mockReturnValue("public");
     vi.mocked(extractCaseCount).mockReturnValue(100);
@@ -191,13 +193,13 @@ describe("getSjpListById", () => {
     expect(result?.caseCount).toBe(100);
     expect(result?.locationId).toBe(1);
 
-    expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
-      where: { artefactId: "list-1" }
+    expect(prisma.artefact.findFirst).toHaveBeenCalledWith({
+      where: { artefactId: "list-1", listType: { isHidden: false } }
     });
   });
 
   it("should return null if artefact not found", async () => {
-    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
 
     const result = await getSjpListById("nonexistent");
 
@@ -212,7 +214,7 @@ describe("getSjpListById", () => {
       locationId: "1"
     };
 
-    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as never);
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue(mockArtefact as never);
     vi.mocked(getPublicationJson).mockResolvedValue(null);
 
     const result = await getSjpListById("list-1");
