@@ -167,8 +167,10 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       expect(await publicationLinks.count()).toBe(initialCount);
 
       // 8. Logout and verify loss of access to PRIVATE and CLASSIFIED publications
-      // /logout sends the id_token_hint to IDAM endSession, which returns the browser to /session-logged-out
-      await page.goto("/logout");
+      // The test-support login has no IDAM session or id token, so IDAM endSession answers 204 and a browser navigation
+      // would abort. The redirect to IDAM is not followed; this step only proves the CaTH session is destroyed.
+      const logoutResponse = await page.request.get("/logout", { maxRedirects: 0 });
+      expect(logoutResponse.status()).toBe(302);
 
       await page.goto(court.summaryUrl);
       await page.waitForSelector("h1.govuk-heading-l");
