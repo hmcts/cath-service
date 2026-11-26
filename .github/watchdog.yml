@@ -29,6 +29,9 @@
 # recurs, so a later triage can see the pattern that one window cannot. It is not in
 # fingerprint-by and no rule reads it, so adding it changes nothing that fires.
 #
+# make_list keeps whichever 20 it meets first, so above 20 occurrences seen_at is a
+# sample, not the first or the last 20. The triage prompt says so.
+#
 # Thresholds calibrated 2026-09-04 against cath-appinsights-aat: roughly 1800
 # non-health requests/day. Revisit when traffic changes materially.
 
