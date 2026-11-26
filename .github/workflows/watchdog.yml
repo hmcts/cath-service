@@ -157,6 +157,13 @@ jobs:
             // re-notify window; this stops two concurrent runs both triaging the same
             // thing, and gives a human somewhere to comment.
             //
+            // The gate is not permanent. Each time an open issue's problem is detected
+            // again, the sighting is recorded on the issue, and once enough have built up
+            // since the last triage the problem is triaged again on the same thread. A
+            // problem that never stops firing never closes its issue, so without this one
+            // inconclusive triage was the only look it ever got: #1033 sat open for eight
+            // weeks behind an ESCALATE that more sightings would have settled.
+            //
             // A problem that recurs after someone closed its issue still gets a new
             // issue rather than reopening a thread that was deliberately ended. Closed
             // issues are read only as history: whatever was concluded last time is
@@ -236,10 +243,12 @@ jobs:
             // allowlist a passer-by could leave "known noise, do not notify" and have it
             // read as a verdict on the next recurrence.
             const TRUSTED_ASSOCIATIONS = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
-            const priorConclusions = async (issue_number) => {
-              const comments = await github.paginate(github.rest.issues.listComments, {
-                owner, repo, issue_number, per_page: 100,
-              });
+            const commentsOn = (issue_number) => github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number, per_page: 100,
+            });
+            const priorConclusions = async (issue_number) =>
+              conclusionsFrom(await commentsOn(issue_number));
+            const conclusionsFrom = (comments) => {
               const reports = comments.filter(c =>
                 c.user?.type === 'Bot' && c.body?.startsWith(TRIAGE_REPORT_HEADING));
               const humans = comments
@@ -260,12 +269,143 @@ jobs:
               };
             };
 
+            // Sightings of a problem whose issue is still open. One comment per issue,
+            // edited in place rather than added to, because a problem that fires all
+            // day is re-detected every few hours and a comment each time would bury the
+            // thread and email every watcher. The rows are what one triage cannot see:
+            // a single window holds one or two occurrences per pod, but a dozen windows
+            // across a week show whether they keep a rhythm or arrive together.
+            //
+            // Six sightings is roughly three working days at the detect job's
+            // re-notify window. Counted from the last triage attempt, finished or not,
+            // so a triage that keeps crashing waits its turn rather than retrying on
+            // every detection.
+            const SIGHTINGS_MARKER = '<!-- watchdog-sightings -->';
+            const RETRIAGE_AFTER_SIGHTINGS = 6;
+            const SIGHTINGS_KEPT = 30;
+            const SIGHTING_STRING_CHARS = 300;
+            // Bounds a single sighting, so the trim below always gets under the limit:
+            // five rows of twenty seen_at entries is well under 10k characters.
+            const SIGHTING_ROWS = 5;
+            // GitHub rejects a comment over 65536 characters.
+            const SIGHTINGS_COMMENT_CHARS = 60000;
+            const TRIAGE_ATTEMPT_HEADINGS = [TRIAGE_REPORT_HEADING, '## ⚠️ Triage did not complete'];
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+
+            // Samples and stack traces are cut down; seen_at is kept whole, because the
+            // timing is the evidence.
+            const trimRow = (row) => Object.fromEntries(Object.entries(row ?? {}).map(([k, v]) =>
+              [k, typeof v === 'string' && v.length > SIGHTING_STRING_CHARS
+                ? `${v.slice(0, SIGHTING_STRING_CHARS)}… (truncated)`
+                : v]));
+
+            // Sliced on the outermost fence rather than matched, because a quoted
+            // exception message can itself contain a code fence.
+            const sightingsIn = (body) => {
+              const start = body?.indexOf('```json\n') ?? -1;
+              const end = body?.lastIndexOf('\n```') ?? -1;
+              if (start < 0 || end <= start) return [];
+              try {
+                const parsed = JSON.parse(body.slice(start + '```json\n'.length, end));
+                return Array.isArray(parsed?.sightings) ? parsed.sightings : [];
+              } catch {
+                return [];
+              }
+            };
+
+            const sightingsBody = (all) => {
+              let kept = all.slice(-SIGHTINGS_KEPT);
+              const render = () => [
+                SIGHTINGS_MARKER,
+                `**Still firing.** Detected again since this issue opened, most recently in [this run](${runUrl}); the last ${kept.length} sighting(s) are below. Updated in place on every detection, and triage runs again once ${RETRIAGE_AFTER_SIGHTINGS} sightings have built up since the last one.`,
+                '',
+                '<details><summary>Sightings</summary>',
+                '',
+                '```json',
+                JSON.stringify({ sightings: kept }, null, 1),
+                '```',
+                '',
+                '</details>',
+              ].join('\n');
+              while (kept.length > 1 && render().length > SIGHTINGS_COMMENT_CHARS) kept = kept.slice(1);
+              return render();
+            };
+
+            // Returns the sightings as recorded, this one included.
+            const recordSighting = async (issue, comments, finding) => {
+              const existingComment = comments.find(c =>
+                c.user?.type === 'Bot' && c.body?.startsWith(SIGHTINGS_MARKER));
+              const rows = finding.rows ?? [finding.row];
+              const sightings = [
+                ...sightingsIn(existingComment?.body),
+                {
+                  at: new Date().toISOString(),
+                  run: runUrl,
+                  rows: rows.slice(0, SIGHTING_ROWS).map(trimRow),
+                  ...(rows.length > SIGHTING_ROWS ? { rowsOmitted: rows.length - SIGHTING_ROWS } : {}),
+                },
+              ];
+              const body = sightingsBody(sightings);
+              if (existingComment) {
+                await github.rest.issues.updateComment({ owner, repo, comment_id: existingComment.id, body });
+              } else {
+                await github.rest.issues.createComment({ owner, repo, issue_number: issue.number, body });
+              }
+              return sightingsIn(body);
+            };
+
             const claimed = [];
             const prior = [];
             for (const finding of findings) {
               const existing = open.find(i => i.body?.includes(marker(finding.normalisedFingerprint)));
               if (existing) {
-                core.info(`${finding.fingerprint}: already tracked in #${existing.number} — skipping`);
+                const comments = await commentsOn(existing.number);
+                const sightings = await recordSighting(existing, comments, finding);
+
+                const attempts = comments.filter(c => c.user?.type === 'Bot'
+                  && TRIAGE_ATTEMPT_HEADINGS.some(h => c.body?.startsWith(h)));
+                const lastAttemptAt = attempts.length
+                  ? attempts[attempts.length - 1].created_at
+                  : existing.created_at;
+                const newSightings = sightings.filter(s => Date.parse(s.at) > Date.parse(lastAttemptAt));
+
+                const coveringPr = openFixPrs.find(p => p.checkIds.includes(finding.checkId));
+                if (coveringPr) {
+                  core.info(`${finding.fingerprint}: tracked in #${existing.number}, fix in review in #${coveringPr.number} — sighting recorded`);
+                  continue;
+                }
+                if (newSightings.length < RETRIAGE_AFTER_SIGHTINGS) {
+                  core.info(`${finding.fingerprint}: tracked in #${existing.number} — sighting ${newSightings.length} of ${RETRIAGE_AFTER_SIGHTINGS} before re-triage`);
+                  continue;
+                }
+
+                core.info(`${finding.fingerprint}: tracked in #${existing.number} — ${newSightings.length} sightings since the last triage, triaging again`);
+                const conclusions = conclusionsFrom(comments);
+                claimed.push({ ...finding, issue: existing.number, retriage: true });
+                prior.push({
+                  fingerprint: finding.fingerprint,
+                  checkId: finding.checkId,
+                  issue: existing.number,
+                  // The earlier triage already had the closed-issue priors, and its
+                  // report carries whatever it made of them.
+                  priorIssue: null,
+                  priorTriage: null,
+                  priorHumanComments: [],
+                  priorCheckIssue: null,
+                  priorCheckTriage: null,
+                  priorCheckHumanComments: [],
+                  retriage: {
+                    issueOpenedAt: existing.created_at,
+                    daysOpen: Math.floor((Date.now() - Date.parse(existing.created_at)) / 86400000),
+                    alerted: existing.labels.some(l => (l.name ?? l) === 'claude:watchdog-alerted'),
+                    lastTriageAt: lastAttemptAt,
+                    lastTriage: conclusions.report,
+                    humanComments: conclusions.humanComments,
+                    newSightingCount: newSightings.length,
+                    sightings,
+                  },
+                  openFixPrs,
+                });
                 continue;
               }
               const issue = await github.rest.issues.create({
@@ -317,6 +457,7 @@ jobs:
                 priorCheckIssue: sameIssue ? null : priorRef(previousCheck),
                 priorCheckTriage: checkPriorOf?.report || null,
                 priorCheckHumanComments: checkPriorOf?.humanComments || [],
+                retriage: null,
                 openFixPrs,
               });
             }
@@ -376,9 +517,10 @@ jobs:
 
             Read /tmp/watchdog/claimed.json first. Each entry is one finding: the check
             that fired, the KQL query that produced it, the row that breached, and the
-            tracking issue number. /tmp/watchdog/appinsights-health-check-findings.json
-            has the full picture, including the checks that stayed clean — useful for
-            ruling things out.
+            tracking issue number. An entry with `retriage: true` is a problem already
+            triaged once that is still firing; prior.json says what is known about it.
+            /tmp/watchdog/appinsights-health-check-findings.json has the full picture,
+            including the checks that stayed clean — useful for ruling things out.
 
             Read /tmp/watchdog/prior.json before any of that. It is what the watchdog
             already knows about these findings, and it carries two kinds of prior that
@@ -412,6 +554,29 @@ jobs:
             `checkIds` contain a finding's own checkId is already a fix for that check:
             say which PR covers it and stop. Two changes to the same check is worse than
             none. An entry that does not name the checkId is unrelated work — ignore it.
+
+            `retriage` is set when this is not a new problem: it has been triaged before,
+            its tracking issue is still open, and it has kept firing since. `lastTriage`
+            is the report that triage wrote, `humanComments` is what people have said on
+            the issue, and `sightings` is every time the watchdog has seen the
+            problem again, each with the rows it returned — including `seen_at`, when
+            each occurrence happened and on which pod. Those sightings are exactly the
+            evidence the earlier triage did not have, so for a re-triage the rule about
+            standing diagnoses works the other way round: do not repeat the earlier
+            conclusion, test it.
+
+            - If the last report said what evidence would settle it, check the sightings
+              against that, and say what they show.
+            - Look at the timing across the sightings, not just the counts: the same pods
+              recurring at a steady interval points to a timer or a timeout; every pod at
+              the same instant points to one event they all saw.
+            - If the evidence now meets the bar for FIX, reach FIX. Moving from ESCALATE
+              to FIX on evidence is the whole point of triaging again, not a contradiction
+              of the earlier report.
+            - If it still does not, say what the sightings rule in or out and what is
+              still missing. Do not restate the earlier report.
+
+            A human comment still outranks both reports.
 
             The queries and thresholds live in .github/watchdog.yml. Read it: a check
             firing does not mean the code is broken, it means a query matched.
@@ -465,6 +630,13 @@ jobs:
             the reasoning, and what you changed. This goes on the tracking issues, so
             length is not a concern here.
 
+            If you did not reach FIX because the evidence was missing, end that finding
+            with a section headed `What would settle it`: the observation that would
+            decide between the explanations you could not tell apart, said in terms of
+            the rows the watchdog collects (counts, `seen_at` timing, which pods). The
+            problem stays open while it keeps firing, and the next triage of it reads
+            that section against the sightings gathered in the meantime.
+
             Then write /tmp/watchdog/notify.json. YOU decide whether this is worth
             interrupting the team for, and you write what they read:
 
@@ -479,6 +651,11 @@ jobs:
             have already corrected. A quiet channel is what a healthy service looks
             like, and every message that did not need sending makes the next real one
             easier to ignore. Say so in `reason` and the run log will record it.
+
+            For a re-triage, notify when the conclusion changed, or when it still needs a
+            human decision and `alerted` is false — the channel has never been told about
+            it. A re-triage that reaches the same conclusion on a problem the channel
+            already knows about does not need repeating there; the issue holds it.
 
             Set notify to true when someone should look. Then write `message` as if you
             were the engineer who just investigated — because you are:
@@ -620,8 +797,11 @@ jobs:
                   ? '## 🤖 Triage complete — commits made, no pull request'
                   : '## 🤖 Triage complete — no code change';
 
-            const body = [
+            const bodyFor = (finding) => [
               heading, '',
+              finding.retriage
+                ? 'Triaged again: this problem kept firing after the last triage, and this one also had the sightings gathered since.'
+                : null,
               process.env.PR_URL ? `Draft PR: ${process.env.PR_URL}` : null,
               committedWithoutPr
                 ? process.env.REF_NAME === 'master'
@@ -633,7 +813,7 @@ jobs:
 
             for (const finding of claimed) {
               await github.rest.issues.createComment({
-                ...context.repo, issue_number: finding.issue, body,
+                ...context.repo, issue_number: finding.issue, body: bodyFor(finding),
               });
             }
 
