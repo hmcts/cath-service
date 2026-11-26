@@ -30,9 +30,9 @@ on:
 env:
   CHANGE_ID: ${{ inputs.change-id }}
   REGISTRY_NAME: hmctsprod
-  # PRs read master's per-app layer caches but don't write their own (~370 MB
-  # per app per PR), keeping the Actions cache under its 10 GB limit.
-  WRITE_APP_LAYER_CACHE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+  # Only master pushes save the turbo and per-app layer caches; PRs restore
+  # master's. Keeps the Actions cache under its 10 GB limit.
+  SAVE_CACHES: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
 
 jobs:
   get-last-successful-sha:
@@ -123,9 +123,23 @@ jobs:
 
       # Persists the turbo cache mount used by the Dockerfile's `yarn build`
       # across runs. The per-app builds reuse this job's build stage.
-      - name: Restore turbo cache
-        id: turbo-cache
+      # actions/cache saves in its post step, which runs after the dance's post
+      # step has extracted the cache (post steps run in reverse), so a plain
+      # save step can't be used. On master it restores and saves; elsewhere
+      # restore-only, and the dance skips extraction.
+      - name: Restore and save turbo cache
+        id: turbo-cache-save
+        if: env.SAVE_CACHES == 'true'
         uses: actions/cache@v5
+        with:
+          path: ${{ runner.temp }}/turbo-cache
+          key: turbo-docker-${{ github.sha }}
+          restore-keys: turbo-docker-
+
+      - name: Restore turbo cache
+        id: turbo-cache-restore
+        if: env.SAVE_CACHES != 'true'
+        uses: actions/cache/restore@v5
         with:
           path: ${{ runner.temp }}/turbo-cache
           key: turbo-docker-${{ github.sha }}
@@ -141,7 +155,7 @@ jobs:
           # cache mount in the Dockerfile.
           scratch-dir: ${{ runner.temp }}/dance-scratch
           cache-map: '{"${{ runner.temp }}/turbo-cache": {"target": "/opt/app/.turbo", "id": "cath-turbo", "uid": "1000", "gid": "1000"}}'
-          skip-extraction: ${{ steps.turbo-cache.outputs.cache-hit }}
+          skip-extraction: ${{ env.SAVE_CACHES != 'true' || steps.turbo-cache-save.outputs.cache-hit == 'true' }}
 
       - name: Build shared stages into the layer cache
         uses: docker/build-push-action@v6
@@ -234,7 +248,7 @@ jobs:
           cache-from: |
             type=gha,scope=${{ matrix.app }}
             type=gha,scope=shared
-          cache-to: ${{ env.WRITE_APP_LAYER_CACHE == 'true' && format('type=gha,mode=min,scope={0}', matrix.app) || '' }}
+          cache-to: ${{ env.SAVE_CACHES == 'true' && format('type=gha,mode=min,scope={0}', matrix.app) || '' }}
 
   save-build-sha:
     name: Save Build SHA
