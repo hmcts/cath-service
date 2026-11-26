@@ -2,7 +2,7 @@ export const en = {
   pageTitle: "Check connection to PIP",
   back: "Back",
   urlLabel: "URL to test",
-  urlHint: "Enter the full URL of a GET endpoint on one of these PIP APIs:",
+  urlHint: "Enter the URL of a GET endpoint, without https://, on one of these PIP APIs:",
   authHint: "A Connected result only proves authentication if the endpoint requires an access token.",
   testConnectionButton: "Test connection",
   notConfigured: "The PIP connection check is not set up in this environment.",
@@ -10,7 +10,7 @@ export const en = {
   errorMessages: {
     required: "Enter a URL",
     tooLong: "URL must be 2,048 characters or fewer",
-    invalidFormat: "Enter a URL in the correct format, like https://pip-data-management.staging.platform.hmcts.net/locations/1",
+    invalidFormat: "Enter a URL in the correct format, like pip-data-management.staging.platform.hmcts.net/locations/1",
     hostNotAllowed: "Enter a URL for one of the allowed PIP APIs"
   },
   result: {

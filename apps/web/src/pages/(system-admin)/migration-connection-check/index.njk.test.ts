@@ -46,10 +46,16 @@ describe("migration-connection-check template", () => {
     const { $ } = renderPage();
 
     expect($("h1").text()).toContain(en.pageTitle);
-    expect($('input#url[name="url"][type="url"]')).toHaveLength(1);
+    expect($('input#url[name="url"][type="text"][inputmode="url"]')).toHaveLength(1);
     expect($('label[for="url"]').text()).toContain(en.urlLabel);
     expect($("form[method='post'] button").text()).toContain(en.testConnectionButton);
     assertNoErrors($);
+  });
+
+  it("should show https:// as a fixed prefix so the scheme is never submitted", () => {
+    const { $ } = renderPage();
+
+    expect($(".govuk-input__prefix").text().trim()).toBe("https://");
   });
 
   it("should list every PIP API host pattern in the hint", () => {
@@ -63,9 +69,9 @@ describe("migration-connection-check template", () => {
   });
 
   it("should keep the entered URL in the input", () => {
-    const { $ } = renderPage({ data: { url: "https://example.com/x" } });
+    const { $ } = renderPage({ data: { url: "example.com/x" } });
 
-    expect($("input#url").val()).toBe("https://example.com/x");
+    expect($("input#url").val()).toBe("example.com/x");
   });
 
   it("should render a back link to the migration page", () => {

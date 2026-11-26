@@ -39,7 +39,9 @@
         {{ govukInput({
           id: "url",
           name: "url",
-          type: "url",
+          type: "text",
+          inputmode: "url",
+          prefix: { text: "https://" },
           spellcheck: false,
           autocomplete: "off",
           label: { text: urlLabel, classes: "govuk-label--s" },
