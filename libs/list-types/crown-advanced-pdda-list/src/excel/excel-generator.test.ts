@@ -124,12 +124,33 @@ describe("generateCrownAdvanceListExcel", () => {
     const row = worksheet.getRow(2);
 
     expect(row.getCell(1).value).toBe("Trial");
-    expect(row.getCell(2).value).toBe("13/01/2025");
+    expect(row.getCell(2).value).toBe("13 January 2025");
     expect(row.getCell(3).value).toBe("T20250001");
     expect(row.getCell(4).value).toBe("Smith, John");
     expect(row.getCell(5).value).toBe("CPS");
     expect(row.getCell(6).value).toBe("T20250002, T20250003");
     expect(row.getCell(7).value).toBe("Note A");
+  });
+
+  it("should write the fixed for date with a Welsh month name when the locale is cy", async () => {
+    vi.mocked(renderCrownAdvanceListData).mockResolvedValue(buildRendered([{ category: "Trial", cases: [buildRow({ fixedFor: "05/10/2026" })] }]) as any);
+
+    await generateCrownAdvanceListExcel({ ...baseOptions, locale: "cy" });
+    const worksheet = await readWorksheet();
+
+    expect(worksheet.getRow(2).getCell(2).value).toBe("5 Hydref 2026");
+  });
+
+  it.each([
+    ["a fixed for value that is not a date", "TBC", "TBC"],
+    ["a missing fixed for date", undefined, ""]
+  ])("should write %s unchanged", async (_description, fixedFor, expected) => {
+    vi.mocked(renderCrownAdvanceListData).mockResolvedValue(buildRendered([{ category: "Trial", cases: [buildRow({ fixedFor })] }]) as any);
+
+    await generateCrownAdvanceListExcel(baseOptions);
+    const worksheet = await readWorksheet();
+
+    expect(worksheet.getRow(2).getCell(2).value ?? "").toBe(expected);
   });
 
   it("should map the TO_BE_ALLOCATED key to the translated label", async () => {

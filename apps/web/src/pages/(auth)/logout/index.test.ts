@@ -45,14 +45,14 @@ describe("Logout handler", () => {
 
   it.each(["CFT_IDAM", "CRIME_IDAM", "PI_AAD", "SSO"])("should build the sign-out URL for a %s user", async (provenance) => {
     // Arrange
-    req.user = { ...req.user!, provenance };
+    req.user = { ...req.user!, provenance, idToken: "id-token" };
     res.locals = { locale: "cy" };
 
     // Act
     await GET(req, res);
 
     // Assert
-    expect(buildSignOutRedirectUrl).toHaveBeenCalledWith({ provenance, locale: "cy", origin: "https://localhost:8080" });
+    expect(buildSignOutRedirectUrl).toHaveBeenCalledWith({ provenance, locale: "cy", origin: "https://localhost:8080", idToken: "id-token" });
   });
 
   it("should build the sign-out URL when there is no signed-in user", async () => {
@@ -63,7 +63,7 @@ describe("Logout handler", () => {
     await GET(req, res);
 
     // Assert
-    expect(buildSignOutRedirectUrl).toHaveBeenCalledWith({ provenance: undefined, locale: "en", origin: "https://localhost:8080" });
+    expect(buildSignOutRedirectUrl).toHaveBeenCalledWith({ provenance: undefined, locale: "en", origin: "https://localhost:8080", idToken: undefined });
     expect(res.redirect).toHaveBeenCalledWith(SIGN_OUT_URL);
   });
 

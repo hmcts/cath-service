@@ -55,6 +55,11 @@ export const cy = {
       title: "Lawrlwytho Adroddiad MI",
       description: "Lawrlwythwch ddata Cyfrifon defnyddwyr, Cyhoeddiad, Tanysgrifiadau lleoliad a Phob tanysgrifiad",
       href: "/mi-report"
+    },
+    {
+      title: "[WELSH TRANSLATION REQUIRED: 'Migration']",
+      description: "[WELSH TRANSLATION REQUIRED: 'Tools for the PIP to CaTH migration, including checking connections to PIP']",
+      href: "/migration"
     }
   ]
 };

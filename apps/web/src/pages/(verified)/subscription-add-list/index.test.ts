@@ -18,12 +18,8 @@ vi.mock("@hmcts/location", () => ({
   }))
 }));
 
-vi.mock("@hmcts/postgres-prisma", () => ({
-  prisma: {
-    listType: {
-      findMany: vi.fn()
-    }
-  }
+vi.mock("@hmcts/subscriptions", () => ({
+  findSubscribableListTypesBySubJurisdictionIds: vi.fn()
 }));
 
 describe("subscription-add-list", () => {
@@ -53,8 +49,8 @@ describe("subscription-add-list", () => {
 
   describe("GET", () => {
     it("should render list types from sub-jurisdictions of confirmed locations", async () => {
-      const { prisma } = await import("@hmcts/postgres-prisma");
-      vi.mocked(prisma.listType.findMany).mockResolvedValue([
+      const { findSubscribableListTypesBySubJurisdictionIds } = await import("@hmcts/subscriptions");
+      vi.mocked(findSubscribableListTypesBySubJurisdictionIds).mockResolvedValue([
         {
           id: 1,
           name: "Civil List",
@@ -96,6 +92,18 @@ describe("subscription-add-list", () => {
           ])
         })
       );
+    });
+
+    it("should request only subscribable list types for the confirmed locations' sub-jurisdictions", async () => {
+      // Arrange
+      const { findSubscribableListTypesBySubJurisdictionIds } = await import("@hmcts/subscriptions");
+      vi.mocked(findSubscribableListTypesBySubJurisdictionIds).mockResolvedValue([]);
+
+      // Act
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      expect(findSubscribableListTypesBySubJurisdictionIds).toHaveBeenCalledWith([1, 2]);
     });
 
     it("should render empty list when no confirmed locations", async () => {
@@ -142,8 +150,8 @@ describe("subscription-add-list", () => {
     });
 
     it("should show validation error when no list type selected", async () => {
-      const { prisma } = await import("@hmcts/postgres-prisma");
-      vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
+      const { findSubscribableListTypesBySubJurisdictionIds } = await import("@hmcts/subscriptions");
+      vi.mocked(findSubscribableListTypesBySubJurisdictionIds).mockResolvedValue([]);
       mockReq.body = {};
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());

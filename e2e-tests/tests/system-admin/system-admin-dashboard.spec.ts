@@ -28,7 +28,8 @@ test.describe("System Admin Dashboard", () => {
       { title: "Audit Log Viewer", href: "/audit-log-list" },
       { title: "Manage List Types", href: "/manage-list-types" },
       { title: "Manage Jurisdiction Data", href: "/jurisdiction-data" },
-      { title: "Download MI Report", href: "/mi-report" }
+      { title: "Download MI Report", href: "/mi-report" },
+      { title: "Migration", href: "/migration" }
     ];
 
     const tiles = page.locator("a.admin-tile");
