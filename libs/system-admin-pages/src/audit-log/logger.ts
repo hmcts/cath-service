@@ -19,6 +19,7 @@ export enum AuditLogAction {
   HIDE_LIST_TYPE = "Hide list type",
   MANUAL_UPLOAD = "Manual upload",
   NON_STRATEGIC_UPLOAD = "Non strategic upload",
+  PIP_CONNECTION_CHECK = "PIP connection check",
   REFERENCE_DATA_UPLOAD = "Reference data upload",
   REMOVE_LIST = "Remove list",
   SHOW_LIST_TYPE = "Show list type",
