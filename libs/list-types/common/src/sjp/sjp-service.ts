@@ -85,8 +85,8 @@ export async function getLatestSjpLists(): Promise<SjpListMetadata[]> {
  * Gets SJP list metadata by artefact ID
  */
 export async function getSjpListById(artefactId: string): Promise<SjpListMetadata | null> {
-  const artefact = await prisma.artefact.findUnique({
-    where: { artefactId }
+  const artefact = await prisma.artefact.findFirst({
+    where: { artefactId, listType: { isHidden: false } }
   });
 
   if (!artefact) return null;

@@ -1,4 +1,4 @@
-import { createListType, findListTypeByName, updateListType } from "./queries.js";
+import { createListType, findListTypeById, findListTypeByName, updateListType, updateListTypeVisibility } from "./queries.js";
 
 export async function saveListType(data: SaveListTypeData, existingId?: number) {
   const existingListType = await findListTypeByName(data.name);
@@ -37,6 +37,19 @@ export async function saveListType(data: SaveListTypeData, existingId?: number) 
     subJurisdictionIds: data.subJurisdictionIds
   });
 }
+
+export async function setListTypeVisibility(id: number, isHidden: boolean): Promise<ListTypeVisibilityResult> {
+  const listType = await findListTypeById(id);
+
+  if (!listType || listType.deletedAt) {
+    return "NOT_FOUND";
+  }
+
+  const updatedCount = await updateListTypeVisibility(id, isHidden);
+  return updatedCount > 0 ? "UPDATED" : "ALREADY_IN_STATE";
+}
+
+export type ListTypeVisibilityResult = "UPDATED" | "NOT_FOUND" | "ALREADY_IN_STATE";
 
 interface SaveListTypeData {
   name: string;
