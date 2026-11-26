@@ -24,31 +24,31 @@ export const FTT_TAX_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Case Name",
       fieldName: "caseName",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Name", rowNumber)]
     },
     {
       header: "Case Reference Number",
       fieldName: "caseReferenceNumber",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Reference Number", rowNumber)]
     },
     {
       header: "Judge(s)",
       fieldName: "judges",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Judge(s)", rowNumber)]
     },
     {
       header: "Member(s)",
       fieldName: "members",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Member(s)", rowNumber)]
     },
     {
       header: "Venue/Platform",
       fieldName: "venuePlatform",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Venue/Platform", rowNumber)]
     }
   ],

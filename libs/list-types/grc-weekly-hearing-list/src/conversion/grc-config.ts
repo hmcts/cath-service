@@ -25,19 +25,19 @@ export const GRC_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Case reference number",
       fieldName: "caseReferenceNumber",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case reference number", rowNumber)]
     },
     {
       header: "Case name",
       fieldName: "caseName",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case name", rowNumber)]
     },
     {
       header: "Judge(s)",
       fieldName: "judges",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Judge(s)", rowNumber)]
     },
     {
@@ -49,13 +49,13 @@ export const GRC_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Mode of hearing",
       fieldName: "modeOfHearing",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Mode of hearing", rowNumber)]
     },
     {
       header: "Venue",
       fieldName: "venue",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Venue", rowNumber)]
     },
     {

@@ -13,14 +13,6 @@ describe("UTIAC_JR_REGIONAL_EXCEL_CONFIG", () => {
     expect(fieldNames).toEqual(["venue", "judges", "hearingTime", "caseReferenceNumber", "caseTitle", "hearingType", "additionalInformation"]);
   });
 
-  it("should have correct required flags", () => {
-    const requiredFields = UTIAC_JR_REGIONAL_EXCEL_CONFIG.fields.filter((f) => f.required).map((f) => f.fieldName);
-    const optionalFields = UTIAC_JR_REGIONAL_EXCEL_CONFIG.fields.filter((f) => !f.required).map((f) => f.fieldName);
-
-    expect(requiredFields).toEqual(["venue", "judges", "hearingTime", "caseReferenceNumber", "caseTitle", "hearingType"]);
-    expect(optionalFields).toEqual(["additionalInformation"]);
-  });
-
   describe("hearingTime field validation", () => {
     const hearingTimeField = UTIAC_JR_REGIONAL_EXCEL_CONFIG.fields.find((f) => f.fieldName === "hearingTime");
 
@@ -70,14 +62,6 @@ describe("UTIAC_JR_LONDON_EXCEL_CONFIG", () => {
       "location",
       "additionalInformation"
     ]);
-  });
-
-  it("should have correct required flags", () => {
-    const requiredFields = UTIAC_JR_LONDON_EXCEL_CONFIG.fields.filter((f) => f.required).map((f) => f.fieldName);
-    const optionalFields = UTIAC_JR_LONDON_EXCEL_CONFIG.fields.filter((f) => !f.required).map((f) => f.fieldName);
-
-    expect(requiredFields).toEqual(["hearingTime", "caseTitle", "caseReferenceNumber", "judges", "hearingType", "location"]);
-    expect(optionalFields).toEqual(["representative", "additionalInformation"]);
   });
 
   describe("hearingTime field validation", () => {

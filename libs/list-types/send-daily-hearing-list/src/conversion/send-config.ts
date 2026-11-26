@@ -11,31 +11,31 @@ export const SEND_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Case reference number",
       fieldName: "caseReferenceNumber",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case reference number", rowNumber)]
     },
     {
       header: "Respondent",
       fieldName: "respondent",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Respondent", rowNumber)]
     },
     {
       header: "Hearing type",
       fieldName: "hearingType",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Hearing type", rowNumber)]
     },
     {
       header: "Venue",
       fieldName: "venue",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Venue", rowNumber)]
     },
     {
       header: "Time estimate",
       fieldName: "timeEstimate",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Time estimate", rowNumber)]
     }
   ],

@@ -18,31 +18,31 @@ export const CST_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Case name",
       fieldName: "caseName",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case name", rowNumber)]
     },
     {
       header: "Hearing length",
       fieldName: "hearingLength",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Hearing length", rowNumber)]
     },
     {
       header: "Hearing type",
       fieldName: "hearingType",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Hearing type", rowNumber)]
     },
     {
       header: "Venue",
       fieldName: "venue",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Venue", rowNumber)]
     },
     {
       header: "Additional information",
       fieldName: "additionalInformation",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Additional information", rowNumber)]
     }
   ],

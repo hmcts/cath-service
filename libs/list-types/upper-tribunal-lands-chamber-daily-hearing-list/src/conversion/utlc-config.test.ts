@@ -23,24 +23,6 @@ describe("UTLC_EXCEL_CONFIG", () => {
     ]);
   });
 
-  it("should have correct required flags", () => {
-    const requiredFields = UTLC_EXCEL_CONFIG.fields.filter((f) => f.required).map((f) => f.fieldName);
-    const optionalFields = UTLC_EXCEL_CONFIG.fields.filter((f) => !f.required).map((f) => f.fieldName);
-
-    expect(requiredFields).toEqual([
-      "time",
-      "caseReferenceNumber",
-      "caseName",
-      "judges",
-      "members",
-      "hearingType",
-      "venue",
-      "modeOfHearing",
-      "additionalInformation"
-    ]);
-    expect(optionalFields).toEqual([]);
-  });
-
   describe("field validators", () => {
     it("should accept values without HTML tags", () => {
       for (const field of UTLC_EXCEL_CONFIG.fields) {

@@ -5,31 +5,31 @@ export const SSCS_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Venue",
       fieldName: "venue",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Venue", rowNumber)]
     },
     {
       header: "Appeal Reference Number",
       fieldName: "appealReferenceNumber",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Appeal Reference Number", rowNumber)]
     },
     {
       header: "Hearing Type",
       fieldName: "hearingType",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Hearing Type", rowNumber)]
     },
     {
       header: "Appellant",
       fieldName: "appellant",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Appellant", rowNumber)]
     },
     {
       header: "Courtroom",
       fieldName: "courtroom",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Courtroom", rowNumber)]
     },
     {
@@ -41,13 +41,13 @@ export const SSCS_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Tribunal",
       fieldName: "tribunal",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Tribunal", rowNumber)]
     },
     {
       header: "FTA/Respondent",
       fieldName: "respondent",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "FTA/Respondent", rowNumber)]
     },
     {

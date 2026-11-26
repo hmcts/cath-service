@@ -54,6 +54,25 @@ describe("renderInterimApplicationsDailyCauseList", () => {
     expect(result.importantInfo.editableParagraph).toContain("second@justice.gov.uk");
   });
 
+  // Pins the current output for a partially filled open-justice row (accepted since #1658);
+  // the stray separator is existing wording and is deliberately left unchanged here.
+  it.each([
+    {
+      details: { nameToBeDisplayed: "Jane Smith", email: "" },
+      expected: "Parties should contact the clerk to the Interim Judge Jane Smith,  as early as possible."
+    },
+    {
+      details: { nameToBeDisplayed: "", email: "jane.smith@justice.gov.uk" },
+      expected: "Parties should contact the clerk to the Interim Judge , jane.smith@justice.gov.uk as early as possible."
+    }
+  ])("should render the editable paragraph as-is when the open-justice row is partly blank ($details)", ({ details, expected }) => {
+    const data = buildData({ openJusticeStatementDetails: [details] });
+
+    const result = renderInterimApplicationsDailyCauseList(data, OPTIONS);
+
+    expect(result.importantInfo.editableParagraph).toBe(expected);
+  });
+
   it("should fall back to static wording when openJusticeStatementDetails is empty", () => {
     const result = renderInterimApplicationsDailyCauseList(buildData({ openJusticeStatementDetails: [] }), OPTIONS);
 

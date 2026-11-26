@@ -24,25 +24,25 @@ export const FTT_LRT_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Case Name",
       fieldName: "caseName",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Name", rowNumber)]
     },
     {
       header: "Case Reference Number",
       fieldName: "caseReferenceNumber",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Reference Number", rowNumber)]
     },
     {
       header: "Judge",
       fieldName: "judge",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Judge", rowNumber)]
     },
     {
       header: "Venue/Platform",
       fieldName: "venuePlatform",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Venue/Platform", rowNumber)]
     }
   ],

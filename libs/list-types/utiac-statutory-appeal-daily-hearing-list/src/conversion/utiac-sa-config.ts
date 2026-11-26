@@ -11,7 +11,7 @@ export const UTIAC_SA_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Appellant",
       fieldName: "appellant",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Appellant", rowNumber)]
     },
     {
@@ -23,25 +23,25 @@ export const UTIAC_SA_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Appeal reference number",
       fieldName: "appealReferenceNumber",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Appeal reference number", rowNumber)]
     },
     {
       header: "Judge(s)",
       fieldName: "judges",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Judge(s)", rowNumber)]
     },
     {
       header: "Hearing type",
       fieldName: "hearingType",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Hearing type", rowNumber)]
     },
     {
       header: "Location",
       fieldName: "location",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Location", rowNumber)]
     },
     {

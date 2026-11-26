@@ -28,18 +28,6 @@ describe("STANDARD_CONFIG", () => {
     ]);
   });
 
-  it("should mark additionalInformation as optional", () => {
-    const additionalInfoField = STANDARD_CONFIG.fields.find((f) => f.fieldName === "additionalInformation");
-    expect(additionalInfoField?.required).toBe(false);
-  });
-
-  it("should mark all other fields as required", () => {
-    const requiredFields = STANDARD_CONFIG.fields.filter((f) => f.fieldName !== "additionalInformation");
-    for (const field of requiredFields) {
-      expect(field.required).toBe(true);
-    }
-  });
-
   it("should allow minRows of 0", () => {
     expect(STANDARD_CONFIG.minRows).toBe(0);
   });

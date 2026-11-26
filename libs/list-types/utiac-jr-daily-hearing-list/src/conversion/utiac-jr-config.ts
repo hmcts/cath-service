@@ -5,13 +5,13 @@ export const UTIAC_JR_REGIONAL_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Venue",
       fieldName: "venue",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Venue", rowNumber)]
     },
     {
       header: "Judge(s)",
       fieldName: "judges",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Judge(s)", rowNumber)]
     },
     {
@@ -23,19 +23,19 @@ export const UTIAC_JR_REGIONAL_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Case reference number",
       fieldName: "caseReferenceNumber",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case reference number", rowNumber)]
     },
     {
       header: "Case title",
       fieldName: "caseTitle",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case title", rowNumber)]
     },
     {
       header: "Hearing type",
       fieldName: "hearingType",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Hearing type", rowNumber)]
     },
     {
@@ -59,7 +59,7 @@ export const UTIAC_JR_LONDON_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Case title",
       fieldName: "caseTitle",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case title", rowNumber)]
     },
     {
@@ -71,25 +71,25 @@ export const UTIAC_JR_LONDON_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Case reference number",
       fieldName: "caseReferenceNumber",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case reference number", rowNumber)]
     },
     {
       header: "Judge(s)",
       fieldName: "judges",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Judge(s)", rowNumber)]
     },
     {
       header: "Hearing type",
       fieldName: "hearingType",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Hearing type", rowNumber)]
     },
     {
       header: "Location",
       fieldName: "location",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Location", rowNumber)]
     },
     {

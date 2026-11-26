@@ -36,11 +36,8 @@ describe("interim applications ChD converter registration", () => {
 });
 
 describe("OPEN_JUSTICE_CONFIG", () => {
-  it("should map the two open-justice fields as required", () => {
+  it("should map the two open-justice fields", () => {
     expect(OPEN_JUSTICE_CONFIG.fields.map((f) => f.fieldName)).toEqual(["nameToBeDisplayed", "email"]);
-    for (const field of OPEN_JUSTICE_CONFIG.fields) {
-      expect(field.required).toBe(true);
-    }
   });
 
   it("should allow minRows of 0", () => {
@@ -142,5 +139,16 @@ describe("two-tab conversion", () => {
     );
 
     await expect(convert(buffer)).rejects.toThrow(/Invalid email format/);
+  });
+
+  it("should accept a blank email in the open-justice tab without running the email format check", async () => {
+    const buffer = await createTwoTabBuffer(
+      [["Judge A", "10.30am", "This is a venue name", "Case type A", "1234", "This is a case name", "This is additional information"]],
+      [["Judge OpenJusticeTest", ""]]
+    );
+
+    const result = await convert(buffer);
+
+    expect(result.openJusticeStatementDetails).toEqual([{ nameToBeDisplayed: "Judge OpenJusticeTest", email: "" }]);
   });
 });

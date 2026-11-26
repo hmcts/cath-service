@@ -5,25 +5,25 @@ export const AST_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Appellant",
       fieldName: "appellant",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Appellant", rowNumber)]
     },
     {
       header: "Appeal reference number",
       fieldName: "appealReferenceNumber",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Appeal reference number", rowNumber)]
     },
     {
       header: "Case type",
       fieldName: "caseType",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case type", rowNumber)]
     },
     {
       header: "Hearing type",
       fieldName: "hearingType",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Hearing type", rowNumber)]
     },
     {
@@ -35,7 +35,7 @@ export const AST_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Additional information",
       fieldName: "additionalInformation",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Additional information", rowNumber)]
     }
   ],

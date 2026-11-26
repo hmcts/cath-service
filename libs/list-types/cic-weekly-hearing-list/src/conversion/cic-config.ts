@@ -25,37 +25,37 @@ export const CIC_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Case reference number",
       fieldName: "caseReferenceNumber",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case reference number", rowNumber)]
     },
     {
       header: "Case name",
       fieldName: "caseName",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case name", rowNumber)]
     },
     {
       header: "Venue/platform",
       fieldName: "venue/platform",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Venue/platform", rowNumber)]
     },
     {
       header: "Judge(s)",
       fieldName: "judges",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Judge(s)", rowNumber)]
     },
     {
       header: "Member(s)",
       fieldName: "members",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Member(s)", rowNumber)]
     },
     {
       header: "Additional information",
       fieldName: "additionalInformation",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Additional information", rowNumber)]
     }
   ],
