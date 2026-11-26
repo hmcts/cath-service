@@ -28,7 +28,7 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => {
 // authorisation assertions below fail if the sensitivity check is ever unwired (VIBE-521).
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
-    artefact: { findUnique: vi.fn() },
+    artefact: { findFirst: vi.fn() },
     listType: { findUnique: vi.fn() }
   }
 }));
@@ -42,7 +42,7 @@ const ALLOWED_PROVENANCE = "PI_AAD";
 
 /** Stubs the artefact row the page authorises against. Sensitivity is the only access authority. */
 const givenArtefact = (sensitivity: string) => {
-  vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+  vi.mocked(prisma.artefact.findFirst).mockResolvedValue({
     artefactId: ARTEFACT_ID,
     type: "LIST",
     locationId: "1",
@@ -234,7 +234,7 @@ describe("SJP Public List Controller", () => {
 
     it("should render 404 and read no case data when the artefact does not exist", async () => {
       // Arrange
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
       const res = mockResponse();
 
       // Act

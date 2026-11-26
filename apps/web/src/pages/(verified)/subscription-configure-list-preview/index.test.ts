@@ -17,14 +17,20 @@ vi.mock("@hmcts/postgres-prisma", () => ({
 }));
 
 vi.mock("@hmcts/subscriptions", () => ({
-  replaceSubscriptionListTypes: vi.fn()
+  replaceSubscriptionListTypes: vi.fn(),
+  getAllSubscriptionsByUserId: vi.fn(),
+  getAllowedListTypeIdsForLocations: vi.fn()
 }));
 
 describe("subscription-configure-list-preview", () => {
   let mockReq: Partial<Request>;
   let mockRes: Partial<Response>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    const { getAllSubscriptionsByUserId, getAllowedListTypeIdsForLocations } = await import("@hmcts/subscriptions");
+    vi.mocked(getAllSubscriptionsByUserId).mockResolvedValue([{ locationId: 10 }, { caseNumber: "C1" }] as any);
+    vi.mocked(getAllowedListTypeIdsForLocations).mockResolvedValue([1, 2]);
+
     mockReq = {
       body: {},
       path: "/subscription-configure-list-preview",
@@ -70,6 +76,20 @@ describe("subscription-configure-list-preview", () => {
       );
     });
 
+    it("should resolve names only for visible list types", async () => {
+      // Arrange
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
+
+      // Act
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      expect(prisma.listType.findMany).toHaveBeenCalledWith({
+        where: { id: { in: expect.any(Array) }, isHidden: false }
+      });
+    });
+
     it("should show noLanguageSelected and empty listTypes when session has no pending list types or language", async () => {
       const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
@@ -90,18 +110,51 @@ describe("subscription-configure-list-preview", () => {
 
   describe("POST", () => {
     it("should call replaceSubscriptionListTypes and redirect to subscription-confirmed on confirm", async () => {
-      const { replaceSubscriptionListTypes } = await import("@hmcts/subscriptions");
+      const { getAllowedListTypeIdsForLocations, replaceSubscriptionListTypes } = await import("@hmcts/subscriptions");
       vi.mocked(replaceSubscriptionListTypes).mockResolvedValue(undefined);
 
       mockReq.body = { action: "confirm" };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
+      expect(getAllowedListTypeIdsForLocations).toHaveBeenCalledWith([10]);
       expect(replaceSubscriptionListTypes).toHaveBeenCalledWith("user-123", [1, 2], "ENGLISH");
       expect(mockReq.session?.emailSubscriptions?.pendingListTypeIds).toBeUndefined();
       expect(mockReq.session?.emailSubscriptions?.pendingLanguage).toBeUndefined();
       expect(mockReq.session?.emailSubscriptions?.listUpdateComplete).toBe(true);
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-configure-list-confirmed");
+    });
+
+    it("should drop ids that are not allowed for the user's courts, such as hidden list types, before saving", async () => {
+      // Arrange
+      const { getAllowedListTypeIdsForLocations, replaceSubscriptionListTypes } = await import("@hmcts/subscriptions");
+      vi.mocked(getAllowedListTypeIdsForLocations).mockResolvedValue([1]);
+      mockReq.session = { emailSubscriptions: { pendingListTypeIds: [1, 99], pendingLanguage: "ENGLISH" } } as any;
+      mockReq.body = { action: "confirm" };
+
+      // Act
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      expect(replaceSubscriptionListTypes).toHaveBeenCalledWith("user-123", [1], "ENGLISH");
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-configure-list-confirmed");
+    });
+
+    it("should re-render without saving when none of the pending ids are allowed", async () => {
+      // Arrange
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { getAllowedListTypeIdsForLocations, replaceSubscriptionListTypes } = await import("@hmcts/subscriptions");
+      vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
+      vi.mocked(getAllowedListTypeIdsForLocations).mockResolvedValue([]);
+      mockReq.body = { action: "confirm" };
+
+      // Act
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      expect(replaceSubscriptionListTypes).not.toHaveBeenCalled();
+      expect(mockRes.redirect).not.toHaveBeenCalledWith("/subscription-configure-list-confirmed");
+      expect(mockRes.render).toHaveBeenCalledWith("subscription-configure-list-preview/index", expect.any(Object));
     });
 
     it("should remove a list type from session and redirect back to GET on remove-list-type", async () => {
