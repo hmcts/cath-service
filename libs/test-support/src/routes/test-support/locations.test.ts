@@ -7,6 +7,7 @@ vi.mock("@hmcts/postgres-prisma", () => ({
     location: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
+      create: vi.fn(),
       upsert: vi.fn(),
       deleteMany: vi.fn()
     }
@@ -14,6 +15,14 @@ vi.mock("@hmcts/postgres-prisma", () => ({
 }));
 
 import { prisma } from "@hmcts/postgres-prisma";
+
+// Shape of a Prisma 7 unique-constraint error raised through the pg driver adapter
+function uniqueConstraintError(field: string) {
+  return Object.assign(new Error("Unique constraint failed"), {
+    code: "P2002",
+    meta: { driverAdapterError: { cause: { constraint: { fields: [field] } } } }
+  });
+}
 
 describe("locations routes", () => {
   let mockRequest: Partial<Request>;
@@ -113,7 +122,7 @@ describe("locations routes", () => {
         welshName: "Llys Prawf"
       };
       const mockLocation = { locationId: 90001, name: "Test Court", welshName: "Llys Prawf" };
-      vi.mocked(prisma.location.upsert).mockResolvedValue(mockLocation as any);
+      vi.mocked(prisma.location.create).mockResolvedValue(mockLocation as any);
 
       // Act
       await POST(mockRequest as Request, mockResponse as Response);
@@ -125,6 +134,7 @@ describe("locations routes", () => {
         name: "Test Court",
         welshName: "Llys Prawf"
       });
+      expect(prisma.location.upsert).not.toHaveBeenCalled();
     });
 
     it("should create location with custom locationId", async () => {
@@ -157,15 +167,15 @@ describe("locations routes", () => {
         subJurisdictionIds: [3, 4]
       };
       const mockLocation = { locationId: 90001, name: "Test Court", welshName: "Llys Prawf" };
-      vi.mocked(prisma.location.upsert).mockResolvedValue(mockLocation as any);
+      vi.mocked(prisma.location.create).mockResolvedValue(mockLocation as any);
 
       // Act
       await POST(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(prisma.location.upsert).toHaveBeenCalledWith(
+      expect(prisma.location.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          create: expect.objectContaining({
+          data: expect.objectContaining({
             locationRegions: {
               create: [{ regionId: 1 }, { regionId: 2 }]
             },
@@ -175,6 +185,103 @@ describe("locations routes", () => {
           })
         })
       );
+    });
+
+    it("should create location references with the generated id as the default provenance id", async () => {
+      // Arrange
+      mockRequest.body = {
+        name: "Test Court",
+        welshName: "Llys Prawf",
+        locationReferences: [{ provenance: "SNL" }]
+      };
+      vi.mocked(prisma.location.create).mockImplementation(
+        (args: any) => Promise.resolve({ locationId: args.data.locationId, name: "Test Court", welshName: "Llys Prawf" }) as any
+      );
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      const { data } = vi.mocked(prisma.location.create).mock.calls[0][0] as any;
+      expect(data.locationReferences).toEqual({
+        create: [{ provenance: "SNL", provenanceLocationId: String(data.locationId), provenanceLocationType: "VENUE" }]
+      });
+      expect(mockResponse.status).toHaveBeenCalledWith(201);
+    });
+
+    it("should create location references with an explicit provenance id and type", async () => {
+      // Arrange
+      mockRequest.body = {
+        name: "Test Court",
+        welshName: "Llys Prawf",
+        locationReferences: [{ provenance: "CP_CATH", provenanceLocationId: "CP-123", provenanceLocationType: "OWNING_HEARING_LOCATION" }]
+      };
+      vi.mocked(prisma.location.create).mockResolvedValue({ locationId: 90001, name: "Test Court", welshName: "Llys Prawf" } as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.location.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          locationReferences: {
+            create: [{ provenance: "CP_CATH", provenanceLocationId: "CP-123", provenanceLocationType: "OWNING_HEARING_LOCATION" }]
+          }
+        })
+      });
+    });
+
+    it("should not create location references when none are requested", async () => {
+      // Arrange
+      mockRequest.body = { name: "Test Court", welshName: "Llys Prawf" };
+      vi.mocked(prisma.location.create).mockResolvedValue({ locationId: 90001, name: "Test Court", welshName: "Llys Prawf" } as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      const { data } = vi.mocked(prisma.location.create).mock.calls[0][0] as any;
+      expect(data).not.toHaveProperty("locationReferences");
+    });
+
+    it("should include location references when upserting a fixed location id", async () => {
+      // Arrange
+      mockRequest.body = { locationId: 12345, name: "Test Court", welshName: "Llys Prawf", locationReferences: [{ provenance: "SNL" }] };
+      vi.mocked(prisma.location.upsert).mockResolvedValue({ locationId: 12345, name: "Test Court", welshName: "Llys Prawf" } as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      const { create } = vi.mocked(prisma.location.upsert).mock.calls[0][0] as any;
+      expect(create.locationReferences).toEqual({
+        create: [{ provenance: "SNL", provenanceLocationId: "12345", provenanceLocationType: "VENUE" }]
+      });
+    });
+
+    it("should return 400 when a location reference has no provenance", async () => {
+      // Arrange
+      mockRequest.body = { name: "Test Court", welshName: "Llys Prawf", locationReferences: [{ provenanceLocationId: "1" }] };
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({ error: "locationReferences must be an array of objects with a provenance" });
+      expect(prisma.location.create).not.toHaveBeenCalled();
+    });
+
+    it("should return 400 when locationReferences is not an array", async () => {
+      // Arrange
+      mockRequest.body = { name: "Test Court", welshName: "Llys Prawf", locationReferences: "SNL" };
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(prisma.location.create).not.toHaveBeenCalled();
     });
 
     it("should return 400 when name is missing", async () => {
@@ -204,7 +311,7 @@ describe("locations routes", () => {
     it("should return 500 on database error", async () => {
       // Arrange
       mockRequest.body = { name: "Test Court", welshName: "Llys Prawf" };
-      vi.mocked(prisma.location.upsert).mockRejectedValue(new Error("DB error"));
+      vi.mocked(prisma.location.create).mockRejectedValue(new Error("DB error"));
 
       // Act
       await POST(mockRequest as Request, mockResponse as Response);
@@ -213,6 +320,79 @@ describe("locations routes", () => {
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(mockResponse.json).toHaveBeenCalledWith({ error: "Failed to create test location" });
       expect(consoleSpy).toHaveBeenCalled();
+    });
+
+    it("should retry with a new id when the generated id is already taken", async () => {
+      // Arrange
+      mockRequest.body = { name: "Test Court", welshName: "Llys Prawf" };
+      const mockLocation = { locationId: 90002, name: "Test Court", welshName: "Llys Prawf" };
+      vi.mocked(prisma.location.create)
+        .mockRejectedValueOnce(uniqueConstraintError("location_id"))
+        .mockResolvedValueOnce(mockLocation as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.location.create).toHaveBeenCalledTimes(2);
+      expect(prisma.location.upsert).not.toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(201);
+      expect(mockResponse.json).toHaveBeenCalledWith(mockLocation);
+    });
+
+    it("should return 500 when every generated id is already taken", async () => {
+      // Arrange
+      mockRequest.body = { name: "Test Court", welshName: "Llys Prawf" };
+      vi.mocked(prisma.location.create).mockRejectedValue(uniqueConstraintError("location_id"));
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.location.create).toHaveBeenCalledTimes(5);
+      expect(mockResponse.status).toHaveBeenCalledWith(500);
+    });
+
+    it("should retry when the native engine reports the taken id under target", async () => {
+      // Arrange
+      mockRequest.body = { name: "Test Court", welshName: "Llys Prawf" };
+      const mockLocation = { locationId: 90003, name: "Test Court", welshName: "Llys Prawf" };
+      vi.mocked(prisma.location.create)
+        .mockRejectedValueOnce(Object.assign(new Error("Unique constraint failed"), { code: "P2002", meta: { target: ["location_id"] } }))
+        .mockResolvedValueOnce(mockLocation as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.location.create).toHaveBeenCalledTimes(2);
+      expect(mockResponse.status).toHaveBeenCalledWith(201);
+    });
+
+    it("should not retry when the name is already taken", async () => {
+      // Arrange
+      mockRequest.body = { name: "Test Court", welshName: "Llys Prawf" };
+      vi.mocked(prisma.location.create).mockRejectedValue(uniqueConstraintError("name"));
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.location.create).toHaveBeenCalledTimes(1);
+      expect(mockResponse.status).toHaveBeenCalledWith(500);
+    });
+
+    it("should not retry when creation fails for a reason other than a taken id", async () => {
+      // Arrange
+      mockRequest.body = { name: "Test Court", welshName: "Llys Prawf" };
+      vi.mocked(prisma.location.create).mockRejectedValue(Object.assign(new Error("Foreign key constraint failed"), { code: "P2003" }));
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.location.create).toHaveBeenCalledTimes(1);
+      expect(mockResponse.status).toHaveBeenCalledWith(500);
     });
   });
 

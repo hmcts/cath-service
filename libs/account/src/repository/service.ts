@@ -21,7 +21,7 @@ export async function createLocalMediaUser(email: string, name: string, azureAdU
     email,
     firstName: givenName,
     surname,
-    userProvenance: "B2C_IDAM",
+    userProvenance: "PI_AAD",
     userProvenanceId: azureAdUserId,
     role: "VERIFIED"
   });
@@ -37,7 +37,7 @@ export async function updateLocalMediaUser(email: string, azureAdUserId: string,
       email,
       firstName,
       surname,
-      userProvenance: "B2C_IDAM",
+      userProvenance: "PI_AAD",
       userProvenanceId: azureAdUserId,
       role: "VERIFIED"
     });

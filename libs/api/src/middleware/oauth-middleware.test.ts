@@ -1,6 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { authenticateApi } from "./oauth-middleware.js";
 
 // Mock jsonwebtoken
 vi.mock("jsonwebtoken", () => ({
@@ -32,8 +31,13 @@ describe("authenticateApi", () => {
 
   const mockNext = vi.fn() as NextFunction;
 
-  beforeEach(() => {
+  // The middleware caches its JWKS client per tenant, so each test needs a fresh module.
+  let authenticateApi: typeof import("./oauth-middleware.js").authenticateApi;
+
+  beforeEach(async () => {
     vi.clearAllMocks();
+    vi.resetModules();
+    ({ authenticateApi } = await import("./oauth-middleware.js"));
     process.env.AZURE_TENANT_ID = "test-tenant-id";
     process.env.CATH_SERVICE_API_CLIENT_ID = "test-client-id";
   });
@@ -52,8 +56,8 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
-      message: "Missing or invalid Authorization header"
+      statusCode: 401,
+      message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
   });
@@ -67,8 +71,8 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
-      message: "Missing or invalid Authorization header"
+      statusCode: 401,
+      message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
   });
@@ -85,10 +89,32 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
-      message: "Invalid or expired token"
+      statusCode: 401,
+      message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
+  });
+
+  it("should reuse one JWKS client across requests for the same tenant", async () => {
+    const jwt = await import("jsonwebtoken");
+    const jwksClient = await import("jwks-rsa");
+
+    vi.mocked(jwt.default.decode).mockReturnValue({ header: { kid: "test-key-id" }, payload: {} } as any);
+    vi.mocked(jwksClient.default).mockReturnValue({
+      getSigningKey: vi.fn((_kid: string, callback: (err: Error | null, key?: any) => void) => {
+        callback(null, { getPublicKey: () => "test-public-key" });
+      })
+    } as any);
+    vi.mocked(jwt.default.verify).mockImplementation((_token, _key, _options, callback: any) => {
+      callback(null, { appid: "test-app-id", roles: ["api.publisher.user"] });
+    });
+
+    const middleware = authenticateApi();
+    await middleware(mockRequest("Bearer first-token"), mockResponse(), mockNext);
+    await middleware(mockRequest("Bearer second-token"), mockResponse(), mockNext);
+
+    expect(jwksClient.default).toHaveBeenCalledTimes(1);
+    expect(mockNext).toHaveBeenCalledTimes(2);
   });
 
   it("should authenticate successfully with valid token and required role", async () => {
@@ -177,7 +203,7 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
+      statusCode: 403,
       message: "Insufficient permissions. Required role: api.publisher.user"
     });
     expect(mockNext).not.toHaveBeenCalled();
@@ -242,8 +268,8 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
-      message: "Invalid or expired token"
+      statusCode: 401,
+      message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
   });
@@ -265,8 +291,8 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
-      message: "Invalid or expired token"
+      statusCode: 401,
+      message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
   });
@@ -298,8 +324,8 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
-      message: "Invalid or expired token"
+      statusCode: 401,
+      message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
   });
@@ -338,8 +364,8 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
-      message: "Invalid or expired token"
+      statusCode: 401,
+      message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
   });
@@ -382,7 +408,7 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
+      statusCode: 403,
       message: "Insufficient permissions. Required role: api.publisher.user"
     });
     expect(mockNext).not.toHaveBeenCalled();

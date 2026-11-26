@@ -8,9 +8,10 @@ import {
   hasActiveSubscriptions,
   type LocationDetails
 } from "@hmcts/location";
-import { sendSystemAdminNotification } from "@hmcts/notifications";
-import { deleteArtefactsByLocationId } from "@hmcts/publication";
-import { deleteSubscriptionsByLocationId } from "@hmcts/subscriptions";
+import { sendSubscriptionDeletedNotification, sendSystemAdminNotification } from "@hmcts/notifications";
+import { deleteArtefactsByLocationId, getArtefactsByLocation } from "@hmcts/publication";
+import { deleteSubscriptionsByLocationId, findSubscribersByLocationId } from "@hmcts/subscriptions";
+import { sendPublicationDeletionToThirdParties } from "@hmcts/third-party-subscription-fulfilment";
 
 export const VALIDATION_ERROR_CODES = {
   LOCATION_NOT_FOUND: "LOCATION_NOT_FOUND",
@@ -81,7 +82,24 @@ export async function performLocationDeletion(locationId: number, locationName: 
 }
 
 export async function performLocationPublicationsDeletion(locationId: number, locationName: string, requesterEmail: string): Promise<void> {
+  const artefacts = await getArtefactsByLocation(locationId.toString());
+
   await deleteArtefactsByLocationId(locationId.toString());
+
+  // Legacy findActiveArtefactsForLocation only notifies third parties about publications still on display;
+  // a null displayTo is displayed indefinitely in CaTH, so it counts as live
+  const now = new Date();
+  const liveArtefacts = artefacts.filter((artefact) => !artefact.displayTo || artefact.displayTo >= now);
+
+  for (const artefact of liveArtefacts) {
+    sendPublicationDeletionToThirdParties({
+      artefactId: artefact.artefactId,
+      listTypeId: artefact.listTypeId,
+      sensitivity: artefact.sensitivity
+    }).catch((error) => {
+      console.error("Third-party OAuth deletion failed:", { artefactId: artefact.artefactId, error: error instanceof Error ? error.message : String(error) });
+    });
+  }
 
   const adminEmails = await findSystemAdminEmails();
   await sendSystemAdminNotification(adminEmails, {
@@ -92,7 +110,14 @@ export async function performLocationPublicationsDeletion(locationId: number, lo
 }
 
 export async function performLocationSubscriptionsDeletion(locationId: number, locationName: string, requesterEmail: string): Promise<void> {
+  const subscribers = await findSubscribersByLocationId(locationId);
+
   await deleteSubscriptionsByLocationId(locationId);
+
+  await sendSubscriptionDeletedNotification(
+    subscribers.map((subscriber) => subscriber.user),
+    locationName
+  );
 
   const adminEmails = await findSystemAdminEmails();
   await sendSystemAdminNotification(adminEmails, {

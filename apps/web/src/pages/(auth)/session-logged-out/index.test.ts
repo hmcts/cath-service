@@ -40,6 +40,6 @@ describe("Session Logged Out Page", () => {
     const renderCall = (mockRes.render as any).mock.calls[0];
     const translations = renderCall[1];
 
-    expect(translations.cy.title).toBe("Rydych wedi allgofnodi");
+    expect(translations.cy.title).toBe("Rydych wedi cael eich allgofnodi");
   });
 });

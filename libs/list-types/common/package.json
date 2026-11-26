@@ -11,6 +11,14 @@
       "production": "./dist/list-type-data.js",
       "default": "./src/list-type-data.ts"
     },
+    "./list-type-provenance": {
+      "production": "./dist/list-type-provenance.js",
+      "default": "./src/list-type-provenance.ts"
+    },
+    "./list-type-package": {
+      "production": "./dist/validation/list-type-package.js",
+      "default": "./src/validation/list-type-package.ts"
+    },
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"
@@ -44,12 +52,11 @@
     "@hmcts/postgres-prisma": "workspace:*",
     "ajv": "8.20.0",
     "exceljs": "4.4.0",
-    "nunjucks": "3.2.4",
-    "zod": "3.25.76"
+    "nunjucks": "3.2.4"
   },
   "devDependencies": {
-    "@types/node": "24.10.4",
+    "@types/node": "24.19.2",
     "typescript": "6.0.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.12"
   }
 }

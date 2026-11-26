@@ -98,8 +98,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         lastReceivedDate: new Date("2025-01-13"),
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       } as any;
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
       vi.mocked(getPublicationJson).mockResolvedValue(null);
@@ -125,8 +124,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         lastReceivedDate: new Date("2025-01-13"),
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       } as any;
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
       vi.mocked(getPublicationJson).mockResolvedValue({ invalid: "data" });
@@ -158,8 +156,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         lastReceivedDate: new Date("2025-01-13"),
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       } as any;
       const mockJsonData = {
         document: {
@@ -219,8 +216,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         lastReceivedDate: new Date("2025-01-13"),
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       } as any;
       const mockJsonData = {
         document: {
@@ -270,8 +266,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         lastReceivedDate: new Date("2025-01-13"),
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       } as any;
       const mockJsonData = {
         document: {
@@ -330,8 +325,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         lastReceivedDate: new Date("2025-01-13"),
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       } as any;
       const mockJsonData = {
         document: {
@@ -380,8 +374,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         lastReceivedDate: new Date("2025-01-13"),
         isFlatFile: false,
         provenance: "UNKNOWN_PROVENANCE",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       } as any;
       const mockJsonData = {
         document: {

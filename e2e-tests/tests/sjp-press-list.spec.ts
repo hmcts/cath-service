@@ -1,13 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
-import type { APIRequestContext } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { getApiAuthToken } from "../utils/api-auth-helpers.js";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
-import { uploadTestFlatFileToWeb } from "../utils/test-support-api.js";
-
-const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
-const PUBLICATION_ENDPOINT = `${API_BASE_URL}/v1/publication`;
-const IS_DEPLOYED = !!process.env.CATH_SERVICE_WEB_URL;
+import { uploadTestPublication } from "../utils/publication-upload.js";
+import { createVerifiedTestUser, loginAsTestUser, type VerifiedTestUser } from "../utils/verified-user-helpers.js";
 
 // Helper function to create SJP press list payload
 function createSjpPressListPayload(locationId: number) {
@@ -22,9 +17,10 @@ function createSjpPressListPayload(locationId: number) {
   ];
   const names = [
     { forenames: "John", surname: "Smith", dob: "1985-05-15", age: 40 },
-    { forenames: "Jane", surname: "Doe", dob: "1990-08-22", age: 34 },
+    // dd/MM/yyyy is almost certainly the format the live feed sends (as PIP assumed); "unknown" checks a value the parser cannot read is shown as sent
+    { forenames: "Jane", surname: "Doe", dob: "22/08/1990", age: 34 },
     { forenames: "Bob", surname: "Wilson", dob: "1982-03-10", age: 43 },
-    { forenames: "Alice", surname: "Brown", dob: "1995-12-05", age: 29 }
+    { forenames: "Alice", surname: "Brown", dob: "unknown", age: 29 }
   ];
 
   const hearings = [];
@@ -81,15 +77,15 @@ function createSjpPressListPayload(locationId: number) {
   const contentDate = today.toISOString().split("T")[0];
 
   return {
-    court_id: locationId.toString(),
-    provenance: "MANUAL_UPLOAD",
-    content_date: contentDate,
-    list_type: "SJP_PRESS_LIST",
-    sensitivity: "CLASSIFIED",
-    language: "ENGLISH",
-    display_from: displayFrom.toISOString(),
-    display_to: displayTo.toISOString(),
-    hearing_list: {
+    upload: {
+      locationId,
+      listTypeName: "SJP_PRESS_LIST",
+      sensitivity: "CLASSIFIED" as const,
+      contentDate,
+      displayFrom: displayFrom.toISOString(),
+      displayTo: displayTo.toISOString()
+    },
+    payload: {
       document: {
         publicationDate: `${contentDate}T09:00:00Z`,
         version: "1.0"
@@ -128,41 +124,30 @@ function createSjpPressListPayload(locationId: number) {
 }
 
 // Helper function to upload publication via API
-async function uploadSjpPressListViaApi(request: APIRequestContext, locationId: number): Promise<string> {
-  const payload = createSjpPressListPayload(locationId);
-  const token = await getApiAuthToken();
-
-  const response = await request.post(PUBLICATION_ENDPOINT, {
-    data: payload,
-    headers: { Authorization: `Bearer ${token}` }
-  });
-
-  const result = await response.json();
-
-  expect(response.status()).toBe(201);
-  expect(result.artefact_id).toBeDefined();
-
-  // In deployed environments, API and web are separate pods with separate filesystems.
-  // Upload the JSON to the web pod so the list type page can render it.
-  if (IS_DEPLOYED) {
-    const jsonBuffer = Buffer.from(JSON.stringify(payload.hearing_list));
-    await uploadTestFlatFileToWeb({ artefactId: result.artefact_id, content: jsonBuffer, extension: ".json" });
-  }
-
-  return result.artefact_id;
+async function uploadSjpPressListViaApi(locationId: number): Promise<string> {
+  const { upload, payload } = createSjpPressListPayload(locationId);
+  const { artefactId } = await uploadTestPublication({ ...upload, payload, mirrorJsonToWeb: true });
+  return artefactId;
 }
 
 test.describe("SJP Press List @nightly", () => {
   let artefactId: string;
   let listUrl: string;
+  let pressUser: VerifiedTestUser;
 
-  test.beforeAll(async ({ request }) => {
+  test.beforeAll(async () => {
+    // SJP_PRESS_LIST only allows the PI_AAD provenance, so a CFT_IDAM user would be redirected to sign-in
+    pressUser = await createVerifiedTestUser({ provenance: "PI_AAD", label: "sjp-press" });
     // Create unique test location for isolation
     const testLocation = await createUniqueTestLocation({ namePrefix: "SJP Press Test Court" });
 
     // Upload SJP press list via API with proper authentication
-    artefactId = await uploadSjpPressListViaApi(request, testLocation.locationId);
+    artefactId = await uploadSjpPressListViaApi(testLocation.locationId);
     listUrl = `/sjp-press-list?artefactId=${artefactId}`;
+  });
+
+  test.beforeEach(async ({ page }) => {
+    await loginAsTestUser(page, pressUser);
   });
 
   test("should display press list page with required elements", async ({ page }) => {
@@ -176,6 +161,12 @@ test.describe("SJP Press List @nightly", () => {
 
     // Check Show/Hide filters button
     await expect(page.getByRole("button", { name: /filters/ })).toBeVisible();
+
+    // Check dates of birth: ISO and dd/MM/yyyy are shown as parsed dates, an unreadable value as sent
+    const caseSummary = (name: string) => page.locator(".govuk-summary-list").filter({ hasText: name }).first();
+    await expect(caseSummary("John Smith")).toContainText("15 May 1985 (40)");
+    await expect(caseSummary("Jane Doe")).toContainText("22 August 1990 (34)");
+    await expect(caseSummary("Alice Brown")).toContainText("unknown (29)");
 
     // Test accessibility (disable region rule - known site-wide issue)
     const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();

@@ -3,6 +3,7 @@ import "./conversion/cst-config.js"; // Register converter on module load
 // Business logic exports
 export type { ValidationResult } from "@hmcts/publication";
 export * from "./email-summary/summary-builder.js";
+export { reformatCareStandardsTribunalWeeklyHearingListExcel } from "./excel/excel-reformatter.js";
 export { cy as careStandardsTribunalWeeklyHearingListCy } from "./locales/cy.js";
 // Locale exports
 export { en as careStandardsTribunalWeeklyHearingListEn } from "./locales/en.js";

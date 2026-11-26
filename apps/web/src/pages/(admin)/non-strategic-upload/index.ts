@@ -6,8 +6,8 @@ import "@hmcts/send-daily-hearing-list"; // Register SEND converter
 import "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list"; // Register UTCC converter
 import "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list"; // Register UTLC converter
 import "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"; // Register UTAAC converter
-import "@hmcts/companies-winding-up-chd-daily-cause-list"; // Register Companies Winding Up (ChD) converter
-import "@hmcts/financial-list-chd-kb-daily-cause-list"; // Register Financial List (ChD/KB) converter
+import "@hmcts/business-and-property-division-rolls-building-daily-cause-list"; // Register Business and Property Division Rolls Building converter
+import "@hmcts/interim-applications-daily-cause-list"; // Register Interim Applications converter
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS, storeNonStrategicUpload, type UploadFormData, validateNonStrategicUploadForm } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getAllLocations, getLocationById } from "@hmcts/location";

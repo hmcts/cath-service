@@ -1,8 +1,18 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import jwksClient from "jwks-rsa";
+import jwksClient, { type JwksClient } from "jwks-rsa";
 
 const REQUIRED_ROLE = "api.publisher.user";
+
+// One message for every way a bearer token can fail — absent, malformed, unverifiable or
+// expired. Publishers reach CaTH through APIM, which phrases OAuth rejections this way, so a
+// token problem reads the same whether it was caught at the gateway or here. Deliberately says
+// nothing about *which* check failed: that detail is logged, not returned.
+const OAUTH_FAILURE_MESSAGE = "Access denied due to invalid OAuth information";
+
+// The JWKS client caches signing keys and rate-limits key fetches internally, so it must
+// outlive a single request. Keyed by tenant because the tenant is read from env per request.
+const JWKS_CLIENTS = new Map<string, JwksClient>();
 
 /**
  * Middleware to authenticate API requests using OAuth 2.0
@@ -14,10 +24,7 @@ export function authenticateApi() {
       const authHeader = req.headers.authorization;
 
       if (!authHeader?.startsWith("Bearer ")) {
-        return res.status(401).json({
-          success: false,
-          message: "Missing or invalid Authorization header"
-        });
+        return res.status(401).json(authError(401, OAUTH_FAILURE_MESSAGE));
       }
 
       const token = authHeader.substring(7); // Remove "Bearer " prefix
@@ -27,10 +34,7 @@ export function authenticateApi() {
 
       // Check for required app role
       if (!hasRequiredRole(claims, REQUIRED_ROLE)) {
-        return res.status(403).json({
-          success: false,
-          message: "Insufficient permissions. Required role: api.publisher.user"
-        });
+        return res.status(403).json(authError(403, `Insufficient permissions. Required role: ${REQUIRED_ROLE}`));
       }
 
       // Attach claims to request for downstream use
@@ -42,12 +46,18 @@ export function authenticateApi() {
       next();
     } catch (_error) {
       console.error("API authentication error");
-      return res.status(401).json({
-        success: false,
-        message: "Invalid or expired token"
-      });
+      return res.status(401).json(authError(401, OAUTH_FAILURE_MESSAGE));
     }
   };
+}
+
+/**
+ * Auth rejections carry the status code in the body as well as the status line, matching the
+ * shape APIM returns for the same failures — a publisher cannot tell whether the request was
+ * rejected at the gateway or here.
+ */
+function authError(statusCode: number, message: string): AuthErrorBody {
+  return { statusCode, message };
 }
 
 async function validateToken(token: string): Promise<any> {
@@ -60,13 +70,7 @@ async function validateToken(token: string): Promise<any> {
     throw new Error("Azure AD configuration not found. Ensure AZURE_TENANT_ID and CATH_SERVICE_API_CLIENT_ID are set in Key Vault or environment variables.");
   }
 
-  // Create JWKS client to fetch Azure AD public keys
-  const client = jwksClient({
-    jwksUri: `https://login.microsoftonline.com/${tenantId}/discovery/v2.0/keys`,
-    cache: true,
-    cacheMaxAge: 86400000, // Cache keys for 24 hours
-    rateLimit: true
-  });
+  const client = getJwksClient(tenantId);
 
   return new Promise((resolve, reject) => {
     // Decode token to get kid (key ID) without verification
@@ -110,7 +114,28 @@ async function validateToken(token: string): Promise<any> {
   });
 }
 
+function getJwksClient(tenantId: string): JwksClient {
+  const existing = JWKS_CLIENTS.get(tenantId);
+  if (existing) {
+    return existing;
+  }
+
+  const client = jwksClient({
+    jwksUri: `https://login.microsoftonline.com/${tenantId}/discovery/v2.0/keys`,
+    cache: true,
+    cacheMaxAge: 86400000, // Cache keys for 24 hours
+    rateLimit: true
+  });
+  JWKS_CLIENTS.set(tenantId, client);
+  return client;
+}
+
 function hasRequiredRole(claims: any, requiredRole: string): boolean {
   const roles = claims.roles || [];
   return Array.isArray(roles) && roles.includes(requiredRole);
+}
+
+export interface AuthErrorBody {
+  statusCode: number;
+  message: string;
 }

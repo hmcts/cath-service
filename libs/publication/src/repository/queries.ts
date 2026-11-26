@@ -10,8 +10,8 @@ const SJP_LIST_TYPE_NAMES = ["SJP_PRESS_LIST", "SJP_PUBLIC_LIST", "SJP_DELTA_PRE
 export interface ArtefactSummary {
   artefactId: string;
   listType: string;
-  displayFrom: string;
-  displayTo: string;
+  displayFrom: string | null;
+  displayTo: string | null;
   isFlatFile: boolean;
 }
 
@@ -25,8 +25,8 @@ export interface ArtefactMetadata {
   language: string;
   sensitivity: string;
   contentDate: string;
-  displayFrom: string;
-  displayTo: string;
+  displayFrom: string | null;
+  displayTo: string | null;
 }
 
 export interface LocationWithPublicationCount {
@@ -36,13 +36,15 @@ export interface LocationWithPublicationCount {
 }
 
 export async function createArtefact(data: Artefact): Promise<{ artefactId: string; isUpdate: boolean }> {
-  // Check if artefact already exists with same location, list type, content date, and language
+  // The CaTH Inbound Publication API supersedes on court, content date, language,
+  // list type and provenance — all five must match for an existing artefact to be overwritten.
   const existing = await prisma.artefact.findFirst({
     where: {
       locationId: data.locationId,
       listTypeId: data.listTypeId,
       contentDate: data.contentDate,
-      language: data.language
+      language: data.language,
+      provenance: data.provenance
     }
   });
 
@@ -56,13 +58,15 @@ export async function createArtefact(data: Artefact): Promise<{ artefactId: stri
         displayTo: data.displayTo,
         isFlatFile: data.isFlatFile,
         provenance: data.provenance,
-        noMatch: data.noMatch,
         lastReceivedDate: new Date(),
         supersededCount: {
           increment: 1
         }
       }
     });
+    // The superseding upload may not regenerate these (e.g. a flat file replacing a JSON
+    // list), so they are removed to stop the old PDF/Excel being served or emailed.
+    await deleteDerivedFiles(existing.artefactId);
     return { artefactId: existing.artefactId, isUpdate: true };
   }
 
@@ -80,16 +84,19 @@ export async function createArtefact(data: Artefact): Promise<{ artefactId: stri
       displayTo: data.displayTo,
       lastReceivedDate: data.lastReceivedDate ?? new Date(),
       isFlatFile: data.isFlatFile,
-      provenance: data.provenance,
-      noMatch: data.noMatch ?? false
+      provenance: data.provenance
     }
   });
   return { artefactId: artefact.artefactId, isUpdate: false };
 }
 
+/**
+ * Public lookup of a single artefact. Artefacts whose list type is hidden resolve to null,
+ * so every public page and download built on this returns 404 for them.
+ */
 export async function getArtefactById(artefactId: string): Promise<ArtefactWithListType | null> {
-  const artefact = await prisma.artefact.findUnique({
-    where: { artefactId },
+  const artefact = await prisma.artefact.findFirst({
+    where: { artefactId, listType: { isHidden: false } },
     select: {
       artefactId: true,
       type: true,
@@ -104,13 +111,20 @@ export async function getArtefactById(artefactId: string): Promise<ArtefactWithL
       lastReceivedDate: true,
       isFlatFile: true,
       provenance: true,
-      supersededCount: true,
-      noMatch: true
+      supersededCount: true
     }
   });
   if (!artefact) return null;
   const { listType, ...rest } = artefact;
   return { ...rest, listTypeName: listType?.name };
+}
+
+export async function isListTypeHidden(listTypeId: number): Promise<boolean> {
+  const listType = await prisma.listType.findUnique({
+    where: { id: listTypeId },
+    select: { isHidden: true }
+  });
+  return listType?.isHidden === true;
 }
 
 export async function getArtefactsByLocation(locationId: string): Promise<Artefact[]> {
@@ -133,8 +147,7 @@ export async function getArtefactsByLocation(locationId: string): Promise<Artefa
       displayTo: true,
       lastReceivedDate: true,
       isFlatFile: true,
-      provenance: true,
-      noMatch: true
+      provenance: true
     }
   });
 }
@@ -158,8 +171,7 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
       displayTo: true,
       lastReceivedDate: true,
       isFlatFile: true,
-      provenance: true,
-      noMatch: true
+      provenance: true
     }
   });
 }
@@ -180,18 +192,7 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
     deleteBlob(`${artefact.artefactId}${extension}`, CONTAINER.ARTEFACT).catch(() => {
       // Silently ignore — legacy blob may not exist for new artefacts.
     });
-    deleteBlob(`${artefact.artefactId}.pdf`, CONTAINER.PUBLICATIONS).catch((error) => {
-      // 404 is expected if no PDF was generated for this artefact
-      if (!("statusCode" in error) || (error as { statusCode: number }).statusCode !== 404) {
-        console.error(`Failed to delete PDF blob for artefact ${artefact.artefactId}:`, error);
-      }
-    });
-    deleteBlob(`${artefact.artefactId}.xlsx`, CONTAINER.PUBLICATIONS).catch((error) => {
-      // 404 is expected if no Excel file was generated for this artefact
-      if (!("statusCode" in error) || (error as { statusCode: number }).statusCode !== 404) {
-        console.error(`Failed to delete Excel blob for artefact ${artefact.artefactId}:`, error);
-      }
-    });
+    void deleteDerivedFiles(artefact.artefactId);
   }
 
   await prisma.artefact.deleteMany({
@@ -244,8 +245,8 @@ export async function getArtefactSummariesByLocation(locationId: string): Promis
   return artefacts.map((artefact) => ({
     artefactId: artefact.artefactId,
     listType: artefact.listType?.friendlyName || "Unknown",
-    displayFrom: artefact.displayFrom.toISOString(),
-    displayTo: artefact.displayTo.toISOString(),
+    displayFrom: artefact.displayFrom?.toISOString() ?? null,
+    displayTo: artefact.displayTo?.toISOString() ?? null,
     isFlatFile: artefact.isFlatFile
   }));
 }
@@ -278,7 +279,8 @@ export async function getArtefactMetadata(artefactId: string): Promise<ArtefactM
     return null;
   }
 
-  const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
+  const numericLocationId = Number.parseInt(artefact.locationId, 10);
+  const location = Number.isNaN(numericLocationId) ? undefined : await getLocationById(numericLocationId);
 
   return {
     artefactId: artefact.artefactId,
@@ -290,8 +292,8 @@ export async function getArtefactMetadata(artefactId: string): Promise<ArtefactM
     language: artefact.language,
     sensitivity: artefact.sensitivity,
     contentDate: artefact.contentDate.toISOString(),
-    displayFrom: artefact.displayFrom.toISOString(),
-    displayTo: artefact.displayTo.toISOString()
+    displayFrom: artefact.displayFrom?.toISOString() ?? null,
+    displayTo: artefact.displayTo?.toISOString() ?? null
   };
 }
 
@@ -367,8 +369,18 @@ export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
       displayTo: artefact.displayTo,
       lastReceivedDate: artefact.lastReceivedDate,
       isFlatFile: artefact.isFlatFile,
-      provenance: artefact.provenance,
-      noMatch: artefact.noMatch
+      provenance: artefact.provenance
     })
   );
+}
+
+async function deleteDerivedFiles(artefactId: string): Promise<void> {
+  await Promise.all([
+    deleteBlob(`${artefactId}.pdf`, CONTAINER.PUBLICATIONS).catch((error) => {
+      console.error(`Failed to delete PDF blob for artefact ${artefactId}:`, error);
+    }),
+    deleteBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS).catch((error) => {
+      console.error(`Failed to delete Excel blob for artefact ${artefactId}:`, error);
+    })
+  ]);
 }

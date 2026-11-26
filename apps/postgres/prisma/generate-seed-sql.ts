@@ -4,6 +4,7 @@
 // not installed in the focused postgres deploy image.
 
 import { type ListTypeData, listTypeData } from "@hmcts/list-types-common/list-type-data";
+import { assertValidProvenances } from "@hmcts/list-types-common/list-type-provenance";
 import { locationData } from "@hmcts/location/location-data";
 
 const LOCATION_REFERENCE_PROVENANCE = "SNL";
@@ -55,6 +56,7 @@ export function generateSeedSql(data: typeof locationData, listTypes: ListTypeDa
     generateLocationReferencesSql(data.locations),
     generateLocationRegionsSql(data.locations),
     generateLocationSubJurisdictionsSql(data.locations),
+    generateLocationMetadataSql(data.locations),
     generateListTypesSql(listTypes),
     generateListTypeSubJurisdictionsSql(listTypes),
     generateSoftDeleteReconciliationSql(listTypes),
@@ -125,12 +127,27 @@ function generateLocationSubJurisdictionsSql(locations: typeof locationData.loca
   return `INSERT INTO location_sub_jurisdiction (location_id, sub_jurisdiction_id) VALUES\n${rows.join(",\n")}\nON CONFLICT (location_id, sub_jurisdiction_id) DO NOTHING;`;
 }
 
+function generateLocationMetadataSql(locations: typeof locationData.locations): string {
+  const rows = locations
+    .filter((l) => l.cautionMessage || l.welshCautionMessage)
+    .map(
+      (l) =>
+        `  (${sqlStr(`seedmeta_${l.locationId}`)}, ${l.locationId}, ${sqlStrOrNull(l.cautionMessage ?? null)}, ${sqlStrOrNull(l.welshCautionMessage ?? null)}, NOW(), NOW())`
+    );
+  if (rows.length === 0) {
+    return "-- no location_metadata rows";
+  }
+  // DO NOTHING rather than DO UPDATE: once a metadata row exists it is owned by admins via
+  // location-metadata-manage, so a redeploy must never overwrite their edits.
+  return `INSERT INTO location_metadata (location_metadata_id, location_id, caution_message, welsh_caution_message, created_at, updated_at) VALUES\n${rows.join(",\n")}\nON CONFLICT (location_id) DO NOTHING;`;
+}
+
 function generateListTypesSql(listTypes: ListTypeData[]): string {
   const values = listTypes
     .map((lt) => {
       const shortened = lt.shortenedFriendlyName ?? lt.englishFriendlyName;
       const url = lt.urlPath || "";
-      return `  (${sqlStr(lt.name)}, ${sqlStr(lt.englishFriendlyName)}, ${sqlStr(lt.welshFriendlyName)}, ${sqlStr(shortened)}, ${sqlStr(url)}, ${sqlStrOrNull(lt.defaultSensitivity)}, ${sqlStr(lt.provenance)}, ${sqlBool(lt.isNonStrategic)}, NOW(), NOW())`;
+      return `  (${sqlStr(lt.name)}, ${sqlStr(lt.englishFriendlyName)}, ${sqlStr(lt.welshFriendlyName)}, ${sqlStr(shortened)}, ${sqlStr(url)}, ${sqlStrOrNull(lt.defaultSensitivity)}, ${sqlStrArray(assertValidProvenances(lt.provenance))}, ${sqlBool(lt.isNonStrategic)}, NOW(), NOW())`;
     })
     .join(",\n");
   return `INSERT INTO list_types (name, friendly_name, welsh_friendly_name, shortened_friendly_name, url, default_sensitivity, allowed_provenance, is_non_strategic, created_at, updated_at) VALUES\n${values}\nON CONFLICT (name) DO UPDATE SET\n  friendly_name = EXCLUDED.friendly_name,\n  welsh_friendly_name = EXCLUDED.welsh_friendly_name,\n  shortened_friendly_name = EXCLUDED.shortened_friendly_name,\n  url = EXCLUDED.url,\n  default_sensitivity = EXCLUDED.default_sensitivity,\n  allowed_provenance = EXCLUDED.allowed_provenance,\n  is_non_strategic = EXCLUDED.is_non_strategic,\n  deleted_at = NULL,\n  updated_at = NOW();`;
@@ -157,6 +174,11 @@ function generateSoftDeleteReconciliationSql(listTypes: ListTypeData[]): string 
 
 function sqlStr(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;
+}
+
+function sqlStrArray(values: string[]): string {
+  if (values.length === 0) return "ARRAY[]::text[]";
+  return `ARRAY[${values.map(sqlStr).join(", ")}]::text[]`;
 }
 
 function sqlStrOrNull(value: string | null): string {

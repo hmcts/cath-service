@@ -13,7 +13,7 @@ const TEMPLATE = "(system-admin)/manage-third-party-subscriptions/index.njk";
 
 const listTypes = [
   { id: 1, name: "CIVIL_DAILY_CAUSE_LIST", friendlyName: "Civil Daily Cause List", welshFriendlyName: "Rhestr Achos Dyddiol Sifil" },
-  { id: 2, name: "CROWN_DAILY_LIST", friendlyName: "Crown Daily List", welshFriendlyName: "Rhestr Ddyddiol y Goron" }
+  { id: 2, name: "CROWN_DAILY_PDDA_LIST", friendlyName: "Crown Daily List", welshFriendlyName: "Rhestr Ddyddiol y Goron" }
 ];
 
 describe("manage-third-party-subscriptions template", () => {

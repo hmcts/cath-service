@@ -7,7 +7,7 @@
 # template (values.preview.template.yaml), because it needs the -dev SSO app
 # registration and the ASO blob storage.
 global:
-  environment: ${ENVIRONMENT:-aat}
+  environment: ${GLOBAL_ENVIRONMENT}
 
 # Enable/disable subcharts
 postgres:
@@ -48,8 +48,9 @@ cath-web:
     environment:
       BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.{{ .Values.global.environment }}.platform.hmcts.net"
       # false on demo (production-like), true elsewhere. Resolved by
-      # job.helm-deploy.yml; the :-true default keeps aat behaviour if unset.
-      ENABLE_TEST_SUPPORT: "${ENABLE_TEST_SUPPORT:-true}"
+      # job.helm-deploy.yml. Do not add shell-style ":-" defaults to any variable in
+      # this file: helm-deploy renders it with envsubst, which leaves them verbatim.
+      ENABLE_TEST_SUPPORT: "${ENABLE_TEST_SUPPORT}"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
 
 # API application configuration
@@ -58,7 +59,7 @@ cath-api:
     image: "hmctsprod.azurecr.io/cath/cath-api:${API_IMAGE}"
     ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.{{ .Values.global.environment }}.platform.hmcts.net"
     environment:
-      ENABLE_TEST_SUPPORT: "${ENABLE_TEST_SUPPORT:-true}"
+      ENABLE_TEST_SUPPORT: "${ENABLE_TEST_SUPPORT}"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
 
 # Crons application configuration

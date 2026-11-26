@@ -447,9 +447,17 @@ jobs:
                - Text in round brackets (like this) is template guidance - remove it and do not include it in the output
             2. Read .claude/rules/design.md for GOV.UK Design System guidance
             3. Search the codebase for similar implementations to understand existing patterns
-            4. Fill in ALL sections of the template with specific, actionable content based on the issue
-            5. Replace all placeholder text [in brackets] with real content
-            6. For wireframes, use ASCII art diagrams
+            4. Fill in every section with specific, actionable content based on the issue, EXCEPT
+               where the template itself says otherwise
+               - Where the template says to leave an item out if it does not apply, or to leave a
+                 section empty rather than writing something for the sake of it, respect that -
+                 omit it entirely rather than filling it with boilerplate
+               - Where the template asks for something specific to this page - copy, error text,
+                 input rules, destinations - write it out in full, however long that is. Leave out
+                 generic material: standard GOV.UK component behaviour, design system conventions,
+                 anything true of every page in the service
+            5. Replace placeholder text [in brackets] with real content in the sections you keep
+            6. For wireframes and layout sketches, use ASCII art diagrams
             7. For Welsh translations, use markers: [TRANSLATE: "English text here"]
                - These markers will be processed by a translation script after generation
                - Use markers for ALL Welsh text - the script handles lookups and missing translations

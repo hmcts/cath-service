@@ -46,7 +46,11 @@ describe("add-list-type page", () => {
         expect.objectContaining({
           t: expect.objectContaining({ title: "Enter list type details" }),
           data: {},
-          checkedProvenance: { CFT_IDAM: false, PI_AAD: false, CRIME_IDAM: false }
+          provenanceOptions: [
+            { value: "CFT_IDAM", text: "CFT_IDAM", checked: false },
+            { value: "PI_AAD", text: "PI_AAD", checked: false },
+            { value: "CRIME_IDAM", text: "CRIME_IDAM", checked: false }
+          ]
         })
       );
     });
@@ -135,6 +139,27 @@ describe("add-list-type page", () => {
         "add-list-type/index",
         expect.objectContaining({
           errors: expect.objectContaining({ name: { text: "A list type with this name already exists" } })
+        })
+      );
+    });
+
+    it("should re-render provenance checkboxes driven from the shared constant with selection preserved", async () => {
+      // Arrange
+      req.body = { ...validBody, allowedProvenance: ["CFT_IDAM", "PI_AAD"], name: "" };
+      vi.mocked(queries.validateListTypeDetails).mockReturnValue([{ field: "name", message: "Enter a value for name", href: "#name" }]);
+
+      // Act
+      await postHandler(req as Request, res as Response);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "add-list-type/index",
+        expect.objectContaining({
+          provenanceOptions: [
+            { value: "CFT_IDAM", text: "CFT_IDAM", checked: true },
+            { value: "PI_AAD", text: "PI_AAD", checked: true },
+            { value: "CRIME_IDAM", text: "CRIME_IDAM", checked: false }
+          ]
         })
       );
     });

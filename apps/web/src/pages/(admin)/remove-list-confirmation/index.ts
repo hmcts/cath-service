@@ -3,13 +3,21 @@ import { sendThirdPartyDeletion } from "@hmcts/legacy-third-party-fulfilment";
 import { getLocationById } from "@hmcts/location";
 import { deleteArtefacts, getArtefactsByIds } from "@hmcts/publication";
 import { AuditLogAction, findAllListTypes } from "@hmcts/system-admin-pages";
+import { sendPublicationDeletionToThirdParties } from "@hmcts/third-party-subscription-fulfilment";
 import { saveSession } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
+const NO_DATE = "—";
+
 function formatDateString(date: Date): string {
   return date.toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
+}
+
+// Display dates are optional on publications ingested via the inbound publication API.
+function formatOptionalDateString(date: Date | null): string {
+  return date ? formatDateString(date) : NO_DATE;
 }
 
 function capitalizeFirstLetter(text: string): string {
@@ -35,7 +43,7 @@ async function transformArtefactsForDisplay(artefacts: Awaited<ReturnType<typeof
         courtName = locale === "cy" ? location.welshName : location.name;
       }
 
-      const displayDates = `${formatDateString(artefact.displayFrom)} to ${formatDateString(artefact.displayTo)}`;
+      const displayDates = `${formatOptionalDateString(artefact.displayFrom)} to ${formatOptionalDateString(artefact.displayTo)}`;
       const language = capitalizeFirstLetter(artefact.language);
       const sensitivity = capitalizeFirstLetter(artefact.sensitivity);
 
@@ -133,6 +141,14 @@ const postHandler = async (req: Request, res: Response) => {
         provenance: artefact.provenance
       }).catch((error) => {
         console.error("Third-party deletion push failed:", error);
+      });
+
+      sendPublicationDeletionToThirdParties({
+        artefactId: artefact.artefactId,
+        listTypeId: artefact.listTypeId,
+        sensitivity: artefact.sensitivity
+      }).catch((error) => {
+        console.error("Third-party OAuth deletion failed:", { artefactId: artefact.artefactId, error: error instanceof Error ? error.message : String(error) });
       });
     }
 

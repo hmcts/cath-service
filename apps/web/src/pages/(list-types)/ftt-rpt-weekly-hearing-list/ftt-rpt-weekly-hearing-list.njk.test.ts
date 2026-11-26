@@ -54,7 +54,7 @@ function buildHeader(overrides: Record<string, unknown> = {}) {
 function renderList(hearings: unknown[], overrides: Record<string, unknown> = {}, locale: typeof en | typeof cy = en) {
   const importantInformationText = buildImportantInformationText(
     locale.importantInformationTextTemplate,
-    locale.rptRegionalEmail.FTT_RPT_EASTERN_WEEKLY_HEARING_LIST
+    locale.rptRegionalEmail.RPT_EASTERN_WEEKLY_HEARING_LIST
   );
   return render(env, TEMPLATE, {
     t: locale,
@@ -163,7 +163,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
       expect(details.attr("open")).toBeDefined();
       expect(details.find(".govuk-details__summary-text").text()).toContain(en.importantInformationTitle);
       const detailsText = details.find(".govuk-details__text").text();
-      expect(detailsText).toContain(en.rptRegionalEmail.FTT_RPT_EASTERN_WEEKLY_HEARING_LIST);
+      expect(detailsText).toContain(en.rptRegionalEmail.RPT_EASTERN_WEEKLY_HEARING_LIST);
       expect(detailsText).toContain(en.importantInformationSecondParagraph);
     });
 

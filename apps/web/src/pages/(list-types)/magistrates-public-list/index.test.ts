@@ -50,7 +50,6 @@ describe("magistrates-public-list controller", () => {
     isFlatFile: false,
     provenance: "MANUAL_UPLOAD",
     supersededCount: 0,
-    noMatch: false,
     listTypeName: "MAGISTRATES_PUBLIC_LIST"
   };
 

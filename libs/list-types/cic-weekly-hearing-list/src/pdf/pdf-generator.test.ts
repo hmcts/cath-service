@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { cy } from "../locales/cy.js";
+import { en } from "../locales/en.js";
 import type { CicWeeklyHearingList } from "../models/types.js";
 import { generateCicWeeklyHearingListPdf } from "./pdf-generator.js";
 
@@ -80,13 +82,20 @@ describe("generateCicWeeklyHearingListPdf", () => {
     expect(result.error).toBe("PDF generation failed");
   });
 
-  it("should use the correct list title", async () => {
-    await generateCicWeeklyHearingListPdf(baseOptions);
+  it.each([
+    ["en", en.pageTitle],
+    ["cy", cy.pageTitle]
+  ])("should use the %s locale list title", async (locale, expectedTitle) => {
+    await generateCicWeeklyHearingListPdf({ ...baseOptions, locale });
+
+    expect(generateListPdf).toHaveBeenCalledWith(expect.objectContaining({ listTitle: expectedTitle }));
+  });
+
+  it("should give the Welsh PDF the legacy Welsh title", async () => {
+    await generateCicWeeklyHearingListPdf({ ...baseOptions, locale: "cy" });
 
     expect(generateListPdf).toHaveBeenCalledWith(
-      expect.objectContaining({
-        listTitle: "Criminal Injuries Compensation Weekly Hearing List"
-      })
+      expect.objectContaining({ listTitle: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Digolledu am Anafiadau Troseddol" })
     );
   });
 
@@ -99,5 +108,16 @@ describe("generateCicWeeklyHearingListPdf", () => {
 
     expect(enModule.en).toBeDefined();
     expect(cyModule.cy).toBeDefined();
+  });
+
+  it.each([
+    ["en", "MANUAL_UPLOAD", "Manual Upload"],
+    ["cy", "MANUAL_UPLOAD", "Lanlwytho â Llaw"],
+    ["en", "SNL", "ListAssist"],
+    ["cy", "SNL", "ListAssist"]
+  ])("should use the %s locale data source label for %s, as legacy does", async (locale, provenance, expectedLabel) => {
+    await generateCicWeeklyHearingListPdf({ ...baseOptions, locale, provenance });
+
+    expect(generateListPdf).toHaveBeenCalledWith(expect.objectContaining({ provenanceLabel: expectedLabel }));
   });
 });

@@ -142,4 +142,33 @@ describe("renderGrcWeeklyHearingListData", () => {
     // Assert
     expect(result.header.lastUpdatedTime).toBe("2:30pm");
   });
+
+  it("should replace a dot in the hearing time with a colon, as legacy does", () => {
+    // Arrange
+    const hearingList: GrcWeeklyHearingList = [
+      {
+        date: "02/01/2025",
+        hearingTime: "10.30am",
+        caseReferenceNumber: "GRC/2025/001",
+        caseName: "A Vs B",
+        judges: "Judge Smith",
+        members: "Member Jones",
+        modeOfHearing: "Remote",
+        venue: "GRC Hearing Centre",
+        additionalInformation: ""
+      }
+    ];
+
+    // Act
+    const result = renderGrcWeeklyHearingListData(hearingList, {
+      locale: "en",
+      courtName: "General Regulatory Chamber",
+      contentDate: new Date(2025, 0, 2),
+      lastReceivedDate: "2025-01-01T09:55:00Z",
+      listTitle: "General Regulatory Chamber Weekly Hearing List"
+    });
+
+    // Assert
+    expect(result.hearings[0].hearingTime).toBe("10:30am");
+  });
 });

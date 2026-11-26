@@ -9,7 +9,9 @@ interface B2cConfig {
   policyResetCredentials: string;
   redirectUri: string;
   responseType: "code" | "code id_token" | "id_token code" | "id_token";
-  responseMode: "query" | "form_post";
+  // Query only: the session cookie is SameSite=Lax, so a cross-site form_post callback
+  // would arrive without it and fail state validation.
+  responseMode: "query";
   scope: string[];
   customDomain: string;
   customDomainPath: string;

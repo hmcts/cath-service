@@ -4,6 +4,7 @@ import {
   type ExcelConverterConfig,
   RCJ_EXCEL_CONFIG_SIMPLE_TIME,
   registerConverterByName,
+  type SheetConfig,
   validateDateFormat,
   validateNoHtmlTags,
   validateTimeFormatSimple
@@ -67,16 +68,16 @@ export const FUTURE_JUDGMENTS_CONFIG: ExcelConverterConfig = {
   minRows: 0
 };
 
-// Multi-sheet converter for Court of Appeal Civil
-const convertCivilAppealExcel = (buffer: Buffer) =>
-  createMultiSheetConverter(buffer, [
-    { worksheetName: "Daily hearings", worksheetIndex: 0, dataKey: "dailyHearings", config: DAILY_HEARINGS_CONFIG },
-    { worksheetName: "Notice for future judgments", worksheetIndex: 1, dataKey: "futureJudgments", config: FUTURE_JUDGMENTS_CONFIG }
-  ]);
+export const COURT_OF_APPEAL_CIVIL_SHEETS: SheetConfig[] = [
+  { worksheetName: "Daily hearings", worksheetIndex: 0, dataKey: "dailyHearings", config: DAILY_HEARINGS_CONFIG },
+  { worksheetName: "Notice for future judgments", worksheetIndex: 1, dataKey: "futureJudgments", config: FUTURE_JUDGMENTS_CONFIG }
+];
+
+const convertCivilAppealExcel = (buffer: Buffer) => createMultiSheetConverter(buffer, COURT_OF_APPEAL_CIVIL_SHEETS);
 
 const converter = {
   config: DAILY_HEARINGS_CONFIG,
   convertExcelToJson: convertCivilAppealExcel as any
 };
 
-registerConverterByName("COURT_OF_APPEAL_CIVIL_DIVISION_DAILY_CAUSE_LIST", converter);
+registerConverterByName("COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST", converter);

@@ -37,7 +37,7 @@ describe("expressSessionRedis", () => {
         cookie: expect.objectContaining({
           secure: false,
           httpOnly: true,
-          maxAge: 1000 * 60 * 60 * 4
+          maxAge: undefined
         }),
         store: expect.objectContaining({
           redisStoreOptions: expect.objectContaining({
@@ -66,6 +66,7 @@ describe("expressSessionRedis", () => {
 
   it("should set secure cookie in production", () => {
     process.env.NODE_ENV = "production";
+    process.env.SESSION_SECRET = "my-secret-key";
     const mockRedisClient = { connect: vi.fn() };
 
     const middleware = expressSessionRedis({
@@ -77,6 +78,45 @@ describe("expressSessionRedis", () => {
         cookie: expect.objectContaining({
           secure: true
         })
+      })
+    });
+  });
+
+  it("should set the session cookie to SameSite=Lax", () => {
+    const mockRedisClient = { connect: vi.fn() };
+
+    const middleware = expressSessionRedis({
+      redisConnection: mockRedisClient
+    });
+
+    expect(middleware).toEqual({
+      sessionOptions: expect.objectContaining({
+        cookie: expect.objectContaining({
+          sameSite: "lax"
+        })
+      })
+    });
+  });
+
+  it("should throw when SESSION_SECRET is missing in production", () => {
+    process.env.NODE_ENV = "production";
+    const mockRedisClient = { connect: vi.fn() };
+
+    expect(() => expressSessionRedis({ redisConnection: mockRedisClient })).toThrow("SESSION_SECRET must be set in production");
+  });
+
+  it("should not require SESSION_SECRET in production when a secret is passed in session options", () => {
+    process.env.NODE_ENV = "production";
+    const mockRedisClient = { connect: vi.fn() };
+
+    const middleware = expressSessionRedis({
+      redisConnection: mockRedisClient,
+      sessionOptions: { secret: "custom-secret" }
+    });
+
+    expect(middleware).toEqual({
+      sessionOptions: expect.objectContaining({
+        secret: "custom-secret"
       })
     });
   });
@@ -105,6 +145,23 @@ describe("expressSessionRedis", () => {
         })
       })
     });
+  });
+
+  it("should default to a browser-session cookie with no maxAge", () => {
+    const middleware = expressSessionRedis({ redisConnection: { connect: vi.fn() } }) as unknown as {
+      sessionOptions: { cookie: { maxAge?: number; expires?: Date } };
+    };
+
+    expect(middleware.sessionOptions.cookie.maxAge).toBeUndefined();
+    expect(middleware.sessionOptions.cookie.expires).toBeUndefined();
+  });
+
+  it("should apply an explicit cookieMaxAge", () => {
+    const middleware = expressSessionRedis({ redisConnection: { connect: vi.fn() }, cookieMaxAge: 1000 * 60 * 15 }) as unknown as {
+      sessionOptions: { cookie: { maxAge?: number } };
+    };
+
+    expect(middleware.sessionOptions.cookie.maxAge).toBe(1000 * 60 * 15);
   });
 
   it("should allow custom session options to override defaults", () => {

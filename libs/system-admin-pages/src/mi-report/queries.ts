@@ -26,6 +26,8 @@ const LOCATION_SUBSCRIPTIONS_HEADERS = ["id", "search_value", "channel", "user_i
 
 const ALL_SUBSCRIPTIONS_HEADERS = ["id", "channel", "search_type", "user_id", "court_name", "created_date"];
 
+const DELETED_ACCOUNTS_HEADERS = ["user_id", "provenance_user_id", "user_provenance", "roles", "last_signed_in_date", "deleted_date"];
+
 const LOCATION_SEARCH_TYPE = "LOCATION_ID";
 
 export async function buildUserAccountsSheet(cutoff?: Date): Promise<MiReportSheet> {
@@ -145,6 +147,24 @@ export async function buildAllSubscriptionsSheet(cutoff?: Date, resolver?: Court
   }));
 
   return { name: "All Subscriptions", headers: ALL_SUBSCRIPTIONS_HEADERS, rows };
+}
+
+export async function buildDeletedAccountsSheet(cutoff?: Date): Promise<MiReportSheet> {
+  const accounts = await prisma.userArchive.findMany({
+    where: cutoff ? { archivedDate: { gte: cutoff } } : undefined,
+    orderBy: { archivedDate: "desc" }
+  });
+
+  const rows = accounts.map((account) => ({
+    user_id: account.userId,
+    provenance_user_id: account.provenanceUserId ?? "",
+    user_provenance: account.userProvenance ?? "",
+    roles: account.roles ?? "",
+    last_signed_in_date: formatDate(account.lastSignedInDate),
+    deleted_date: formatDate(account.archivedDate)
+  }));
+
+  return { name: "Deleted Accounts", headers: DELETED_ACCOUNTS_HEADERS, rows };
 }
 
 function formatDate(date: Date | null | undefined): string {

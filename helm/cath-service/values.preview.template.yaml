@@ -23,6 +23,8 @@ blobstorage:
       - artefact
       - files
       - publications
+      # Runs of the pull request's hosted parity check (apps/ui-baseline/helm/values.preview.template.yaml)
+      - ui-baseline
 
 # Web application configuration
 cath-web:
@@ -32,8 +34,7 @@ cath-web:
     environment:
       BASE_URL: "https://{{ .Release.Name }}-web.preview.platform.hmcts.net"
       ENABLE_TEST_SUPPORT: "true"
-      MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
-      CFT_IDAM_URL: "https://idam-web-public.aat.platform.hmcts.net"
+      CFT_IDAM_URL: "https://hmcts-access.aat.platform.hmcts.net"
       SSO_ALLOW_HTTP_REDIRECT: 'true'
       REDIS_URL: "redis://{{ .Release.Name }}-redis-master:6379"
       POSTGRES_DATABASE: "{{ .Release.Name }}"
@@ -79,7 +80,7 @@ cath-web:
             alias: APPLICATION_INSIGHTS_CONNECTION_STRING
           - name: session-secret
             alias: SESSION_SECRET
-          - name: redis-url
+          - name: managed-redis-entra-url
             alias: REDIS_URL
           - name: postgres-url
             alias: DATABASE_URL
@@ -96,7 +97,7 @@ cath-web:
           - name: cft-idam-client-secret
             alias: CFT_IDAM_CLIENT_SECRET
           # Third-party push secrets (Courtel)
-          - name: auto-pip-stg-courtel-api
+          - name: auto-pip-<ENV>-courtel-api
             alias: COURTEL_API_URL
           - name: courtel-certificate
             alias: COURTEL_CERTIFICATE
@@ -119,6 +120,18 @@ cath-web:
             alias: AZURE_STORAGE_CONNECTION_STRING
           - name: storageaccount-name
             alias: AZURE_STORAGE_ACCOUNT_NAME
+          # PIP frontend's client for the system admin PIP connection check (#1482). It holds api.request.admin
+          # on PIP data and account management; CaTH's own client does not yet.
+          - name: app-tenant-id
+            alias: AZURE_TENANT_ID
+          - name: pip-frontend-id
+            alias: PIP_API_CLIENT_ID
+          - name: pip-frontend-pwd
+            alias: PIP_API_CLIENT_SECRET
+          - name: pip-data-management-scope
+            alias: PIP_DATA_MANAGEMENT_SCOPE
+          - name: pip-account-management-scope
+            alias: PIP_ACCOUNT_MANAGEMENT_SCOPE
 
 # API application configuration
 cath-api:
@@ -128,7 +141,6 @@ cath-api:
     environment:
       POSTGRES_DATABASE: "{{ .Release.Name }}"
       ENABLE_TEST_SUPPORT: "true"
-      MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
     secrets:
       POSTGRES_HOST:
         secretRef: postgres

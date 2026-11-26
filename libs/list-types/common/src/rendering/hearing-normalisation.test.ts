@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normaliseHearings } from "./hearing-normalisation.js";
+import { normaliseHearing, normaliseHearings } from "./hearing-normalisation.js";
 
 describe("normaliseHearings", () => {
   const hearing = {
@@ -37,5 +37,40 @@ describe("normaliseHearings", () => {
     expect(results).toHaveLength(2);
     expect(results[0].time).toBe("10:30am");
     expect(results[1].time).toBe("2:15pm");
+  });
+});
+
+describe("normaliseHearing", () => {
+  it("should normalise the time and keep other fields", () => {
+    // Arrange
+    const row = { venue: "Court 1", time: "10.30", additionalInformation: "Remote", notes: "kept" };
+
+    // Act
+    const result = normaliseHearing(row);
+
+    // Assert
+    expect(result).toEqual({ venue: "Court 1", time: "10:30", additionalInformation: "Remote", notes: "kept" });
+  });
+
+  it("should default a missing additionalInformation to an empty string", () => {
+    // Arrange
+    const row = { time: "2pm", additionalInformation: undefined as unknown as string };
+
+    // Act
+    const result = normaliseHearing(row);
+
+    // Assert
+    expect(result.additionalInformation).toBe("");
+  });
+
+  it("should not mutate the input row", () => {
+    // Arrange
+    const row = { time: "9.15am", additionalInformation: "" };
+
+    // Act
+    normaliseHearing(row);
+
+    // Assert
+    expect(row.time).toBe("9.15am");
   });
 });

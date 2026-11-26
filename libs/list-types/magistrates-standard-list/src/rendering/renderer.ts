@@ -275,6 +275,8 @@ function formatDateAndTime(isoDateTime: string, locale: string): { date: string;
 
 function formatDateFromIso(isoDateTime: string): string {
   const date = new Date(isoDateTime);
+  // The schema only checks the shape, so a date that doesn't exist (2025-13-01, or 2025-02-31, which Date rolls over to 3 March) is shown as sent
+  if (Number.isNaN(date.getTime()) || !date.toISOString().startsWith(isoDateTime.slice(0, 10))) return isoDateTime;
   const day = String(date.getUTCDate()).padStart(2, "0");
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   const year = String(date.getUTCFullYear());
