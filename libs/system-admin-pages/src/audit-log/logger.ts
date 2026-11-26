@@ -18,6 +18,7 @@ export enum AuditLogAction {
   DOWNLOAD_MI_REPORT = "Download MI report",
   MANUAL_UPLOAD = "Manual upload",
   NON_STRATEGIC_UPLOAD = "Non strategic upload",
+  PIP_CONNECTION_CHECK = "PIP connection check",
   REFERENCE_DATA_UPLOAD = "Reference data upload",
   REMOVE_LIST = "Remove list",
   UPDATE_LOCATION_JURISDICTION = "Update location jurisdiction",
