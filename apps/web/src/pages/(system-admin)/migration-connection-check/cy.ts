@@ -2,7 +2,7 @@ export const cy = {
   pageTitle: "[WELSH TRANSLATION REQUIRED: 'Check connection to PIP']",
   back: "Yn ôl",
   urlLabel: "[WELSH TRANSLATION REQUIRED: 'URL to test']",
-  urlHint: "[WELSH TRANSLATION REQUIRED: 'Enter the full URL of a GET endpoint on one of these PIP APIs:']",
+  urlHint: "[WELSH TRANSLATION REQUIRED: 'Enter the URL of a GET endpoint, without https://, on one of these PIP APIs:']",
   authHint: "[WELSH TRANSLATION REQUIRED: 'A Connected result only proves authentication if the endpoint requires an access token.']",
   testConnectionButton: "Profi cysylltiad",
   notConfigured: "[WELSH TRANSLATION REQUIRED: 'The PIP connection check is not set up in this environment.']",
@@ -10,7 +10,7 @@ export const cy = {
   errorMessages: {
     required: "[WELSH TRANSLATION REQUIRED: 'Enter a URL']",
     tooLong: "[WELSH TRANSLATION REQUIRED: 'URL must be 2,048 characters or fewer']",
-    invalidFormat: "[WELSH TRANSLATION REQUIRED: 'Enter a URL in the correct format, like https://pip-data-management.staging.platform.hmcts.net/locations/1']",
+    invalidFormat: "[WELSH TRANSLATION REQUIRED: 'Enter a URL in the correct format, like pip-data-management.staging.platform.hmcts.net/locations/1']",
     hostNotAllowed: "[WELSH TRANSLATION REQUIRED: 'Enter a URL for one of the allowed PIP APIs']"
   },
   result: {
