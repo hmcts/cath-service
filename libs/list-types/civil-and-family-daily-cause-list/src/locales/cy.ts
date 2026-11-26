@@ -41,9 +41,25 @@ export const cy = {
     "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y’i diffinnir yn Neddf Gwarchod Data 2018, a elwid gynt yn Ddata Personol Sensitif, a dylid ei drin yn y ffordd briodol.",
   cautionReporting:
     "Mae’r ddogfen hon yn cynnwys gwybodaeth a fwriedir i gynorthwyo i roi adroddiad manwl-gywir am achosion llys. Mae’n hanfodol eich bod yn sicrhau eich bod yn gwarchod y Data Categori Arbennig sydd ynddi ac yn cadw at gyfyngiadau adrodd (er enghraifft yn achos dioddefwyr a phlant). Bydd GLlTEF yn rhoi’r gorau i anfon y data os cyfyd pryder ynghylch sut y’i defnyddir.",
+  thanks: "Diolch am ddarllen y ddogfen hon yn fanwl.",
   errorTitle: "Cyhoeddiad ddim ar gael",
   errorMessage:
     "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch â'r llys yn uniongyrchol am gymorth.",
   error403Title: "Mynediad wedi'i Wrthod",
-  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn."
+  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn.",
+  excelColumns: {
+    courtHouse: "Tŷ Llys",
+    courtRoom: "Ystafell Llys",
+    judge: "Barnwr",
+    time: "Amser",
+    caseRef: "Cyfeirnod achos",
+    caseName: "Enw'r achos",
+    caseType: "Math o achos",
+    hearingType: "Math o wrandawiad",
+    location: "Lleoliad",
+    duration: "Hyd",
+    applicant: "Ceisiwr/Deisebydd",
+    respondent: "Atebydd",
+    reportingRestrictions: "Cyfyngiad Adrodd"
+  }
 };

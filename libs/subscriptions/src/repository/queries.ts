@@ -23,8 +23,10 @@ export async function searchByCaseName(term: string): Promise<CaseSearchResult[]
       caseName: { contains: term, mode: "insensitive" },
       artefact: {
         listTypeId: { in: listTypeIds },
-        displayFrom: { lte: now },
-        displayTo: { gte: now }
+        listType: { isHidden: false },
+        // A null display date means the window is unbounded at that end. Prisma excludes
+        // NULL from lte/gte comparisons, so those rows need an explicit OR branch.
+        AND: [{ OR: [{ displayFrom: null }, { displayFrom: { lte: now } }] }, { OR: [{ displayTo: null }, { displayTo: { gte: now } }] }]
       }
     },
     select: { caseNumber: true, caseName: true },
@@ -38,7 +40,8 @@ export async function searchByCaseName(term: string): Promise<CaseSearchResult[]
 export async function searchByCaseNumber(reference: string): Promise<CaseSearchResult[]> {
   const results = await prisma.artefactSearch.findMany({
     where: {
-      caseNumber: reference
+      caseNumber: reference,
+      artefact: { listType: { isHidden: false } }
     },
     select: {
       caseNumber: true,
@@ -179,4 +182,34 @@ export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId
 
     return deleteResult.count;
   });
+}
+
+export async function findSubscribersByLocationIdRecord(locationId: number) {
+  return prisma.subscription.findMany({
+    where: {
+      searchType: "LOCATION_ID",
+      searchValue: locationId.toString()
+    },
+    select: {
+      userId: true,
+      user: {
+        select: {
+          email: true,
+          firstName: true,
+          surname: true
+        }
+      }
+    }
+  });
+}
+
+export async function deleteSubscriptionsByLocationIdRecord(locationId: number) {
+  const result = await prisma.subscription.deleteMany({
+    where: {
+      searchType: "LOCATION_ID",
+      searchValue: locationId.toString()
+    }
+  });
+
+  return result.count;
 }

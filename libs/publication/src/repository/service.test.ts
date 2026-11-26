@@ -1,10 +1,15 @@
-import fs from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as fileRetrieval from "../file-storage/file-retrieval.js";
 import * as queries from "./queries.js";
 import { getFlatFileUrl, getJsonContent, getRenderedTemplateUrl } from "./service.js";
 
 vi.mock("./queries.js", () => ({
   getArtefactListTypeId: vi.fn()
+}));
+
+vi.mock("../file-storage/file-retrieval.js", () => ({
+  getFileBuffer: vi.fn(),
+  getFileExtension: vi.fn()
 }));
 
 vi.mock("@hmcts/postgres-prisma", () => ({
@@ -15,8 +20,12 @@ vi.mock("@hmcts/postgres-prisma", () => ({
   }
 }));
 
-vi.mock("node:fs/promises");
+vi.mock("@hmcts/azure-blob", () => ({
+  CONTAINER: { ARTEFACT: "artefact", FILES: "files", PUBLICATIONS: "publications" },
+  getBlobProperties: vi.fn()
+}));
 
+import { getBlobProperties } from "@hmcts/azure-blob";
 import { prisma } from "@hmcts/postgres-prisma";
 
 describe("Publication Service", () => {
@@ -25,7 +34,7 @@ describe("Publication Service", () => {
   });
 
   describe("getJsonContent", () => {
-    it("should return parsed JSON content from file", async () => {
+    it("should return parsed JSON content from blob storage", async () => {
       const mockContent = {
         document: {
           publicationDate: "2024-06-01",
@@ -33,16 +42,16 @@ describe("Publication Service", () => {
         }
       };
 
-      vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockContent));
+      vi.mocked(fileRetrieval.getFileBuffer).mockResolvedValue(Buffer.from(JSON.stringify(mockContent)));
 
       const result = await getJsonContent("test-artefact-id");
 
       expect(result).toEqual(mockContent);
-      expect(fs.readFile).toHaveBeenCalledWith(expect.stringContaining("test-artefact-id.json"), "utf-8");
+      expect(fileRetrieval.getFileBuffer).toHaveBeenCalledWith("test-artefact-id");
     });
 
-    it("should return null when file does not exist", async () => {
-      vi.mocked(fs.readFile).mockRejectedValue(new Error("ENOENT: no such file or directory"));
+    it("should return null when blob does not exist", async () => {
+      vi.mocked(fileRetrieval.getFileBuffer).mockResolvedValue(null);
 
       const result = await getJsonContent("non-existent-id");
 
@@ -50,7 +59,7 @@ describe("Publication Service", () => {
     });
 
     it("should return null when JSON is invalid", async () => {
-      vi.mocked(fs.readFile).mockResolvedValue("invalid json{");
+      vi.mocked(fileRetrieval.getFileBuffer).mockResolvedValue(Buffer.from("invalid json{"));
 
       const result = await getJsonContent("invalid-json-id");
 
@@ -61,48 +70,48 @@ describe("Publication Service", () => {
       const result = await getJsonContent("../../etc/passwd");
 
       expect(result).toBeNull();
-      expect(fs.readFile).not.toHaveBeenCalled();
+      expect(fileRetrieval.getFileBuffer).not.toHaveBeenCalled();
     });
 
     it("should reject artefactId with directory separators", async () => {
       const result = await getJsonContent("subdir/malicious");
 
       expect(result).toBeNull();
-      expect(fs.readFile).not.toHaveBeenCalled();
+      expect(fileRetrieval.getFileBuffer).not.toHaveBeenCalled();
     });
 
     it("should reject artefactId with backslashes", async () => {
       const result = await getJsonContent("..\\..\\windows\\system32");
 
       expect(result).toBeNull();
-      expect(fs.readFile).not.toHaveBeenCalled();
+      expect(fileRetrieval.getFileBuffer).not.toHaveBeenCalled();
     });
 
     it("should reject artefactId with null bytes", async () => {
       const result = await getJsonContent("test\x00malicious");
 
       expect(result).toBeNull();
-      expect(fs.readFile).not.toHaveBeenCalled();
+      expect(fileRetrieval.getFileBuffer).not.toHaveBeenCalled();
     });
 
     it("should accept valid UUID format artefactIds", async () => {
       const mockContent = { test: "data" };
-      vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockContent));
+      vi.mocked(fileRetrieval.getFileBuffer).mockResolvedValue(Buffer.from(JSON.stringify(mockContent)));
 
       const result = await getJsonContent("550e8400-e29b-41d4-a716-446655440000");
 
       expect(result).toEqual(mockContent);
-      expect(fs.readFile).toHaveBeenCalled();
+      expect(fileRetrieval.getFileBuffer).toHaveBeenCalled();
     });
 
     it("should accept artefactIds with underscores", async () => {
       const mockContent = { test: "data" };
-      vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockContent));
+      vi.mocked(fileRetrieval.getFileBuffer).mockResolvedValue(Buffer.from(JSON.stringify(mockContent)));
 
       const result = await getJsonContent("test_artefact_123");
 
       expect(result).toEqual(mockContent);
-      expect(fs.readFile).toHaveBeenCalled();
+      expect(fileRetrieval.getFileBuffer).toHaveBeenCalled();
     });
   });
 
@@ -211,76 +220,67 @@ describe("Publication Service", () => {
   });
 
   describe("getFlatFileUrl", () => {
-    it("should return file URL when flat file exists", async () => {
-      vi.mocked(fs.readdir).mockResolvedValue(["test-artefact-id.pdf", "other-file.txt"] as string[]);
+    it("should return file URL when the new bare-name blob exists", async () => {
+      vi.mocked(fileRetrieval.getFileExtension).mockResolvedValue(".pdf");
+      vi.mocked(getBlobProperties).mockResolvedValueOnce({ size: 100 });
 
       const result = await getFlatFileUrl("test-artefact-id");
 
       expect(result).toBe("/files/test-artefact-id.pdf");
-      expect(fs.readdir).toHaveBeenCalledWith(expect.stringContaining("storage/temp/uploads"));
+      expect(getBlobProperties).toHaveBeenCalledWith("test-artefact-id", "artefact");
+      // Legacy lookup should be skipped once the bare blob is found
+      expect(getBlobProperties).toHaveBeenCalledTimes(1);
     });
 
-    it("should return null when no matching file found", async () => {
-      vi.mocked(fs.readdir).mockResolvedValue(["other-file.pdf", "another-file.txt"] as string[]);
-
-      const result = await getFlatFileUrl("test-artefact-id");
-
-      expect(result).toBeNull();
-    });
-
-    it("should return null when directory read fails", async () => {
-      vi.mocked(fs.readdir).mockRejectedValue(new Error("ENOENT: no such directory"));
-
-      const result = await getFlatFileUrl("test-artefact-id");
-
-      expect(result).toBeNull();
-    });
-
-    it("should match file with any extension", async () => {
-      vi.mocked(fs.readdir).mockResolvedValue(["test-artefact-id.docx", "other-file.pdf"] as string[]);
+    it("should return file URL when only the legacy extensioned blob exists", async () => {
+      vi.mocked(fileRetrieval.getFileExtension).mockResolvedValue(".docx");
+      vi.mocked(getBlobProperties).mockResolvedValueOnce(null).mockResolvedValueOnce({ size: 200 });
 
       const result = await getFlatFileUrl("test-artefact-id");
 
       expect(result).toBe("/files/test-artefact-id.docx");
+      expect(getBlobProperties).toHaveBeenNthCalledWith(1, "test-artefact-id", "artefact");
+      expect(getBlobProperties).toHaveBeenNthCalledWith(2, "test-artefact-id.docx", "artefact");
     });
 
-    it("should return first matching file when multiple exist", async () => {
-      vi.mocked(fs.readdir).mockResolvedValue(["test-artefact-id.pdf", "test-artefact-id.docx"] as string[]);
+    it("should return null when no matching blob found", async () => {
+      vi.mocked(fileRetrieval.getFileExtension).mockResolvedValue(".pdf");
+      vi.mocked(getBlobProperties).mockResolvedValue(null);
 
       const result = await getFlatFileUrl("test-artefact-id");
 
-      expect(result).toBe("/files/test-artefact-id.pdf");
+      expect(result).toBeNull();
+    });
+
+    it("should return null when blob lookup throws", async () => {
+      vi.mocked(fileRetrieval.getFileExtension).mockRejectedValue(new Error("boom"));
+
+      const result = await getFlatFileUrl("test-artefact-id");
+
+      expect(result).toBeNull();
     });
 
     it("should reject path traversal attempts in artefactId", async () => {
       const result = await getFlatFileUrl("../../etc/passwd");
 
       expect(result).toBeNull();
-      expect(fs.readdir).not.toHaveBeenCalled();
+      expect(getBlobProperties).not.toHaveBeenCalled();
     });
 
     it("should reject artefactId with forward slashes", async () => {
       const result = await getFlatFileUrl("subdir/malicious");
 
       expect(result).toBeNull();
-      expect(fs.readdir).not.toHaveBeenCalled();
+      expect(getBlobProperties).not.toHaveBeenCalled();
     });
 
-    it("should reject matched filenames with path traversal", async () => {
-      vi.mocked(fs.readdir).mockResolvedValue(["../../../malicious.pdf", "test-artefact-id.pdf"] as string[]);
+    it("should URL-encode the resulting filename", async () => {
+      vi.mocked(fileRetrieval.getFileExtension).mockResolvedValue(".pdf");
+      vi.mocked(getBlobProperties).mockResolvedValueOnce({ size: 100 });
 
-      // Use valid artefactId but readdir returns malicious filename
-      const result = await getFlatFileUrl("../../../malicious");
+      const result = await getFlatFileUrl("test_artefact-123");
 
-      expect(result).toBeNull();
-    });
-
-    it("should reject matched filenames with directory separators", async () => {
-      vi.mocked(fs.readdir).mockResolvedValue(["subdir/malicious.pdf"] as string[]);
-
-      const result = await getFlatFileUrl("test-id");
-
-      expect(result).toBeNull();
+      expect(result).toBe("/files/test_artefact-123.pdf");
     });
   });
 });

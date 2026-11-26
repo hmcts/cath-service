@@ -42,6 +42,11 @@ export async function uploadBlob(blobName: string, buffer: Buffer, contentType?:
   });
 }
 
+export function getBlobUrl(blobName: string, containerName: ContainerName = CONTAINER.ARTEFACT): string {
+  const client = createBlobServiceClient();
+  return client.getContainerClient(containerName).getBlockBlobClient(blobName).url;
+}
+
 export async function downloadBlob(blobName: string, containerName: ContainerName = CONTAINER.ARTEFACT): Promise<Buffer | null> {
   const client = createBlobServiceClient();
   const containerClient = client.getContainerClient(containerName);

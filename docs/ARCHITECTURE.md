@@ -174,13 +174,19 @@ The application uses a **separation of concerns** architecture:
 
 ### 4. Session Store (Redis)
 
-**Purpose**: High-performance session storage
+**Purpose**: Web sessions, plus short-lived keys for rate limiting, manual uploads and pending subscriptions. Every key has a TTL.
 
-**Features**:
-- Express session integration
-- Distributed session support
-- TTL-based expiration
-- Append-only persistence
+**Deployed (aat, demo, perftest, prod)**: Azure Managed Redis (#697), `cath-managed-redis-<env>`, provisioned in `infrastructure/redis.tf`.
+- TLS only, on port 10000, through a private endpoint. Public access is disabled.
+- `EnterpriseCluster` clustering, so the single-endpoint client works without cluster redirects. Database 0 only.
+- `VolatileLRU` eviction, with no persistence.
+- Access keys are disabled. The only way in is Entra ID through the Data Owner access policy held by `cath-<env>-mi`.
+
+**Client**: `createRedisClient(url, managedIdentity)` in `@hmcts/redis`, used for the web session store and by `getRedisClient()`. It pings every 5 minutes to keep idle connections open.
+- Deployed environments and previews set `REDIS_MI=true` and map Key Vault `managed-redis-entra-url` (`rediss://<host>:10000`, no credentials) to `REDIS_URL`. The client authenticates as the pod's workload identity, `cath-<env>-mi`, whose client ID the AKS workload identity webhook injects as `AZURE_CLIENT_ID`. The URL must be `rediss://`, and any credentials in it are ignored.
+- `REDIS_MI` unset or `false` uses whatever credentials are in `REDIS_URL`. That is only for local development, because deployed instances no longer accept keys.
+
+**Local**: docker `redis:8-alpine` on `redis://localhost:6380` with no auth and no `REDIS_MI`, so no Azure login is needed.
 
 ## Shared Libraries
 
@@ -202,7 +208,7 @@ The platform provides seamless Azure Key Vault integration for secure secrets ma
 1. **Helm Chart Definition** (`apps/web/helm/values.yaml`):
    ```yaml
    keyVaults:
-     pip-ss-kv-{{ .Values.global.environment }}:
+     cath:
        secrets:
          - name: sso-client-id
            alias: SSO_CLIENT_ID
@@ -217,29 +223,37 @@ The platform provides seamless Azure Key Vault integration for secure secrets ma
 3. **Application Initialization**:
    ```typescript
    // apps/web/src/app.ts
-   await configurePropertiesVolume(config, {
-     chartPath: path.join(__dirname, "../helm/values.yaml")
-   });
+   const helmValues = process.env.LOCAL_DEV === "true" ? "values.dev.yaml" : "values.yaml";
+   const chartPath = path.join(__dirname, `../helm/${helmValues}`);
+
+   await getPropertiesVolumeSecrets({ chartPath, vaultUriSuffix: process.env.VAULT_URI_SUFFIX });
    ```
 
 **Environment-Specific Behavior**:
-- **Local Development**: Reads from `.env` files via `process.env`
+- **Local Development**: `LOCAL_DEV=true` reads `values.dev.yaml` and fetches its secrets from Key Vault using your `az login` identity; anything else comes from the root `.env` via `process.env`
 - **CI/Testing**: Can optionally connect to Key Vault with Azure credentials
 - **Production (Kubernetes)**: Secrets mounted as files in `/mnt/secrets` by Helm chart
 - **Non-Production with chartPath**: Uses Azure credentials to fetch secrets directly from Key Vault
 
 **Key Vault Naming Convention**:
+
+The vault URI is built from the `keyVaults` key in the Helm values plus `VAULT_URI_SUFFIX`:
 ```
-pip-ss-kv-{environment}
+https://<keyVaults key>-<VAULT_URI_SUFFIX>.vault.azure.net/
 ```
-Where environment is: `demo`, `test`, `stg`, or `prod`
+The key is `cath`, so `VAULT_URI_SUFFIX=aat` resolves to the `cath-aat` application vault. This
+replaced the SDS-era `pip-ss-kv-{environment}` naming in the CNP migration; those vaults no
+longer exist.
+
+E2E test-account credentials live in a **separate** vault, `cath-bootstrap-aat`, so they are
+never mounted into running pods. It is read by `e2e-tests/run-with-credentials.js` locally and
+by `.github/workflows/job.e2e-test.yml` and `nightly.yml` in CI. See
+`infrastructure/keyvault-bootstrap.tf`.
 
 **Implementation**:
 ```typescript
 // Automatic configuration loading
-await configurePropertiesVolume(config, {
-  chartPath: path.join(__dirname, "../helm/values.yaml")
-});
+await getPropertiesVolumeSecrets({ chartPath, vaultUriSuffix: process.env.VAULT_URI_SUFFIX });
 
 // Health check endpoints
 app.use(healthcheck()); // /health, /health/readiness, /health/liveness
@@ -288,7 +302,7 @@ export const GET = async (req, res) => {
 ```typescript
 // apps/web/src/app.ts
 const modulePaths = getModulePaths(); // Auto-discover modules
-const routeMounts = modulePaths.map((dir) => ({ pagesDir: `${dir}/pages` }));
+const routeMounts = modulePaths.map((dir) => ({ path: `${dir}/pages` }));
 app.use(await createSimpleRouter(...routeMounts)); // Mount all module routes
 ```
 

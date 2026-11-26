@@ -59,15 +59,13 @@ describe("delete-list-type template", () => {
       expect(radioValues).toEqual(["yes", "no"]);
     });
 
-    it("should render the confirm button and cancel link", () => {
+    it("should render the confirm button without a cancel link", () => {
       const data = { ...en, id: LIST_TYPE_ID, listTypeName: LIST_TYPE_NAME, data: {} };
 
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("button.govuk-button").text().trim()).toBe(en.confirmButton);
-      const cancelLink = $(`a[href="/manage-list-type?id=${LIST_TYPE_ID}"]`);
-      expect(cancelLink).toHaveLength(1);
-      expect(cancelLink.text().trim()).toBe(en.cancelLink);
+      expect($(`a[href="/manage-list-type?id=${LIST_TYPE_ID}"]`)).toHaveLength(0);
     });
 
     it("should pre-select the previously chosen radio from data", () => {
@@ -110,7 +108,6 @@ describe("delete-list-type template", () => {
 
       expect($("h1.govuk-heading-xl").text().trim()).toBe(cy.title);
       expect($("button.govuk-button").text().trim()).toBe(cy.confirmButton);
-      expect($(`a[href="/manage-list-type?id=${LIST_TYPE_ID}"]`).text().trim()).toBe(cy.cancelLink);
     });
 
     it("should render the Welsh error summary", () => {

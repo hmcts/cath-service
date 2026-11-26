@@ -1,10 +1,10 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
-{% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/input/macro.njk" import govukInput %}
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 {% from "govuk/components/date-input/macro.njk" import govukDateInput %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "moj/components/filter/macro.njk" import mojFilter %}
 
 {% block backLink %}
   <a href="/system-admin-dashboard" class="govuk-back-link">Back</a>
@@ -17,153 +17,151 @@
   </div>
 </div>
 
-<div class="audit-log-layout govuk-grid-row">
-  <!-- Filter Panel -->
-  <div class="audit-log-layout__filter govuk-grid-column-one-third">
-    <div style="border: 1px solid #b1b4b6;">
+{% set filterOptionsHtml %}
+  <input type="hidden" name="artefactId" value="">
+  {{ govukInput({
+    id: "email",
+    name: "email",
+    label: {
+      text: emailLabel,
+      classes: "govuk-!-font-weight-bold"
+    },
+    value: filters.email,
+    errorMessage: errors.email if errors
+  }) }}
 
-      {# Filter Panel Title #}
-      <div class="govuk-!-padding-4" style="background-color: #d8d8d8; border-bottom: 1px solid #b1b4b6;">
-        <h2 class="govuk-heading-m govuk-!-margin-bottom-0">{{ filters_heading }}</h2>
-      </div>
+  {{ govukInput({
+    id: "userId",
+    name: "userId",
+    label: {
+      text: userIdLabel,
+      classes: "govuk-!-font-weight-bold"
+    },
+    hint: {
+      text: userIdHint
+    },
+    value: filters.userId,
+    errorMessage: errors.userId if errors
+  }) }}
 
-      {# Selected Filters Section #}
-      <div class="govuk-!-padding-4 govuk-!-margin-bottom-0" style="background-color: #f3f2f1; border-bottom: 1px solid #b1b4b6;">
-        <h3 class="govuk-heading-s govuk-!-margin-bottom-3">{{ selectedFiltersText }}</h3>
-        <a href="/audit-log-list" class="govuk-link">{{ clearFiltersText }}</a>
-        {% if filters.email or filters.userId or filters.day or filters.actions.length > 0 %}
-          <div class="filter-tags govuk-!-margin-top-4">
-            {% if filters.email %}
-              <span class="filter-tag" style="max-width: 100%; word-break: break-word;">
-                Email: {{ filters.email }}
-                <a href="/audit-log-list?userId={{ filters.userId }}&day={{ filters.day }}&month={{ filters.month }}&year={{ filters.year }}{% for action in filters.actions %}&actions={{ action }}{% endfor %}" class="filter-tag-remove" aria-label="Remove email filter">×</a>
-              </span>
-            {% endif %}
-            {% if filters.userId %}
-              <span class="filter-tag">
-                User ID: {{ filters.userId }}
-                <a href="/audit-log-list?email={{ filters.email }}&day={{ filters.day }}&month={{ filters.month }}&year={{ filters.year }}{% for action in filters.actions %}&actions={{ action }}{% endfor %}" class="filter-tag-remove" aria-label="Remove user ID filter">×</a>
-              </span>
-            {% endif %}
-            {% if filters.day %}
-              <span class="filter-tag">
-                Date: {{ filters.day }}/{{ filters.month }}/{{ filters.year }}
-                <a href="/audit-log-list?email={{ filters.email }}&userId={{ filters.userId }}{% for action in filters.actions %}&actions={{ action }}{% endfor %}" class="filter-tag-remove" aria-label="Remove date filter">×</a>
-              </span>
-            {% endif %}
-            {% for action in filters.actions %}
-              <span class="filter-tag">
-                {{ action | replace("_", " ") | title }}
-                <a href="/audit-log-list?email={{ filters.email }}&userId={{ filters.userId }}&day={{ filters.day }}&month={{ filters.month }}&year={{ filters.year }}{% for a in filters.actions %}{% if a != action %}&actions={{ a }}{% endif %}{% endfor %}" class="filter-tag-remove" aria-label="Remove {{ action | replace('_', ' ') | title }} filter">×</a>
-              </span>
-            {% endfor %}
-          </div>
-        {% endif %}
-      </div>
+  {{ govukDateInput({
+    id: "date",
+    namePrefix: "",
+    fieldset: {
+      legend: {
+        text: dateLabel,
+        classes: "govuk-!-font-weight-bold"
+      }
+    },
+    hint: {
+      text: dateHint
+    },
+    errorMessage: errors.date if errors,
+    items: [
+      {
+        name: "day",
+        classes: "govuk-input--width-2",
+        label: dayLabel,
+        value: filters.day
+      },
+      {
+        name: "month",
+        classes: "govuk-input--width-2",
+        label: monthLabel,
+        value: filters.month
+      },
+      {
+        name: "year",
+        classes: "govuk-input--width-2",
+        label: yearLabel,
+        value: filters.year
+      }
+    ]
+  }) }}
 
-      {# Filter Controls Section #}
-      <div class="govuk-!-padding-4">
-        <form method="get" action="/audit-log-list">
-          {{ govukButton({
-            text: applyFiltersText
-          }) }}
-
-        {{ govukInput({
-          id: "email",
-          name: "email",
-          label: {
-            text: emailLabel,
-            classes: "govuk-!-font-weight-bold"
-          },
-          value: filters.email,
-          errorMessage: errors.email if errors
-        }) }}
-
-        {{ govukInput({
-          id: "userId",
-          name: "userId",
-          label: {
-            text: userIdLabel,
-            classes: "govuk-!-font-weight-bold"
-          },
-          hint: {
-            text: userIdHint
-          },
-          value: filters.userId,
-          errorMessage: errors.userId if errors
-        }) }}
-
-        {{ govukDateInput({
-          id: "date",
-          namePrefix: "",
-          fieldset: {
-            legend: {
-              text: dateLabel,
-              classes: "govuk-!-font-weight-bold"
-            }
-          },
-          hint: {
-            text: dateHint
-          },
-          errorMessage: errors.date if errors,
-          items: [
-            {
-              name: "day",
-              classes: "govuk-input--width-2",
-              label: dayLabel,
-              value: filters.day
-            },
-            {
-              name: "month",
-              classes: "govuk-input--width-2",
-              label: monthLabel,
-              value: filters.month
-            },
-            {
-              name: "year",
-              classes: "govuk-input--width-2",
-              label: yearLabel,
-              value: filters.year
-            }
-          ]
-        }) }}
-
-        {% if availableActions.length > 0 %}
-          {% set actionItems = [] %}
-          {% for action in availableActions %}
-            {% set actionItems = (actionItems.push({
-              value: action.value,
-              text: action.text,
-              checked: filters.actions.includes(action.value)
-            }), actionItems) %}
-          {% endfor %}
-          {{ govukCheckboxes({
-            name: "actions",
-            formGroup: {
-              classes: "govuk-!-padding-top-4"
-            },
-            fieldset: {
-              legend: {
-                text: actionsLabel,
-                classes: "govuk-!-font-weight-bold"
-              }
-            },
-            items: actionItems
-          }) }}
-        {% else %}
-          <div class="govuk-form-group">
-            <label class="govuk-label govuk-!-font-weight-bold">{{ actionsLabel }}</label>
-            <p class="govuk-body-s">No actions available yet</p>
-          </div>
-        {% endif %}
-        </form>
-      </div>
-
+  {% if availableActions.length > 0 %}
+    {% set actionItems = [] %}
+    {% for action in availableActions %}
+      {% set actionItems = (actionItems.push({
+        value: action.value,
+        text: action.text,
+        checked: filters.actions.includes(action.value)
+      }), actionItems) %}
+    {% endfor %}
+    {{ govukCheckboxes({
+      name: "actions",
+      formGroup: {
+        classes: "govuk-!-padding-top-4"
+      },
+      fieldset: {
+        legend: {
+          text: actionsLabel,
+          classes: "govuk-!-font-weight-bold"
+        }
+      },
+      items: actionItems
+    }) }}
+  {% else %}
+    <div class="govuk-form-group">
+      <label class="govuk-label govuk-!-font-weight-bold">{{ actionsLabel }}</label>
+      <p class="govuk-body-s">No actions available yet</p>
     </div>
+  {% endif %}
+{% endset %}
+
+{% set actionsQuery = "" %}
+{% for action in filters.actions %}{% set actionsQuery = actionsQuery + "&actions=" + action %}{% endfor %}
+
+{% set selectedCategories = [] %}
+{% if filters.email %}
+  {% set emailItems = [{ text: "Email: " + filters.email, href: "/audit-log-list?userId=" + filters.userId + "&day=" + filters.day + "&month=" + filters.month + "&year=" + filters.year + actionsQuery }] %}
+  {% set selectedCategories = (selectedCategories.push({ heading: { text: emailLabel }, items: emailItems }), selectedCategories) %}
+{% endif %}
+{% if filters.userId %}
+  {% set userIdItems = [{ text: "User ID: " + filters.userId, href: "/audit-log-list?email=" + filters.email + "&day=" + filters.day + "&month=" + filters.month + "&year=" + filters.year + actionsQuery }] %}
+  {% set selectedCategories = (selectedCategories.push({ heading: { text: userIdLabel }, items: userIdItems }), selectedCategories) %}
+{% endif %}
+{% if filters.day %}
+  {% set dateItems = [{ text: filters.day + "/" + filters.month + "/" + filters.year, href: "/audit-log-list?email=" + filters.email + "&userId=" + filters.userId + actionsQuery }] %}
+  {% set selectedCategories = (selectedCategories.push({ heading: { text: dateLabel }, items: dateItems }), selectedCategories) %}
+{% endif %}
+{% if filters.actions.length > 0 %}
+  {% set actionTags = [] %}
+  {% for action in filters.actions %}
+    {% set remainingActionsQuery = "" %}
+    {% for a in filters.actions %}{% if a != action %}{% set remainingActionsQuery = remainingActionsQuery + "&actions=" + a %}{% endif %}{% endfor %}
+    {% set actionTags = (actionTags.push({ text: action | replace("_", " ") | title, href: "/audit-log-list?email=" + filters.email + "&userId=" + filters.userId + "&day=" + filters.day + "&month=" + filters.month + "&year=" + filters.year + remainingActionsQuery }), actionTags) %}
+  {% endfor %}
+  {% set selectedCategories = (selectedCategories.push({ heading: { text: actionsLabel }, items: actionTags }), selectedCategories) %}
+{% endif %}
+
+<div class="moj-filter-layout app-filter-layout--sidebar">
+  <div class="moj-filter-layout__filter">
+    <form method="get" action="/audit-log-list">
+      {{ mojFilter({
+        heading: { text: filters_heading },
+        submit: { text: applyFiltersText },
+        selectedFilters: {
+          heading: { text: selectedFiltersText },
+          clearLink: { href: "/audit-log-list", text: clearFiltersText },
+          categories: selectedCategories
+        },
+        optionsHtml: filterOptionsHtml,
+        attributes: {
+          "data-show-text": showFiltersText,
+          "data-hide-text": hideFiltersText,
+          "data-close-text": hideFiltersText,
+          "data-start-hidden": "false"
+        }
+      }) }}
+    </form>
   </div>
 
-  <!-- Main Content -->
-  <div class="audit-log-layout__content govuk-grid-column-three-quarters">
+  <div class="moj-filter-layout__content">
+    <div class="moj-action-bar">
+      <div class="moj-action-bar__filter"></div>
+    </div>
+
     {% if errorList %}
       {{ govukErrorSummary({
         titleText: "There is a problem",

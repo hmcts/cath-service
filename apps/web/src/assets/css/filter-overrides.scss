@@ -1,0 +1,133 @@
+// Custom overrides on top of the MOJ Frontend filter component + filter-layout
+// object (adopted in #892). These bring the migrated panels back towards the
+// bespoke look the pages had before the migration, in the same spirit as
+// hmcts/pip-frontend's main.scss filter overrides. Loaded from web.scss AFTER
+// the MOJ @use lines and govuk index so these rules win on source order.
+//
+// The 48.0625em (769px) breakpoint matches MOJ's govuk `desktop` breakpoint and
+// the FilterToggleButton `bigModeMediaQuery` in filter-toggle.ts: at/above it the
+// panel is always shown (big mode), so the toggle button is redundant there.
+
+// Sidebar pages (courts-tribunals-list, location-name-search, jurisdiction-data-list,
+// audit-log-list, find-users) carry .app-filter-layout--sidebar on their
+// .moj-filter-layout. The two SJP pages do NOT — they are toggle-to-reveal on all
+// widths by design, so they keep their button and are unaffected by these rules.
+@media (min-width: 48.0625em) {
+  // The old sidebar pages had no desktop toggle: the filter sat always-visible in
+  // a one-quarter column. Hide MOJ's desktop toggle button to restore that.
+  .app-filter-layout--sidebar .moj-action-bar__filter {
+    display: none;
+  }
+
+  // Restore the previous ~30% / 70% column split (MOJ defaults the floated filter
+  // to max-width: 385px; min-width: 260px).
+  .app-filter-layout--sidebar .moj-filter-layout__filter {
+    width: 30%;
+    min-width: 0;
+    max-width: none;
+    margin-right: 3%;
+  }
+}
+
+// MOJ's FilterToggleButton normally renders its close ("Hide filters") button with a
+// ✕ cross into .moj-filter__header-action at the top of the panel. filter-toggle.js
+// instead points it at .app-filter__hide (inserted just after the green Apply button)
+// and styles it as a plain secondary button, so the ✕ variant never appears. The
+// header-action container is left empty; collapse it so it takes no space.
+.moj-filter__header-action:empty {
+  display: none;
+}
+
+// The relocated "Hide filters" button sits directly beneath "Apply filters".
+.app-filter__hide {
+  margin-top: 10px;
+}
+
+// Below the desktop breakpoint the in-box "Hide filters" (beneath Apply) is the single
+// hide control, so hide the action-bar toggle while the panel is expanded to avoid a
+// duplicate "Hide filters". It reappears as "Show filters" once the panel is closed
+// (aria-expanded="false"). MOJ moves focus to the panel on open and back to this toggle
+// on close (by which point it is visible again), so focus never lands on a hidden button.
+@media (max-width: 48.0525em) {
+  .moj-action-bar__filter [aria-expanded="true"] {
+    display: none;
+  }
+}
+
+// On normal (desktop) screens the action-bar Show/Hide toggle is the single control, as
+// before the migration — the in-box "Hide filters" is not needed there. (Sidebar pages
+// have no in-box hide button on desktop anyway; this only affects the toggle-to-reveal
+// SJP pages, which stay in small mode at all widths.)
+@media (min-width: 48.0625em) {
+  .app-filter__hide {
+    display: none;
+  }
+}
+
+// Give the panel a narrower width on desktop only. This width must NOT apply on mobile:
+// there MOJ makes .moj-filter-layout__filter a position:fixed white overlay with no
+// width so it collapses to nothing while hidden — forcing a width there paints a
+// full-height white overlay over the page even when the filter is closed.
+@media (min-width: 48.0625em) {
+  .app-filter-layout--reveal .moj-filter-layout__filter {
+    width: 100%;
+    max-width: 320px;
+  }
+}
+
+// The "Clear filters" link (.moj-filter__heading-action) is moved in the DOM to sit
+// after the filter tags by initFilterToggle() in filter-toggle.js — see that file
+// for why the move is done in JS rather than with CSS `order` (focus-order / WCAG
+// 2.4.3). Once moved it is a direct child of .moj-filter__selected below the tags;
+// this just restores a little separation above it.
+.moj-filter__heading-action {
+  margin-top: 10px;
+}
+
+// Selected-filter tags: restyle MOJ's tag links back to the old solid blue pills
+// (previously .filter-tag / .filter-tag-remove) while keeping MOJ's accessible
+// remove-link semantics (a real link with a visually-hidden "Remove this filter").
+.moj-filter__tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 3px;
+  background-color: #1d70b8;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.25;
+  text-decoration: none;
+  // Long unbroken values (e.g. an email address) must not overflow the narrow filter
+  // box: cap the tag at the container width and break the string to fit.
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.moj-filter__tag:hover {
+  color: #ffffff;
+  background-color: #003078;
+}
+
+.moj-filter__tag:focus {
+  color: #0b0c0c;
+  background-color: #fd0;
+  box-shadow: 0 -2px #fd0, 0 4px #0b0c0c;
+  outline: 3px solid transparent;
+}
+
+// Below the desktop breakpoint MOJ makes .moj-filter-layout__filter a fixed overlay
+// pinned to the right of the viewport (position:fixed; right:0). Before the migration
+// the filter appeared inline in the normal document flow — where the grey "Show
+// filters" button is — not as a side sheet. Restore that: revert to static positioning
+// so the revealed panel renders in place. Full width so it reads as a block, not a
+// narrow column. Applies once the panel is shown (JS removes .moj-js-hidden).
+@media (max-width: 48.0525em) {
+  .app-filter-layout--sidebar .moj-filter-layout__filter,
+  .app-filter-layout--reveal .moj-filter-layout__filter {
+    position: static;
+    width: 100%;
+    max-width: none;
+    overflow-y: visible;
+  }
+}

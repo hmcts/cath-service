@@ -1,10 +1,14 @@
 import type { FullConfig } from "@playwright/test";
+import { warnInCi } from "./utils/ci-warning.js";
 import { seedListTypes } from "./utils/seed-list-types.js";
 import { seedLocationData } from "./utils/seed-location-data.js";
 import { seedAllReferenceData } from "./utils/seed-reference-data.js";
 import { generateTestPrefix, setTestPrefix } from "./utils/test-prefix.js";
-import { checkTestSupportHealth } from "./utils/test-support-api.js";
+import { checkTestSupportHealth, cleanupStaleTestRuns, ensureListSearchConfig } from "./utils/test-support-api.js";
 import { verifySeedData } from "./utils/verify-seed-data.js";
+
+// Well above the E2E job timeout, so a run still in progress is never cleaned up underneath itself
+const STALE_RUN_MINUTES = 120;
 
 async function globalSetup(_config: FullConfig) {
   try {
@@ -44,6 +48,15 @@ async function globalSetup(_config: FullConfig) {
       throw new Error("API or database did not become ready");
     }
 
+    // Remove data left by earlier runs whose teardown never ran or failed. Non-fatal: leftovers must not block this run
+    console.log(`Cleaning up E2E data from runs older than ${STALE_RUN_MINUTES} minutes...`);
+    try {
+      const stale = await cleanupStaleTestRuns(STALE_RUN_MINUTES);
+      console.log(`Stale cleanup complete: ${stale.runs.length} run(s), deleted ${stale.deleted} records`);
+    } catch (error) {
+      warnInCi(`Stale E2E data cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
     // Step 3: Seed reference data (jurisdictions, sub-jurisdictions, regions)
     // These don't use the prefix as they're stable lookup data
     console.log("Seeding reference data (jurisdictions, sub-jurisdictions, regions)...");
@@ -57,7 +70,11 @@ async function globalSetup(_config: FullConfig) {
     console.log("Seeding test location data...");
     await seedLocationData(testPrefix);
 
-    // Step 6: Verify all seed data is correct
+    // Step 6: Case subscription tests need case search data extracted from CIVIL_DAILY_CAUSE_LIST uploads
+    console.log("Ensuring list search config for CIVIL_DAILY_CAUSE_LIST...");
+    await ensureListSearchConfig({ listTypeName: "CIVIL_DAILY_CAUSE_LIST", caseNumberFieldName: "caseNumber", caseNameFieldName: "caseName" });
+
+    // Step 7: Verify all seed data is correct
     console.log("\nVerifying seed data...");
     const verificationResult = await verifySeedData();
 

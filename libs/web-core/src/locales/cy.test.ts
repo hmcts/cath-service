@@ -33,6 +33,7 @@ describe("Welsh Locale", () => {
     expect(cy.footer.accessibility).toBe("Datganiad hygyrchedd");
     expect(cy.footer.termsAndConditions).toBe("Telerau ac amodau");
     expect(cy.footer.contactUs).toBe("Cysylltwch");
+    expect(cy.footer.publishingPolicy).toBe("Polisi cyhoeddi");
   });
 
   it("should have contentLicence in footer", () => {

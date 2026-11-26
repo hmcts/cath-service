@@ -14,5 +14,7 @@ export const cy = {
   noRadioSelected: "Dewiswch ydw neu nac ydw i barhau",
   activeSubscriptions: "Mae tanysgrifiadau gweithredol ar gyfer y lleoliad a roddir.",
   activeArtefacts: "Mae arteffactau gweithredol ar gyfer y lleoliad a roddir.",
-  locationNotFound: "Heb ddod o hyd i'r llys neu'r tribiwnlys yn y sesiwn"
+  locationNotFound: "Heb ddod o hyd i'r llys neu'r tribiwnlys yn y sesiwn",
+  deletePublicationsLinkText: "Dileu holl gyhoeddiadau ar gyfer",
+  deleteSubscriptionsLinkText: "Dileu holl danysgrifiadau ar gyfer"
 };

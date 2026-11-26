@@ -4,7 +4,6 @@ import Papa from "papaparse";
 export async function generateReferenceDataCsv(): Promise<string> {
   try {
     const locations = await prisma.location.findMany({
-      where: { deletedAt: null },
       orderBy: {
         locationId: "asc"
       },

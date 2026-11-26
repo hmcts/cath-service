@@ -1,7 +1,7 @@
 import type { Jurisdiction, Location, Region, SubJurisdiction } from "./repository/model.js";
 
 export const locationData: {
-  locations: Location[];
+  locations: SeedLocation[];
   regions: Region[];
   jurisdictions: Jurisdiction[];
   subJurisdictions: SubJurisdiction[];
@@ -33,7 +33,7 @@ export const locationData: {
       name: "Royal Courts of Justice",
       welshName: "Llysoedd Barn Brenhinol",
       regions: [1],
-      subJurisdictions: [1, 4, 5]
+      subJurisdictions: [1, 5, 10, 11, 12]
     },
     {
       locationId: 5,
@@ -68,7 +68,11 @@ export const locationData: {
       name: "Single Justice Procedure",
       welshName: "Gweithdrefn Un Ynad",
       regions: [1, 2, 3, 4, 5],
-      subJurisdictions: [7]
+      subJurisdictions: [7],
+      cautionMessage:
+        "<strong>Please note:</strong> SJP hearing lists are published up until 10:15am. If no lists are currently displayed, please check again after this time.",
+      welshCautionMessage:
+        "<strong>Sylwer:</strong> Caiff rhestrau gwrandawiadau'r Weithdrefn Un Ynad (SJP) eu cyhoeddi tan 10:15am. Os nad oes unrhyw restrau yn ymddangos ar hyn o bryd, gwiriwch eto ar ôl yr amser hwn."
     },
     {
       locationId: 10,
@@ -182,6 +186,21 @@ export const locationData: {
       welshName: "Tribiwnlys Iechyd Sylfaenol",
       regions: [8],
       subJurisdictions: [22],
+      provenanceLocationType: "NATIONAL"
+    },
+    {
+      locationId: 26,
+      name: "Business and Property Division Rolls Building",
+      welshName: "Adran Busnes ac Eiddo - Adeilad Rolls",
+      regions: [11],
+      subJurisdictions: [10]
+    },
+    {
+      locationId: 27,
+      name: "First-tier Tribunal (Property Chamber) - Residential Property Division",
+      welshName: "Tribiwnlys Haen Gyntaf (Siambr Eiddo) – Adran Eiddo Preswyl",
+      regions: [8],
+      subJurisdictions: [24],
       provenanceLocationType: "NATIONAL"
     }
   ],
@@ -415,8 +434,8 @@ export const locationData: {
     },
     {
       subJurisdictionId: 24,
-      name: "Residential Property Tribunal",
-      welshName: "Tribiwnlys Eiddo Preswyl",
+      name: "First-tier Tribunal (Property Chamber) - Residential Property Division",
+      welshName: "Tribiwnlys Haen Gyntaf (Siambr Eiddo) – Adran Eiddo Preswyl",
       jurisdictionId: 4
     },
     {
@@ -456,4 +475,11 @@ export const locationData: {
       jurisdictionId: 4
     }
   ]
+};
+
+// Seeded into location_metadata only when a location has no metadata row, so admin edits made
+// through location-metadata-manage are never overwritten by a later deploy.
+type SeedLocation = Location & {
+  cautionMessage?: string;
+  welshCautionMessage?: string;
 };

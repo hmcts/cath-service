@@ -68,7 +68,7 @@ export function parseCsv(fileBuffer: Buffer): ParseResult {
     const row = parseResult.data[i];
     const rowNumber = i + 2;
 
-    if (!row.LOCATION_ID || !row.LOCATION_ID.trim()) {
+    if (!row.LOCATION_ID?.trim()) {
       errors.push(`Row ${rowNumber}: LOCATION_ID is required`);
       continue;
     }

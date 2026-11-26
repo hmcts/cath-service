@@ -1,6 +1,6 @@
 # Global values shared by all subcharts
 global:
-  environment: dev
+  environment: preview
   security:
     allowInsecureImages: true
 
@@ -17,23 +17,24 @@ crons:
 # Per-PR isolated blob storage provisioned via Azure Service Operator
 blobstorage:
   enabled: true
-  resourceGroup: cath-aso-dev-rg
+  resourceGroup: cath-aso-preview-rg
   setup:
     containers:
       - artefact
       - files
       - publications
+      # Runs of the pull request's hosted parity check (apps/ui-baseline/helm/values.preview.template.yaml)
+      - ui-baseline
 
 # Web application configuration
 cath-web:
   nodejs:
-    image: "hmctspublic.azurecr.io/cath/cath-web:${WEB_IMAGE}"
-    ingressHost: "{{ .Release.Name }}-web.dev.platform.hmcts.net"
+    image: "hmctsprod.azurecr.io/cath/cath-web:${WEB_IMAGE}"
+    ingressHost: "{{ .Release.Name }}-web.preview.platform.hmcts.net"
     environment:
-      BASE_URL: "https://{{ .Release.Name }}-web.dev.platform.hmcts.net"
+      BASE_URL: "https://{{ .Release.Name }}-web.preview.platform.hmcts.net"
       ENABLE_TEST_SUPPORT: "true"
-      MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
-      CFT_IDAM_URL: "https://idam-web-public.aat.platform.hmcts.net"
+      CFT_IDAM_URL: "https://hmcts-access.aat.platform.hmcts.net"
       SSO_ALLOW_HTTP_REDIRECT: 'true'
       REDIS_URL: "redis://{{ .Release.Name }}-redis-master:6379"
       POSTGRES_DATABASE: "{{ .Release.Name }}"
@@ -56,16 +57,90 @@ cath-web:
       AZURE_STORAGE_ACCOUNT_KEY:
         secretRef: "storage-secret-{{ .Release.Name }}-blobstorage"
         key: accessKey
+    # Restates apps/web/helm/values.yaml in full, because Helm replaces arrays rather
+    # than merging them - overriding two entries here would drop the other twenty.
+    # Only SSO_CLIENT_ID and SSO_CLIENT_SECRET differ; keep the rest in sync.
+    # apps/web/helm/values.yaml.test.ts fails the build if they drift apart.
+    keyVaults:
+      cath:
+        secrets:
+          # Preview deploys to a per-PR host, {{ .Release.Name }}-web.preview.platform.hmcts.net,
+          # so BASE_URL and the OIDC redirect URI are unique to every PR. Entra ID matches
+          # redirect URIs exactly and only sso-client-id-dev (fd41d1b3) has
+          # https://*.preview.platform.hmcts.net/sso/return registered. sso-client-id
+          # (00b72acf) does not, and using it here fails with AADSTS50011.
+          # These -dev names must stay preview-only: aat and Flux read
+          # apps/web/helm/values.yaml, which keeps sso-client-id.
+          - name: sso-client-id-dev
+            alias: SSO_CLIENT_ID
+          - name: sso-client-secret-dev
+            alias: SSO_CLIENT_SECRET
+          # Everything below is a verbatim copy of apps/web/helm/values.yaml
+          - name: app-insights-connection-string
+            alias: APPLICATION_INSIGHTS_CONNECTION_STRING
+          - name: session-secret
+            alias: SESSION_SECRET
+          - name: managed-redis-entra-url
+            alias: REDIS_URL
+          - name: postgres-url
+            alias: DATABASE_URL
+          - name: govuk-notify-api-key
+            alias: GOVUK_NOTIFY_API_KEY
+          - name: sso-issuer-url
+            alias: SSO_ISSUER_URL
+          - name: sso-sg-system-admin
+            alias: SSO_SYSTEM_ADMIN_GROUP_ID
+          - name: sso-sg-admin-ctsc
+            alias: SSO_INTERNAL_ADMIN_CTSC_GROUP_ID
+          - name: sso-sg-admin-local
+            alias: SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID
+          - name: cft-idam-client-secret
+            alias: CFT_IDAM_CLIENT_SECRET
+          # Third-party push secrets (Courtel)
+          - name: auto-pip-<ENV>-courtel-api
+            alias: COURTEL_API_URL
+          - name: courtel-certificate
+            alias: COURTEL_CERTIFICATE
+          # Azure AD B2C secrets (media user account management)
+          - name: b2c-tenant-id
+            alias: AZURE_B2C_TENANT_ID
+          - name: b2c-<ENV>-graph-client-id
+            alias: B2C_GRAPH_CLIENT_ID
+          - name: b2c-<ENV>-graph-client-secret
+            alias: B2C_GRAPH_CLIENT_SECRET
+          - name: b2c-ad-url
+            alias: AZURE_B2C_DOMAIN
+          # B2C secrets for CaTH user sign-in
+          - name: b2c-<ENV>-client-id
+            alias: B2C_CLIENT_ID
+          - name: b2c-<ENV>-client-secret
+            alias: B2C_CLIENT_SECRET
+          # Azure Blob Storage
+          - name: storageaccount-connection-string
+            alias: AZURE_STORAGE_CONNECTION_STRING
+          - name: storageaccount-name
+            alias: AZURE_STORAGE_ACCOUNT_NAME
+          # PIP frontend's client for the system admin PIP connection check (#1482). It holds api.request.admin
+          # on PIP data and account management; CaTH's own client does not yet.
+          - name: app-tenant-id
+            alias: AZURE_TENANT_ID
+          - name: pip-frontend-id
+            alias: PIP_API_CLIENT_ID
+          - name: pip-frontend-pwd
+            alias: PIP_API_CLIENT_SECRET
+          - name: pip-data-management-scope
+            alias: PIP_DATA_MANAGEMENT_SCOPE
+          - name: pip-account-management-scope
+            alias: PIP_ACCOUNT_MANAGEMENT_SCOPE
 
 # API application configuration
 cath-api:
   nodejs:
-    image: "hmctspublic.azurecr.io/cath/cath-api:${API_IMAGE}"
-    ingressHost: "{{ .Release.Name }}-api.dev.platform.hmcts.net"
+    image: "hmctsprod.azurecr.io/cath/cath-api:${API_IMAGE}"
+    ingressHost: "{{ .Release.Name }}-api.preview.platform.hmcts.net"
     environment:
       POSTGRES_DATABASE: "{{ .Release.Name }}"
       ENABLE_TEST_SUPPORT: "true"
-      MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
     secrets:
       POSTGRES_HOST:
         secretRef: postgres
@@ -89,7 +164,7 @@ cath-api:
 # Crons application configuration
 cath-crons:
   job:
-    image: "hmctspublic.azurecr.io/cath/cath-crons:${CRONS_IMAGE}"
+    image: "hmctsprod.azurecr.io/cath/cath-crons:${CRONS_IMAGE}"
     schedule: "*/5 * * * *"
     suspend: false
     kind: CronJob
@@ -112,8 +187,8 @@ cath-crons:
 # Postgres Prisma Studio service configuration
 cath-postgres:
   nodejs:
-    image: "hmctspublic.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
-    ingressHost: "{{ .Release.Name }}-postgres.dev.platform.hmcts.net"
+    image: "hmctsprod.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
+    ingressHost: "{{ .Release.Name }}-postgres.preview.platform.hmcts.net"
     environment:
       POSTGRES_DATABASE: "{{ .Release.Name }}"
     secrets:
@@ -133,7 +208,7 @@ cath-postgres:
 # PostgreSQL database configuration
 postgresql:
   enabled: true
-  flexibleserver: cath-dev
+  flexibleserver: cath-preview
   setup:
     databases:
       - name: "{{ .Release.Name }}"

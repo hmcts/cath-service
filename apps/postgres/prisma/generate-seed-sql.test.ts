@@ -4,7 +4,8 @@ import { describe, expect, it } from "vitest";
 import { generateSeedSql } from "./generate-seed-sql.js";
 
 // Synthetic fixture: includes an apostrophe (quote escaping), a null defaultSensitivity,
-// a location with empty junction arrays, and the two ET list types that must reach STG.
+// a location with empty junction arrays, the two ET list types that must reach STG, and
+// a flat-file-only list type with no urlPath to prove the empty-string url coercion.
 const LOCATION_DATA: typeof locationData = {
   regions: [
     { regionId: 1, name: "London", welshName: "Llundain" },
@@ -21,7 +22,9 @@ const LOCATION_DATA: typeof locationData = {
       name: "Birmingham Magistrates' Court",
       welshName: "Llys Ynadon Birmingham",
       regions: [2],
-      subJurisdictions: [3, 4]
+      subJurisdictions: [3, 4],
+      cautionMessage: "<strong>Please note:</strong> Lists aren't published before 10am.",
+      welshCautionMessage: "<strong>Sylwer:</strong> Rhybudd prawf"
     },
     {
       locationId: 11,
@@ -38,7 +41,7 @@ const LIST_TYPES: ListTypeData[] = [
     name: "ET_DAILY_LIST",
     englishFriendlyName: "Employment Tribunals Daily List",
     welshFriendlyName: "Rhestr Ddyddiol",
-    provenance: "CFT_IDAM",
+    provenance: ["CFT_IDAM"],
     urlPath: "et-daily-list",
     isNonStrategic: false,
     defaultSensitivity: "Public",
@@ -49,11 +52,20 @@ const LIST_TYPES: ListTypeData[] = [
     name: "ET_FORTNIGHTLY_PRESS_LIST",
     englishFriendlyName: "Employment Tribunals Fortnightly Press List",
     welshFriendlyName: "Rhestr y Wasg",
-    provenance: "CFT_IDAM",
+    provenance: ["CFT_IDAM"],
     urlPath: "et-fortnightly-list",
     isNonStrategic: true,
     defaultSensitivity: null,
     subJurisdictionIds: [3, 4]
+  },
+  {
+    name: "FLAT_FILE_ONLY_LIST",
+    englishFriendlyName: "Flat File Only List",
+    welshFriendlyName: "Rhestr Ffeil Wastad",
+    provenance: ["CFT_IDAM"],
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [4]
   }
 ];
 
@@ -120,8 +132,15 @@ describe("generateSeedSql", () => {
 
     // ET_FORTNIGHTLY_PRESS_LIST has null sensitivity; the value must be unquoted NULL,
     // sitting immediately before the provenance/is_non_strategic columns.
-    expect(sql).toContain("NULL, 'CFT_IDAM', TRUE");
+    expect(sql).toContain("NULL, ARRAY['CFT_IDAM']::text[], TRUE");
     expect(sql).not.toContain("'null'");
+  });
+
+  it("should coerce an omitted urlPath to an empty-string url", () => {
+    const sql = generate();
+
+    // FLAT_FILE_ONLY_LIST has no urlPath; the url column must be an empty string, not NULL or undefined.
+    expect(sql).toContain("'FLAT_FILE_ONLY_LIST', 'Flat File Only List', 'Rhestr Ffeil Wastad', 'Flat File Only List', '', 'Public'");
   });
 
   it("should supply a deterministic location_reference id and derived provenance id", () => {
@@ -162,11 +181,17 @@ describe("generateSeedSql", () => {
     expect(sql).toContain("deleted_at = NULL");
   });
 
+  it("should never write is_hidden so an admin's hide setting survives a redeploy", () => {
+    const sql = generate();
+
+    expect(sql).not.toContain("is_hidden");
+  });
+
   it("should soft-delete active list types absent from the source data, preserving TEST_/E2E_ fixtures", () => {
     const sql = generate();
 
     expect(sql).toContain("UPDATE list_types SET deleted_at = NOW()");
-    expect(sql).toContain("name NOT IN ('ET_DAILY_LIST', 'ET_FORTNIGHTLY_PRESS_LIST')");
+    expect(sql).toContain("name NOT IN ('ET_DAILY_LIST', 'ET_FORTNIGHTLY_PRESS_LIST', 'FLAT_FILE_ONLY_LIST')");
     expect(sql).toContain("name NOT LIKE 'TEST_%'");
     expect(sql).toContain("name NOT LIKE 'E2E_%'");
   });
@@ -176,6 +201,31 @@ describe("generateSeedSql", () => {
 
     expect(sql).toContain("'ET_DAILY_LIST'");
     expect(sql).toContain("'ET_FORTNIGHTLY_PRESS_LIST'");
+  });
+
+  it("should insert caution message metadata only for locations that define one", () => {
+    const sql = generate();
+
+    expect(sql).toContain(
+      "INSERT INTO location_metadata (location_metadata_id, location_id, caution_message, welsh_caution_message, created_at, updated_at) VALUES\n" +
+        "  ('seedmeta_10', 10, '<strong>Please note:</strong> Lists aren''t published before 10am.', '<strong>Sylwer:</strong> Rhybudd prawf', NOW(), NOW())\n"
+    );
+    expect(sql).not.toContain("'seedmeta_11'");
+  });
+
+  it("should never overwrite an existing location_metadata row so admin edits survive a redeploy", () => {
+    const sql = generate();
+
+    expect(sql).toContain("ON CONFLICT (location_id) DO NOTHING;");
+  });
+
+  it("should emit no location_metadata insert when no location defines a caution message", () => {
+    const locations = LOCATION_DATA.locations.map(({ cautionMessage, welshCautionMessage, ...location }) => location);
+
+    const sql = generateSeedSql({ ...LOCATION_DATA, locations }, LIST_TYPES);
+
+    expect(sql).not.toContain("INSERT INTO location_metadata");
+    expect(sql).toContain("-- no location_metadata rows");
   });
 
   it("should order inserts so foreign keys resolve (parents before children)", () => {
@@ -188,6 +238,7 @@ describe("generateSeedSql", () => {
       "INSERT INTO location_reference",
       "INSERT INTO location_region",
       "INSERT INTO location_sub_jurisdiction",
+      "INSERT INTO location_metadata",
       "INSERT INTO list_types",
       "INSERT INTO list_types_sub_jurisdictions"
     ];

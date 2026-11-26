@@ -5,52 +5,183 @@ set -euo pipefail
 # Purpose: Detect which apps have been affected by changes using Turborepo
 # Usage: detect-affected-apps.sh [base-sha]
 #   base-sha: Optional. SHA to compare against (defaults to origin/master)
+# Environment:
 # Outputs:
-#   - affected_apps: JSON array of apps with Dockerfiles that were affected
+#   - affected_apps: JSON array of buildable apps that were affected
+#   - promotable_apps: affected_apps without the unpromoted apps, which are never promoted to prod
 #   - helm_apps: JSON array of all apps with Helm charts
 #   - has_changes: boolean indicating if any apps were affected
+#   - needs_shared_build: boolean, true if any affected app uses the shared build stage
+#
+# The root Dockerfile is the source of truth for which apps are buildable.
 
 # Accept optional base SHA as first argument
 BASE_SHA="${1:-}"
 
+DOCKERFILE="Dockerfile"
+
+# Apps deployed to preview and aat only (.github/workflows/jobs/unpromoted-apps): never promoted, as
+# nothing beyond aat deploys them, and built only when what they are built from changed, not
+# whenever Turborepo calls them affected (ui-baseline depends, through other libs, on most of the
+# workspace, so it would otherwise be rebuilt, and its pod replaced, for nearly every change).
+# A list with no apps in it is a list of none, not an error (grep -v finds no lines and exits 1)
+UNPROMOTED_APPS="$({ grep -v '^#' "$(dirname "${BASH_SOURCE[0]}")/../unpromoted-apps" || true; } | jq -R -s -c 'split("\n") | map(select(. != ""))')"
+
+# Stage aliases declared in the root Dockerfile, e.g. `web` from `FROM x AS web`.
+dockerfile_stages() {
+  awk '
+    /^FROM[[:space:]]/ {
+      for (i = 2; i < NF; i++) {
+        if (tolower($i) == "as") { print $(i + 1) }
+      }
+    }
+  ' "$DOCKERFILE"
+}
+
+# An app is buildable if the root Dockerfile has a stage named after it
+buildable_apps() {
+  local stages app
+  stages="$(dockerfile_stages)"
+  for dir in apps/*/; do
+    app="$(basename "$dir")"
+    if grep -qx "$app" <<<"$stages"; then
+      echo "$app"
+    fi
+  done
+}
+
+# The folders of the workspaces an app's package.json depends on, each ending in a slash
+direct_workspace_deps() {
+  local names
+  names="$(jq -c '[(.dependencies // {}), (.devDependencies // {})] | add | to_entries | map(select(.value | startswith("workspace:")) | .key)' "apps/$1/package.json")"
+  yarn workspaces list --json | jq -r --argjson names "$names" 'select(.name as $name | $names | index($name)) | "\(.location)/"'
+}
+
+# True if the app's stage copies anything out of the shared `build` stage.
+stage_uses_shared_build() {
+  awk -v stage="$1" '
+    /^FROM[[:space:]]/ {
+      alias = ""
+      for (i = 2; i < NF; i++) {
+        if (tolower($i) == "as") { alias = $(i + 1) }
+      }
+      in_stage = (alias == stage)
+      next
+    }
+    in_stage && /--from=build[[:space:]]/ { found = 1 }
+    END { exit (found ? 0 : 1) }
+  ' "$DOCKERFILE"
+}
+
 main() {
   echo "Detecting affected apps using Turborepo..."
 
+  # Find all apps with Helm charts
+  local helm_apps
+  helm_apps=$(find apps/*/helm -name Chart.yaml 2>/dev/null | sed 's|apps/\([^/]*\)/helm/Chart.yaml|\1|' | jq -R -s -c 'split("\n") | map(select(. != ""))')
+
+  # A renamed stage would silently drop that app from the build matrix, leaving
+  # the previously published image deployed against the new chart.
+  local buildable app
+  buildable="$(buildable_apps)"
+  for app in $(echo "$helm_apps" | jq -r '.[]'); do
+    if ! grep -qx "$app" <<<"$buildable"; then
+      echo "Error: apps/${app}/helm/Chart.yaml exists but ${DOCKERFILE} has no '${app}' stage" >&2
+      exit 1
+    fi
+  done
+
   local use_fallback="false"
+  # The files changed since the base, when there is one to compare with
+  local changed_files=""
 
   # Use provided base SHA, or default to origin/master
   if [ -n "$BASE_SHA" ]; then
-    export TURBO_SCM_BASE="$BASE_SHA"
-    echo "Using custom base: $BASE_SHA"
+    # A squash merge or force push can leave the cached SHA unreachable; the
+    # comparisons below would then fail inside `if` conditions, where errexit
+    # does not apply, and conclude "nothing affected".
+    if git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+      export TURBO_SCM_BASE="$BASE_SHA"
+      echo "Using custom base: $BASE_SHA"
+    else
+      echo "Base SHA $BASE_SHA is unreachable - building all apps"
+      use_fallback="true"
+    fi
   else
     # No cached SHA - build all apps to establish baseline for this PR/change
     echo "No cached SHA - building all apps to establish baseline"
     use_fallback="true"
   fi
 
-  local affected_apps
+  if [ "$use_fallback" = "false" ]; then
+    # Assigned rather than piped into grep, so a git failure is visible here
+    # instead of reading as "no Dockerfile change".
+    if ! changed_files="$(git diff --name-only "$BASE_SHA" HEAD)"; then
+      echo "Error: git diff against $BASE_SHA failed" >&2
+      exit 1
+    fi
+
+    # These sit outside every workspace, so Turborepo cannot attribute a change
+    # in them to any app.
+    if grep -qE '^(Dockerfile[^/]*|\.dockerignore)$' <<<"$changed_files"; then
+      echo "Root Dockerfile or .dockerignore changed - building all apps"
+      use_fallback="true"
+    fi
+  fi
+
+  local affected_apps affected_json
+
+  # Get affected packages using Turborepo (comparing against base branch)
+  # Note: --affected and --filter cannot be used together
+  #
+  # A turbo crash must fall back to building everything, not to an empty list
+  # that is indistinguishable from "nothing changed". Turbo exiting 0 with
+  # unparseable or unshaped stdout has to take the same path: it would otherwise
+  # fail the jq below, inside a command substitution where errexit aborts the
+  # script. The shape is asserted here rather than defaulted to [] downstream,
+  # because an empty list would read as "nothing changed" and publish nothing.
+  if [ "$use_fallback" = "false" ]; then
+    if ! affected_json=$(yarn turbo ls --affected --output=json 2>/dev/null); then
+      echo "turbo ls --affected failed - building all apps"
+      use_fallback="true"
+    elif ! printf '%s' "$affected_json" | jq -e '(.packages.items | type) == "array"' >/dev/null 2>&1; then
+      echo "turbo ls --affected returned unexpected output - building all apps"
+      use_fallback="true"
+    fi
+  fi
 
   if [ "$use_fallback" = "true" ]; then
-    # Build all apps with Dockerfiles
-    affected_apps=$(find apps/*/Dockerfile 2>/dev/null | sed 's|apps/\([^/]*\)/Dockerfile|\1|' | jq -R -s -c 'split("\n") | map(select(. != ""))')
-    echo "Fallback: detected all apps with Dockerfiles"
+    affected_apps=$(echo "$buildable" | jq -R -s -c 'split("\n") | map(select(. != ""))')
+    echo "Fallback: detected all buildable apps"
   else
-    # Get affected packages using Turborepo (comparing against base branch)
-    # Note: --affected and --filter cannot be used together
-    local affected_json
-    affected_json=$(yarn turbo ls --affected --output=json 2>/dev/null || echo '{"packages":{"items":[]}}')
-
-    # Extract paths, filter to apps directory, strip apps/ prefix, and filter to only those with Dockerfiles
+    # Extract paths, filter to apps directory, strip apps/ prefix, and keep only buildable apps
     affected_apps=$(echo "$affected_json" | jq -r '.packages.items[].path // empty' | { grep '^apps/' || true; } | sed 's|^apps/||' | while read -r app_name; do
-      if [ -f "apps/${app_name}/Dockerfile" ]; then
+      if grep -qx "$app_name" <<<"$buildable"; then
         echo "$app_name"
       fi
     done | jq -R -s -c 'split("\n") | map(select(. != ""))')
   fi
 
-  # Find all apps with Helm charts
-  local helm_apps
-  helm_apps=$(find apps/*/helm -name Chart.yaml 2>/dev/null | sed 's|apps/\([^/]*\)/helm/Chart.yaml|\1|' | jq -R -s -c 'split("\n") | map(select(. != ""))')
+  local promotable_apps
+  promotable_apps=$(echo "$affected_apps" | jq -c --argjson skip "$UNPROMOTED_APPS" 'map(select(. as $app | $skip | index($app) | not))')
+  # An unpromoted app is built and pushed, on a pull request for preview and on master for aat, only
+  # when what it is built from changed: its own files, the workspaces its package.json depends on
+  # (for ui-baseline, the list types, locations, publication and storage code it seeds and reads
+  # with), the root tsconfig.json, the root Dockerfile or .dockerignore, or what the install resolves
+  # (yarn.lock, the root package.json, Yarn's config), or there is no base to tell from. A lib it
+  # reaches only through those is left to the lint and tests, which run for the lib's dependents
+  # too; rebuilding for it would replace the hosted check's pod, and hand over its queued runs, on
+  # nearly every merge. Master's deploy then keeps the image it has (job.helm-deploy.yml pins it).
+  local app deps
+  affected_apps="$promotable_apps"
+  for app in $(echo "$UNPROMOTED_APPS" | jq -r '.[]'); do
+    deps="$(direct_workspace_deps "$app" | sed 's/[.]/\\./g' | paste -sd '|' -)"
+    if [ "$use_fallback" = "true" ] || grep -qE "^(apps/${app}/|${deps:+${deps}|}libs/list-types/|tsconfig\.json$|Dockerfile[^/]*$|\.dockerignore$|yarn\.lock$|package\.json$|\.yarnrc\.yml$|\.yarn/)" <<<"$changed_files"; then
+      affected_apps=$(echo "$affected_apps" | jq -c --arg app "$app" '. + [$app]')
+    else
+      echo "${app} is not built, as nothing it is built from changed"
+    fi
+  done
 
   # Determine if we have any changes
   local has_changes="false"
@@ -58,17 +189,30 @@ main() {
     has_changes="true"
   fi
 
+  # Only warm the shared build stage if an affected app actually consumes it
+  local needs_shared_build="false"
+  for app in $(echo "$affected_apps" | jq -r '.[]'); do
+    if stage_uses_shared_build "$app"; then
+      needs_shared_build="true"
+      break
+    fi
+  done
+
   # Output results for GitHub Actions
   if [ -n "${GITHUB_OUTPUT:-}" ]; then
     echo "affected-apps=$affected_apps" >> "$GITHUB_OUTPUT"
+    echo "promotable-apps=$promotable_apps" >> "$GITHUB_OUTPUT"
     echo "helm-apps=$helm_apps" >> "$GITHUB_OUTPUT"
     echo "has-changes=$has_changes" >> "$GITHUB_OUTPUT"
+    echo "needs-shared-build=$needs_shared_build" >> "$GITHUB_OUTPUT"
   fi
 
   # Log results
-  echo "Affected apps (with Dockerfiles): $affected_apps"
+  echo "Affected apps (buildable): $affected_apps"
+  echo "Promotable apps: $promotable_apps"
   echo "Helm apps (all): $helm_apps"
   echo "Has changes: $has_changes"
+  echo "Needs shared build: $needs_shared_build"
 }
 
 main "$@"

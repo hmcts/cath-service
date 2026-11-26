@@ -102,7 +102,16 @@ describe("find-users page", () => {
       expect(mockResponse.render).toHaveBeenCalledWith(
         "find-users/index",
         expect.objectContaining({
-          userRows: expect.any(Array),
+          userRows: [
+            [
+              // Email can be a long unbroken string; the wrap class stops it forcing
+              // the table wider than the filter-layout content area (horizontal scroll).
+              { text: "test@example.com", classes: "app-wrap-anywhere" },
+              expect.any(Object),
+              expect.any(Object),
+              expect.any(Object)
+            ]
+          ],
           paginationItems: expect.any(Array),
           totalCount: 1
         })

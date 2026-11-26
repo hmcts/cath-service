@@ -8,12 +8,15 @@ import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
+const NO_DATE = "—";
+
 function formatDateString(date: Date): string {
   return date.toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
 }
 
-function formatDateRangeString(from: Date, to: Date): string {
-  return `${formatDateString(from)} to ${formatDateString(to)}`;
+// Display dates are optional on publications ingested via the inbound publication API.
+function formatDateRangeString(from: Date | null, to: Date | null): string {
+  return `${from ? formatDateString(from) : NO_DATE} to ${to ? formatDateString(to) : NO_DATE}`;
 }
 
 type SortColumn = "listType" | "courtName" | "contentDate" | "language" | "sensitivity";
@@ -94,7 +97,7 @@ const getHandler = async (req: Request, res: Response) => {
   const t = locale === "cy" ? cy : en;
 
   const sessionData = req.session.removalData;
-  if (!sessionData || !sessionData.locationId) {
+  if (!sessionData?.locationId) {
     const lng = locale === "cy" ? "?lng=cy" : "";
     return res.redirect(`/remove-list-search${lng}`);
   }
@@ -126,7 +129,7 @@ const postHandler = async (req: Request, res: Response) => {
   const t = locale === "cy" ? cy : en;
 
   const sessionData = req.session.removalData;
-  if (!sessionData || !sessionData.locationId) {
+  if (!sessionData?.locationId) {
     const lng = locale === "cy" ? "?lng=cy" : "";
     return res.redirect(`/remove-list-search${lng}`);
   }

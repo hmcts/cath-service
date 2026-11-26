@@ -43,11 +43,44 @@ export const en = {
   maxPenalty: "Max Penalty",
   lja: "LJA",
   dataSource: "Data Source",
+  cautionNote:
+    "Note this document contains Special Category Data as defined by Data Protection Act 2018, formally known as Sensitive Personal Data, and should be handled appropriately.",
+  cautionReporting:
+    "This document contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.",
+  thanks: "Thank you for reading this document thoroughly.",
   searchCases: "Search cases",
   noHearings: "No hearings today",
   errorTitle: "Publication not available",
   errorMessage:
     "This publication cannot be viewed at the moment. Please check again later. If the problem persists, contact the court directly for assistance.",
   error403Title: "Access Denied",
-  error403Message: "You do not have permission to view this publication."
+  error403Message: "You do not have permission to view this publication.",
+  excelColumns: {
+    courtHouse: "Court House",
+    lja: "LJA",
+    courtRoom: "Court Room",
+    sittingAt: "Sitting at",
+    name: "Name",
+    applicationParticulars: "Application Particulars",
+    dob: "DOB",
+    age: "Age",
+    address: "Address",
+    prosecutingAuthorityName: "Prosecuting Authority Name",
+    attendanceMethod: "Attendance Method",
+    reference: "Reference",
+    applicationType: "Application Type",
+    asn: "ASN",
+    hearingType: "Hearing Type",
+    panel: "Panel",
+    reportingRestrictions: "Reporting Restrictions",
+    offenceCode: "Offence Code",
+    offenceTitle: "Offence Title",
+    offenceDetails: "Offence Details",
+    legislation: "Legislation",
+    maxPenalty: "Max Penalty",
+    plea: "Plea",
+    dateOfPlea: "Date of Plea",
+    convictedOn: "Convicted on",
+    adjournedFrom: "Adjourned from"
+  }
 };

@@ -14,6 +14,8 @@ export const cy = {
   provenancesLabel: "Tarddiannau",
   applyFiltersButton: "Cymhwyso hidlwyr",
   clearFiltersButton: "Clirio hidlwyr",
+  showFilters: "Dangos hidlwyr",
+  hideFilters: "Cuddio hidlwyr",
   tableHeadEmail: "E-bost",
   tableHeadRole: "Rôl",
   tableHeadProvenance: "Tarddiad",

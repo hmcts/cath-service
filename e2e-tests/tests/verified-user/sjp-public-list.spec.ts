@@ -1,19 +1,11 @@
-import fs from "node:fs";
-import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
-import type { APIRequestContext } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
-import { loginWithCftIdam } from "../../utils/cft-idam-helpers.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
-import { deleteTestArtefact, deleteTestFlatFileFromWeb, uploadTestFlatFileToWeb } from "../../utils/test-support-api.js";
+import { uploadTestPublication } from "../../utils/publication-upload.js";
+import { checkFlatFileExists, deleteTestArtefact } from "../../utils/test-support-api.js";
+import { createVerifiedTestUser, loginAsTestUser } from "../../utils/verified-user-helpers.js";
 
-const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
-const PUBLICATION_ENDPOINT = `${API_BASE_URL}/v1/publication`;
-const IS_DEPLOYED = !!process.env.CATH_SERVICE_WEB_URL;
-// When running tests from e2e-tests/, go up to monorepo root then to storage
-const MONOREPO_ROOT = path.join(process.cwd(), "..");
-const STORAGE_PATH = process.env.FILE_STORAGE_PATH || path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
+const GENERATED_FILE_TIMEOUT_MS = 30000;
 
 function createSjpPublicListPayload(locationId: number) {
   const postcodes = ["SW", "M1", "B1", "E1", "BS", "LS"];
@@ -75,15 +67,15 @@ function createSjpPublicListPayload(locationId: number) {
   const contentDate = today.toISOString().split("T")[0];
 
   return {
-    court_id: locationId.toString(),
-    provenance: "MANUAL_UPLOAD",
-    content_date: contentDate,
-    list_type: "SJP_PUBLIC_LIST",
-    sensitivity: "PUBLIC",
-    language: "ENGLISH",
-    display_from: displayFrom.toISOString(),
-    display_to: displayTo.toISOString(),
-    hearing_list: {
+    upload: {
+      locationId,
+      listTypeName: "SJP_PUBLIC_LIST",
+      sensitivity: "PUBLIC" as const,
+      contentDate,
+      displayFrom: displayFrom.toISOString(),
+      displayTo: displayTo.toISOString()
+    },
+    payload: {
       document: {
         publicationDate: `${contentDate}T09:00:00Z`,
         version: "1.0"
@@ -121,84 +113,29 @@ function createSjpPublicListPayload(locationId: number) {
   };
 }
 
-async function uploadSjpPublicListViaApi(request: APIRequestContext, locationId: number): Promise<string> {
-  const payload = createSjpPublicListPayload(locationId);
-  const token = await getApiAuthToken();
-
-  const response = await request.post(PUBLICATION_ENDPOINT, {
-    data: payload,
-    headers: { Authorization: `Bearer ${token}` }
-  });
-
-  const result = await response.json();
-
-  expect(response.status()).toBe(201);
-  expect(result.artefact_id).toBeDefined();
-
-  if (IS_DEPLOYED) {
-    const jsonBuffer = Buffer.from(JSON.stringify(payload.hearing_list));
-    await uploadTestFlatFileToWeb({ artefactId: result.artefact_id, content: jsonBuffer, extension: ".json" });
-  }
-
-  return result.artefact_id;
+async function uploadSjpPublicListViaApi(locationId: number): Promise<string> {
+  const { upload, payload } = createSjpPublicListPayload(locationId);
+  const { artefactId } = await uploadTestPublication({ ...upload, payload, mirrorJsonToWeb: true });
+  return artefactId;
 }
 
-async function uploadDownloadableFiles(artefactId: string): Promise<void> {
-  // Create a minimal PDF for testing
-  const pdfContent = Buffer.from(
-    "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj 3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>>endobj xref 0 4 0000000000 65535 f 0000000009 00000 n 0000000052 00000 n 0000000101 00000 n trailer<</Size 4/Root 1 0 R>>startxref 178 %%EOF"
-  );
-
-  // Create a minimal Excel file for testing (XLSX is a ZIP file with XML content)
-  const excelContent = Buffer.from("Test Excel Content");
-
-  if (IS_DEPLOYED) {
-    await uploadTestFlatFileToWeb({ artefactId, content: pdfContent, extension: ".pdf" });
-    await uploadTestFlatFileToWeb({ artefactId, content: excelContent, extension: ".xlsx" });
-  } else {
-    const storageDir = STORAGE_PATH;
-    if (!fs.existsSync(storageDir)) {
-      fs.mkdirSync(storageDir, { recursive: true });
-    }
-    fs.writeFileSync(path.join(storageDir, `${artefactId}.pdf`), pdfContent);
-    fs.writeFileSync(path.join(storageDir, `${artefactId}.xlsx`), excelContent);
+async function waitForGeneratedFiles(artefactId: string): Promise<void> {
+  // Ingestion renders the PDF and Excel into Blob Storage in the background, so wait for both to land
+  for (const extension of [".pdf", ".xlsx"]) {
+    await expect
+      .poll(async () => (await checkFlatFileExists(artefactId, extension)).exists, {
+        message: `Expected generated ${extension} for artefact ${artefactId} in Blob Storage`,
+        timeout: GENERATED_FILE_TIMEOUT_MS
+      })
+      .toBe(true);
   }
 }
 
 async function cleanupTestData(artefactId: string): Promise<void> {
-  console.log(`Cleaning up test data for artefactId: ${artefactId}`);
-
-  // Delete the artefact via API
   try {
     await deleteTestArtefact(artefactId);
-    console.log(`Deleted artefact: ${artefactId}`);
   } catch (error) {
     console.warn(`Failed to delete artefact ${artefactId}:`, error);
-  }
-
-  // Clean up files
-  if (IS_DEPLOYED) {
-    // Delete flat files from web storage
-    try {
-      await deleteTestFlatFileFromWeb(artefactId);
-      console.log(`Deleted flat files from web for: ${artefactId}`);
-    } catch (error) {
-      console.warn(`Failed to delete flat files from web for ${artefactId}:`, error);
-    }
-  } else {
-    // Delete local files
-    const extensions = [".json", ".pdf", ".xlsx"];
-    for (const ext of extensions) {
-      const filePath = path.join(STORAGE_PATH, `${artefactId}${ext}`);
-      try {
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-          console.log(`Deleted local file: ${filePath}`);
-        }
-      } catch (error) {
-        console.warn(`Failed to delete local file ${filePath}:`, error);
-      }
-    }
   }
 }
 
@@ -206,10 +143,10 @@ test.describe("SJP Public List - Verified User @nightly", () => {
   let artefactId: string;
   let listUrl: string;
 
-  test.beforeAll(async ({ request }) => {
+  test.beforeAll(async () => {
     const testLocation = await createUniqueTestLocation({ namePrefix: "SJP Public Verified Test" });
-    artefactId = await uploadSjpPublicListViaApi(request, testLocation.locationId);
-    await uploadDownloadableFiles(artefactId);
+    artefactId = await uploadSjpPublicListViaApi(testLocation.locationId);
+    await waitForGeneratedFiles(artefactId);
     listUrl = `/sjp-public-list?artefactId=${artefactId}`;
     console.log(`Created test SJP public list with artefactId: ${artefactId}`);
   });
@@ -221,12 +158,9 @@ test.describe("SJP Public List - Verified User @nightly", () => {
   });
 
   test("verified user can view SJP public list and download files", async ({ page }) => {
-    // Step 1: Authenticate via CFT IDAM
-    await page.goto("/sign-in");
-    const hmctsRadio = page.getByRole("radio", { name: /with a myhmcts account/i });
-    await hmctsRadio.check();
-    await page.getByRole("button", { name: /continue/i }).click();
-    await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
+    // Step 1: Authenticate as this test's own verified user
+    await loginAsTestUser(page, await createVerifiedTestUser());
+    await page.goto("/account-home");
     await expect(page).toHaveURL(/\/account-home/);
 
     // Step 2: Navigate to SJP public list
@@ -284,7 +218,13 @@ test.describe("SJP Public List - Verified User @nightly", () => {
     const downloadAccessibility = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
     expect(downloadAccessibility.violations).toEqual([]);
 
-    // Step 14: Test Welsh language on list page
+    // Step 14: Download the PDF from Blob Storage
+    const downloadPromise = page.waitForEvent("download");
+    await pdfLink.click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toBe(`${artefactId}.pdf`);
+
+    // Step 15: Test Welsh language on list page
     await page.goto(`${listUrl}&lng=cy`);
     await expect(page.getByRole("heading", { name: "Achosion Gweithdrefn Un Ynad sy'n barod ar gyfer gwrandawiad (Rhestr Lawn)", level: 1 })).toBeVisible();
 
@@ -298,34 +238,30 @@ test.describe("SJP Public List - Verified User @nightly", () => {
     const welshDownloadButton = page.getByRole("button", { name: "Lawrlwytho copi" });
     await expect(welshDownloadButton).toBeVisible();
 
-    // Step 15: Test Welsh disclaimer page
+    // Step 16: Test Welsh disclaimer page
     await welshDownloadButton.click();
     await expect(page.getByRole("heading", { name: "Telerau ac amodau", level: 1 })).toBeVisible();
   });
 
   test("verified user can filter cases @nightly", async ({ page }) => {
     // Authenticate
-    await page.goto("/sign-in");
-    const hmctsRadio = page.getByRole("radio", { name: /with a myhmcts account/i });
-    await hmctsRadio.check();
-    await page.getByRole("button", { name: /continue/i }).click();
-    await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
+    await loginAsTestUser(page, await createVerifiedTestUser());
+    await page.goto("/account-home");
     await expect(page).toHaveURL(/\/account-home/);
 
     // Navigate to list
     await page.goto(listUrl);
 
-    const filterPanel = page.locator("#filter-panel");
-    const contentArea = page.locator("#content-area");
+    // The MOJ FilterToggleButton shows/hides the .moj-filter element via the
+    // moj-js-hidden class (gated on .js-enabled).
+    const filterPanel = page.locator("#filter-panel .moj-filter");
 
     // Initially filters should be hidden
     await expect(filterPanel).toBeHidden();
-    await expect(contentArea).not.toHaveClass(/with-filters/);
 
     // Show filters
     await page.getByRole("button", { name: "Show filters" }).click();
     await expect(filterPanel).toBeVisible();
-    await expect(contentArea).toHaveClass(/with-filters/);
 
     // Check filter elements
     await expect(page.getByRole("heading", { name: "Selected filters" })).toBeVisible();
@@ -339,11 +275,11 @@ test.describe("SJP Public List - Verified User @nightly", () => {
     await page.getByRole("button", { name: "Apply filters" }).click();
 
     await expect(page).toHaveURL(/postcode=/);
-    await expect(page.locator(".filter-tag").filter({ hasText: postcodeValue! })).toBeVisible();
+    await expect(page.locator(".moj-filter__tag").filter({ hasText: postcodeValue! })).toBeVisible();
 
     // Clear filters
     await page.getByRole("link", { name: "Clear filters" }).click();
-    await expect(page.locator(".filter-tag")).toHaveCount(0);
+    await expect(page.locator(".moj-filter__tag")).toHaveCount(0);
 
     // Test accessibility with filters
     const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();

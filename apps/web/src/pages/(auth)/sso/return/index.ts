@@ -1,4 +1,4 @@
-import { USER_ROLES } from "@hmcts/account";
+import { USER_ROLES, type UserRole } from "@hmcts/account";
 import { createOrUpdateUser } from "@hmcts/account/repository/query";
 import { isSsoConfigured } from "@hmcts/auth";
 import type { Request, Response } from "express";
@@ -38,7 +38,7 @@ export const GET = [
         email: req.user.email,
         userProvenance: "SSO",
         userProvenanceId: req.user.id,
-        role: req.user.role as "VERIFIED" | "LOCAL_ADMIN" | "CTSC_ADMIN" | "SYSTEM_ADMIN"
+        role: req.user.role as UserRole
       });
       req.user.id = dbUser.userId;
     } catch (error) {

@@ -37,11 +37,32 @@ export const cy = {
   listingTime: "Amser rhestru",
   searchCases: "Chwilio Achosion",
   dataSource: "Ffynhonnell y Data",
+  cautionNote:
+    "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y’i diffinnir yn Neddf Gwarchod Data 2018, a elwid gynt yn Ddata Personol Sensitif, a dylid ei drin yn y ffordd briodol.",
+  cautionReporting:
+    "Mae’r ddogfen hon yn cynnwys gwybodaeth a fwriedir i gynorthwyo i roi adroddiad manwl-gywir am achosion llys. Mae’n hanfodol eich bod yn sicrhau eich bod yn gwarchod y Data Categori Arbennig sydd ynddi ac yn cadw at gyfyngiadau adrodd (er enghraifft yn achos dioddefwyr a phlant). Bydd GLlTEF yn rhoi’r gorau i anfon y data os cyfyd pryder ynghylch sut y’i defnyddir.",
+  thanks: "Diolch am ddarllen y ddogfen hon yn fanwl.",
   errorTitle: "Cyhoeddiad ddim ar gael",
   errorMessage:
     "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch â'r llys yn uniongyrchol am gymorth.",
   error403Title: "Mynediad wedi'i Wrthod",
-  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn."
+  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn.",
+  excelColumns: {
+    courtHouse: "Llys",
+    sittingAt: "Yn eistedd yn",
+    lja: "LJA",
+    sessionStart: "Amser cychwyn y sesiwn",
+    blockStart: "Amser Cychwyn y Bloc",
+    defendantName: "Enw'r Diffynnydd",
+    dateOfBirth: "Dyddiad Geni",
+    address: "Cyfeiriad",
+    age: "Oedran",
+    informant: "Hysbysydd",
+    caseNumber: "Cyfeirnod yr Achos",
+    offenceCode: "Cod y Drosedd",
+    offenceTitle: "Teitl y Drosedd",
+    offenceSummary: "Crynodeb o'r Drosedd"
+  }
 };
 
 export const cyDaily = { ...cy, title: cy.titleDaily };

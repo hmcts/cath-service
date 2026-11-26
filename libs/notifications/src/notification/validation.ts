@@ -1,3 +1,5 @@
+import type { FlatFileAttachment } from "../notify-templates/send-email.js";
+
 // Safe email regex - uses specific character sets to avoid ReDoS
 // Allows alphanumeric, dots, underscores, percent, plus, and hyphens in local part
 // Allows alphanumeric, dots, and hyphens in domain part
@@ -18,7 +20,10 @@ export interface PublicationEvent {
   publicationDate: Date;
   listTypeId?: number;
   pdfFilePath?: string;
+  excelPath?: string;
   jsonData?: unknown;
+  payloadSizeBytes?: number;
+  flatFile?: FlatFileAttachment;
 }
 
 export interface ValidationResult {

@@ -3,6 +3,7 @@ import "./conversion/rcj-standard-daily-cause-list-config.js"; // Register conve
 // Business logic exports
 export type { ValidationResult } from "@hmcts/publication";
 export * from "./email-summary/summary-builder.js";
+export { reformatRcjStandardDailyCauseListExcel } from "./excel/excel-reformatter.js";
 export { cy as rcjStandardDailyCauseListCy } from "./locales/cy.js";
 // Locale exports
 export { en as rcjStandardDailyCauseListEn } from "./locales/en.js";

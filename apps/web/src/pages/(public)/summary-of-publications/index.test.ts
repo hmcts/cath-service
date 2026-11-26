@@ -201,14 +201,34 @@ describe("Summary of Publications - GET handler", () => {
       expect(publications[0].formattedDate).toMatch(/\d{1,2} \w+ \d{4}/);
     });
 
+    it("should only query artefacts whose list type is visible", async () => {
+      // Arrange
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.artefact.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ locationId: "9", listType: { isHidden: false } })
+        })
+      );
+    });
+
     it("should render empty state when no publications found for location", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([]);
       mockRequest.query = { locationId: "1" };
       mockResponse.locals = { locale: "en" };
 
       await GET(mockRequest as Request, mockResponse as Response);
 
       const renderCall = renderSpy.mock.calls[0][1];
-      expect(renderCall.noPublicationsMessage).toBe("Sorry, no lists found for this court");
+      expect(renderCall.publications).toEqual([]);
+      expect(renderCall.noPublicationsMessage).toBe("There are no lists available for this court or tribunal today.");
     });
   });
 
@@ -253,6 +273,19 @@ describe("Summary of Publications - GET handler", () => {
       expect(publications[0].formattedDate).toMatch(/\d{1,2} \w+ \d{4}/);
       // Should contain Welsh month name (Ebrill = April)
       expect(publications[0].formattedDate).toContain("Ebrill");
+    });
+
+    it("should render Welsh empty state when no publications found for location", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([]);
+      mockRequest.query = { locationId: "1" };
+      mockResponse.locals = { locale: "cy" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.publications).toEqual([]);
+      expect(renderCall.noPublicationsMessage).toBe("Nid oes unrhyw restrau ar gael ar gyfer y llys na’r tribiwnlys hwn heddiw.");
     });
 
     it("should redirect to 400 page when locationId is missing (Welsh locale)", async () => {
@@ -550,7 +583,7 @@ describe("Summary of Publications - GET handler", () => {
           friendlyName: "Criminal Injuries Compensation Weekly Hearing List",
           welshFriendlyName: "Rhestr Wythnosol",
           url: "cic-weekly-hearing-list",
-          allowedProvenance: "MANUAL_UPLOAD",
+          allowedProvenance: ["CFT_IDAM"],
           isNonStrategic: false
         } as any
       ]);
@@ -701,6 +734,102 @@ describe("Summary of Publications - GET handler", () => {
       const renderCall = renderSpy.mock.calls[0][1];
       expect(renderCall.cautionMessage).toBe("Caution message");
       expect(renderCall.noListMessage).toBe("No list message");
+    });
+  });
+
+  describe("IAC Daily List ordering", () => {
+    const IAC_LIST_TYPES = [
+      {
+        id: 60,
+        name: "IAC_DAILY_LIST",
+        friendlyName: "Immigration and Asylum Chamber Daily List",
+        welshFriendlyName: "Rhestr Ddyddiol y Siambr Mewnfudo a Lloches",
+        url: "iac-daily-list",
+        allowedProvenance: ["CFT_IDAM"],
+        isNonStrategic: false
+      },
+      {
+        id: 61,
+        name: "IAC_DAILY_LIST_ADDITIONAL_CASES",
+        friendlyName: "Immigration and Asylum Chamber Daily List - Additional Cases",
+        welshFriendlyName: "Rhestr Ddyddiol y Siambr Mewnfudo a Lloches - Achosion Ychwanegol",
+        url: "iac-daily-list-additional-cases",
+        allowedProvenance: ["CFT_IDAM"],
+        isNonStrategic: false
+      }
+    ];
+
+    function iacArtefact(listTypeId: number, artefactId: string, lastReceived: string) {
+      return {
+        artefactId,
+        locationId: "9",
+        listTypeId,
+        contentDate: new Date("2025-04-15"),
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-04-01"),
+        displayTo: new Date("2025-12-31"),
+        lastReceivedDate: new Date(lastReceived),
+        isFlatFile: false
+      };
+    }
+
+    it("should place the daily list before additional cases when additional cases is published first", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { findAllListTypes } = await import("@hmcts/system-admin-pages");
+
+      vi.mocked(findAllListTypes).mockResolvedValueOnce(IAC_LIST_TYPES as any);
+      // Additional cases has the later lastReceivedDate, so it sorts first by default ordering.
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([
+        iacArtefact(61, "additional-id", "2025-04-15T12:00:00Z"),
+        iacArtefact(60, "daily-id", "2025-04-15T09:00:00Z")
+      ] as any);
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const publications = renderSpy.mock.calls[0][1].publications;
+      expect(publications.map((p: any) => p.id)).toEqual(["daily-id", "additional-id"]);
+    });
+
+    it("should keep the daily list before additional cases when the daily list is published first", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { findAllListTypes } = await import("@hmcts/system-admin-pages");
+
+      vi.mocked(findAllListTypes).mockResolvedValueOnce(IAC_LIST_TYPES as any);
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([
+        iacArtefact(60, "daily-id", "2025-04-15T12:00:00Z"),
+        iacArtefact(61, "additional-id", "2025-04-15T09:00:00Z")
+      ] as any);
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const publications = renderSpy.mock.calls[0][1].publications;
+      expect(publications.map((p: any) => p.id)).toEqual(["daily-id", "additional-id"]);
+    });
+
+    it("should keep the daily list before additional cases in the Welsh locale", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { findAllListTypes } = await import("@hmcts/system-admin-pages");
+
+      vi.mocked(findAllListTypes).mockResolvedValueOnce(IAC_LIST_TYPES as any);
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([
+        iacArtefact(61, "additional-id", "2025-04-15T12:00:00Z"),
+        iacArtefact(60, "daily-id", "2025-04-15T09:00:00Z")
+      ] as any);
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "cy" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const publications = renderSpy.mock.calls[0][1].publications;
+      expect(publications.map((p: any) => p.id)).toEqual(["daily-id", "additional-id"]);
     });
   });
 });

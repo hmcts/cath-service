@@ -1,8 +1,11 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+export const CFT_IDAM_URL_PATTERN = /hmcts-access\.aat\.platform\.hmcts\.net/;
+const CFT_IDAM_HOST_PATTERN = /hmcts-access/;
+
 /**
- * Helper function to perform CFT IDAM login
+ * Helper function to perform CFT IDAM login against either the classic or the new IDAM UI
  * @param page - Playwright Page object
  * @param email - User email address
  * @param password - User password
@@ -29,7 +32,7 @@ export async function loginWithCftIdam(page: Page, email: string, password: stri
 
   // Wait for CFT IDAM login page
   try {
-    await page.waitForURL(/idam-web-public\.aat\.platform\.hmcts\.net/, { timeout: 15000 });
+    await page.waitForURL(CFT_IDAM_URL_PATTERN, { timeout: 15000 });
     console.log(`[CFT IDAM] Successfully redirected to IDAM. URL: ${page.url()}`);
   } catch (_error) {
     const currentUrl = page.url();
@@ -43,22 +46,15 @@ export async function loginWithCftIdam(page: Page, email: string, password: stri
     );
   }
 
-  // Enter email
-  console.log(`[CFT IDAM] Filling in username field`);
-  const emailInput = page.locator('input[type="text"]#username, input[type="email"]#username, input[name="username"]');
-  await emailInput.waitFor({ state: "visible", timeout: 10000 });
-  await emailInput.fill(email);
+  const classicEmailInput = page.locator('input[type="text"]#username, input[type="email"]#username, input[name="username"]');
+  const modernEmailInput = page.locator("input#email");
+  await classicEmailInput.or(modernEmailInput).first().waitFor({ state: "visible", timeout: 15000 });
 
-  // Enter password
-  console.log(`[CFT IDAM] Filling in password field`);
-  const passwordInput = page.locator('input[type="password"]#password, input[name="password"]');
-  await passwordInput.waitFor({ state: "visible", timeout: 5000 });
-  await passwordInput.fill(password);
-
-  // Click sign in button
-  console.log(`[CFT IDAM] Clicking sign in button`);
-  const signInButton = page.locator('input[type="submit"], button[type="submit"]').first();
-  await signInButton.click();
+  if (await modernEmailInput.isVisible()) {
+    await loginWithModernUi(page, email, password);
+  } else {
+    await loginWithClassicUi(page, email, password);
+  }
 
   // Wait a moment for potential error messages or redirects
   await page.waitForTimeout(2000);
@@ -67,10 +63,11 @@ export async function loginWithCftIdam(page: Page, email: string, password: stri
   console.log(`[CFT IDAM] URL after form submit: ${urlAfterSubmit}`);
 
   // Check for login error messages on the IDAM page
-  if (/idam-web-public/.test(urlAfterSubmit)) {
+  if (CFT_IDAM_HOST_PATTERN.test(new URL(urlAfterSubmit).hostname)) {
     const errorText = await page
-      .locator(".error-message, .alert-danger, [class*='error']")
-      .textContent()
+      .locator(".error-message, .alert-danger, .govuk-error-summary")
+      .first()
+      .textContent({ timeout: 1000 })
       .catch(() => null);
     if (errorText) {
       console.error(`[CFT IDAM] Login error message found: ${errorText}`);
@@ -82,7 +79,7 @@ export async function loginWithCftIdam(page: Page, email: string, password: stri
   // Wait for redirect back to application (any localhost:8080 or deployed URL page)
   console.log(`[CFT IDAM] Waiting for redirect back to application...`);
   try {
-    await page.waitForURL(/localhost:8080|cath-service|hmcts\.net\/(?!idam)/, { timeout: 30000 });
+    await page.waitForURL((url) => !CFT_IDAM_HOST_PATTERN.test(url.hostname), { timeout: 30000 });
     console.log(`[CFT IDAM] Successfully redirected back to application. URL: ${page.url()}`);
   } catch (_error) {
     const finalUrl = page.url();
@@ -99,6 +96,31 @@ export async function loginWithCftIdam(page: Page, email: string, password: stri
   }
 }
 
+async function loginWithModernUi(page: Page, email: string, password: string): Promise<void> {
+  console.log(`[CFT IDAM] New UI detected - filling in email`);
+  await page.locator("input#email").fill(email);
+  await page.getByRole("button", { name: /^(continue|parhau)$/i }).click();
+
+  console.log(`[CFT IDAM] Filling in password`);
+  const passwordInput = page.locator("input#password");
+  await passwordInput.waitFor({ state: "visible", timeout: 10000 });
+  await passwordInput.fill(password);
+  await page.getByRole("button", { name: /^(continue|parhau)$/i }).click();
+}
+
+async function loginWithClassicUi(page: Page, email: string, password: string): Promise<void> {
+  console.log(`[CFT IDAM] Classic UI detected - filling in username`);
+  await page.locator('input[type="text"]#username, input[type="email"]#username, input[name="username"]').fill(email);
+
+  console.log(`[CFT IDAM] Filling in password`);
+  const passwordInput = page.locator('input[type="password"]#password, input[name="password"]');
+  await passwordInput.waitFor({ state: "visible", timeout: 5000 });
+  await passwordInput.fill(password);
+
+  console.log(`[CFT IDAM] Clicking sign in button`);
+  await page.locator('input[type="submit"], button[type="submit"]').first().click();
+}
+
 /**
  * Assert that the user is authenticated with CFT IDAM
  * Checks for common authentication indicators
@@ -111,7 +133,7 @@ export async function assertAuthenticated(page: Page): Promise<void> {
   console.log(`[CFT IDAM] Asserting authenticated. Current URL: ${currentUrl}`);
 
   // Check that we're not on the CFT IDAM login page
-  await expect(page).not.toHaveURL(/idam-web-public\.aat\.platform\.hmcts\.net/);
+  await expect(page).not.toHaveURL(CFT_IDAM_URL_PATTERN);
 
   // Check that we're not on the sign-in page
   await expect(page).not.toHaveURL(/\/sign-in/);
@@ -127,17 +149,17 @@ export async function assertNotAuthenticated(page: Page): Promise<void> {
   console.log(`[CFT IDAM] Asserting not authenticated. Current URL: ${currentUrl}`);
 
   // Should either be on CFT IDAM login or redirected to sign-in
-  await expect(page).toHaveURL(/idam-web-public\.aat\.platform\.hmcts\.net|\/sign-in/);
+  await expect(page).toHaveURL(/hmcts-access\.aat\.platform\.hmcts\.net|\/sign-in/);
 
   console.log(`[CFT IDAM] Not-authenticated assertion passed`);
 }
 
 /**
- * Helper to logout the user
+ * Helper to logout the user. CFT IDAM users are routed through IDAM endSession before returning.
  */
 export async function logout(page: Page): Promise<void> {
   console.log(`[CFT IDAM] Logging out. Current URL: ${page.url()}`);
   await page.goto("/logout");
-  await page.waitForURL(/\/session-logged-out/, { timeout: 10000 });
+  await page.waitForURL(/\/session-logged-out/, { timeout: 30000 });
   console.log(`[CFT IDAM] Logged out successfully. URL: ${page.url()}`);
 }

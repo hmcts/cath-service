@@ -1,10 +1,10 @@
-import type { APIRequestContext, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 // @ts-expect-error - ExcelJS is a CommonJS module
 import ExcelJSPkg from "exceljs";
-import { getApiAuthToken } from "../utils/api-auth-helpers.js";
 import { axeCheck } from "../utils/axe-helper.js";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
+import { uploadTestPublication } from "../utils/publication-upload.js";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 import { createOrGetListType, deleteTestArtefacts, uploadTestFlatFileToWeb } from "../utils/test-support-api.js";
 
@@ -15,130 +15,97 @@ const { Workbook } = ExcelJSPkg;
 // 2. Crown copyright logo link missing accessible text (WCAG 2.4.4, 4.1.2)
 // These issues affect ALL pages and should be addressed in a separate ticket
 
-const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
-const PUBLICATION_ENDPOINT = `${API_BASE_URL}/v1/publication`;
 const IS_DEPLOYED = !!process.env.CATH_SERVICE_WEB_URL;
+const CONTENT_DATE = "2026-01-15";
+const DISPLAY_FROM = "2025-01-01T00:00:00Z";
+const DISPLAY_TO = "2030-12-31T23:59:59Z";
 
-// Create Civil and Family Daily Cause List payload (strategic list type that accepts JSON via API)
-function createCivilFamilyCauseListPayload(locationId: number, contentDate: string, displayFrom: string, displayTo: string) {
+// Civil and Family Daily Cause List payload (strategic list type that accepts JSON via API)
+function createCivilFamilyCauseListPayload(contentDate: string) {
   return {
-    court_id: locationId.toString(),
-    provenance: "MANUAL_UPLOAD",
-    content_date: contentDate,
-    list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-    sensitivity: "PUBLIC",
-    language: "ENGLISH",
-    display_from: displayFrom,
-    display_to: displayTo,
-    hearing_list: {
-      document: {
-        publicationDate: `${contentDate}T09:00:00.000Z`,
-        version: "1.0"
+    document: {
+      publicationDate: `${contentDate}T09:00:00.000Z`,
+      version: "1.0"
+    },
+    venue: {
+      venueName: "Test Court Alpha",
+      venueAddress: {
+        line: ["1 Test Street", "Test District"],
+        town: "Test City",
+        county: "Test County",
+        postCode: "TC1 1TC"
       },
-      venue: {
-        venueName: "Test Court Alpha",
-        venueAddress: {
-          line: ["1 Test Street", "Test District"],
-          town: "Test City",
-          county: "Test County",
-          postCode: "TC1 1TC"
-        },
-        venueContact: {
-          venueTelephone: "01234 567890",
-          venueEmail: "test.court@justice.gov.uk"
+      venueContact: {
+        venueTelephone: "01234 567890",
+        venueEmail: "test.court@justice.gov.uk"
+      }
+    },
+    courtLists: [
+      {
+        courtHouse: {
+          courtHouseName: "Test Court Alpha",
+          courtHouseAddress: {
+            line: ["1 Test Street"],
+            town: "Test City",
+            postCode: "TC1 1TC"
+          },
+          courtRoom: [
+            {
+              courtRoomName: "Court Room 1",
+              session: [
+                {
+                  judiciary: [{ johKnownAs: "Judge Smith", isPresiding: true }],
+                  sittings: [
+                    {
+                      sittingStart: `${contentDate}T10:00:00Z`,
+                      sittingEnd: `${contentDate}T12:00:00Z`,
+                      channel: ["In Person"],
+                      hearing: [
+                        {
+                          hearingType: "Trial",
+                          case: [
+                            {
+                              caseNumber: "TEST-001",
+                              caseName: "Smith v Jones",
+                              caseType: "Civil",
+                              caseSequenceIndicator: "1 of 1",
+                              party: [
+                                {
+                                  partyRole: "APPLICANT_PETITIONER",
+                                  individualDetails: { title: "Mr", individualForenames: "John", individualSurname: "Smith" }
+                                },
+                                {
+                                  partyRole: "RESPONDENT",
+                                  individualDetails: { title: "Ms", individualForenames: "Jane", individualSurname: "Jones" }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
-      },
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Test Court Alpha",
-            courtHouseAddress: {
-              line: ["1 Test Street"],
-              town: "Test City",
-              postCode: "TC1 1TC"
-            },
-            courtRoom: [
-              {
-                courtRoomName: "Court Room 1",
-                session: [
-                  {
-                    judiciary: [{ johKnownAs: "Judge Smith", isPresiding: true }],
-                    sittings: [
-                      {
-                        sittingStart: `${contentDate}T10:00:00Z`,
-                        sittingEnd: `${contentDate}T12:00:00Z`,
-                        channel: ["In Person"],
-                        hearing: [
-                          {
-                            hearingType: "Trial",
-                            case: [
-                              {
-                                caseNumber: "TEST-001",
-                                caseName: "Smith v Jones",
-                                caseType: "Civil",
-                                caseSequenceIndicator: "1 of 1",
-                                party: [
-                                  {
-                                    partyRole: "APPLICANT_PETITIONER",
-                                    individualDetails: { title: "Mr", individualForenames: "John", individualSurname: "Smith" }
-                                  },
-                                  {
-                                    partyRole: "RESPONDENT",
-                                    individualDetails: { title: "Ms", individualForenames: "Jane", individualSurname: "Jones" }
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      ]
-    }
+      }
+    ]
   };
 }
 
-// Helper function to upload publication via API
-async function uploadPublicationViaApi(request: APIRequestContext, locationId: number): Promise<string> {
-  const contentDate = "2026-01-15";
-  const displayFrom = "2025-01-01T00:00:00Z";
-  const displayTo = "2030-12-31T23:59:59Z";
-
-  console.log(`[uploadPublicationViaApi] IS_DEPLOYED=${IS_DEPLOYED} API_URL=${PUBLICATION_ENDPOINT}`);
-
-  const payload = createCivilFamilyCauseListPayload(locationId, contentDate, displayFrom, displayTo);
-  const token = await getApiAuthToken();
-
-  const response = await request.post(PUBLICATION_ENDPOINT, {
-    data: payload,
-    headers: { Authorization: `Bearer ${token}` }
+async function uploadPublicationViaApi(locationId: number): Promise<string> {
+  const { artefactId } = await uploadTestPublication({
+    locationId,
+    listTypeName: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+    payload: createCivilFamilyCauseListPayload(CONTENT_DATE),
+    contentDate: CONTENT_DATE,
+    displayFrom: DISPLAY_FROM,
+    displayTo: DISPLAY_TO,
+    mirrorJsonToWeb: true
   });
-
-  console.log(`[uploadPublicationViaApi] API response status=${response.status()}`);
-  expect(response.status()).toBe(201);
-  const result = await response.json();
-  console.log(`[uploadPublicationViaApi] API response body=${JSON.stringify(result)}`);
-  expect(result.artefact_id).toBeDefined();
-
-  // In deployed environments, API and web are separate pods with separate filesystems.
-  // The API stores the JSON on the API pod; the web controller reads from the web pod.
-  // Upload the JSON to the web pod so the list type page can render it.
-  if (IS_DEPLOYED) {
-    console.log(`[uploadPublicationViaApi] Uploading flat file to web pod for artefactId=${result.artefact_id}`);
-    const jsonBuffer = Buffer.from(JSON.stringify(payload.hearing_list));
-    const uploadResult = await uploadTestFlatFileToWeb({ artefactId: result.artefact_id, content: jsonBuffer, extension: ".json" });
-    console.log(`[uploadPublicationViaApi] Flat file upload result=${JSON.stringify(uploadResult)}`);
-  } else {
-    console.log("[uploadPublicationViaApi] Not deployed, skipping flat file upload to web pod");
-  }
-
-  return result.artefact_id;
+  return artefactId;
 }
 
 // Helper function to authenticate as System Admin for non-strategic uploads
@@ -253,12 +220,12 @@ async function uploadCSTExcel(page: Page, excelBuffer: Buffer, locationId: numbe
 
 test.describe("Summary of Publications Page", () => {
   // Each test creates its own data for full isolation
-  test("should display publications list with correct content and accessibility compliance", async ({ page, request }) => {
+  test("should display publications list with correct content and accessibility compliance", async ({ page }) => {
     // Create unique location for this test
     const testLocation = await createUniqueTestLocation({ namePrefix: "Publications Test Court" });
 
     // Upload a publication via API
-    await uploadPublicationViaApi(request, testLocation.locationId);
+    await uploadPublicationViaApi(testLocation.locationId);
 
     // Navigate to summary of publications
     await page.goto(`/summary-of-publications?locationId=${testLocation.locationId}`);
@@ -309,7 +276,7 @@ test.describe("Summary of Publications Page", () => {
     await expect(factLink).toBeVisible();
 
     // Check for empty state message
-    await expect(page.getByText(/sorry, no lists found for this court/i)).toBeVisible();
+    await expect(page.getByText("There are no lists available for this court or tribunal today.")).toBeVisible();
 
     // Verify select list message is NOT displayed when no publications
     await expect(page.getByText("Select the list you want to view from the link(s) below:")).not.toBeVisible();
@@ -324,12 +291,12 @@ test.describe("Summary of Publications Page", () => {
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
-  test("should view publication content with English and Welsh translations", async ({ page, request }) => {
+  test("should view publication content with English and Welsh translations", async ({ page }) => {
     // Create unique location for this test
     const testLocation = await createUniqueTestLocation({ namePrefix: "Translation Test Court" });
 
     // Upload a publication via API
-    await uploadPublicationViaApi(request, testLocation.locationId);
+    await uploadPublicationViaApi(testLocation.locationId);
 
     // Navigate to summary of publications
     await page.goto(`/summary-of-publications?locationId=${testLocation.locationId}`);
@@ -388,12 +355,12 @@ test.describe("Summary of Publications Page", () => {
     await expect(page.locator("tbody tr:visible")).toHaveCount(1);
   });
 
-  test("should display Welsh content when language is changed @nightly", async ({ page, request }) => {
+  test("should display Welsh content when language is changed @nightly", async ({ page }) => {
     // Create unique location for this test
     const testLocation = await createUniqueTestLocation({ namePrefix: "Welsh Test Court" });
 
     // Upload a publication via API
-    await uploadPublicationViaApi(request, testLocation.locationId);
+    await uploadPublicationViaApi(testLocation.locationId);
 
     await page.goto(`/summary-of-publications?locationId=${testLocation.locationId}`);
 
@@ -443,7 +410,7 @@ test.describe("Summary of Publications Page", () => {
     await page.waitForSelector("h1.govuk-heading-l");
 
     // Verify Welsh empty state message
-    await expect(page.getByText(/mae'n ddrwg gennym, nid ydym wedi dod o hyd i unrhyw restrau/i)).toBeVisible();
+    await expect(page.getByText("Nid oes unrhyw restrau ar gael ar gyfer y llys na’r tribiwnlys hwn heddiw.")).toBeVisible();
 
     // Verify language toggle still shows English option
     const languageToggle = page.locator(".app-phase-banner__language");
@@ -489,7 +456,7 @@ test.describe("Summary of Publications Page", () => {
 });
 
 test.describe("Non-Strategic Publication (CST Excel Upload)", () => {
-  test.skip("should upload CST Excel file and view in summary of publications", async ({ page }) => {
+  test("should upload CST Excel file and view in summary of publications", async ({ page }) => {
     // Create unique location for this test
     const testLocation = await createUniqueTestLocation({ namePrefix: "CST Upload Test Court" });
 
@@ -498,7 +465,7 @@ test.describe("Non-Strategic Publication (CST Excel Upload)", () => {
 
     // Step 2: Ensure CST list type exists (it's a non-strategic list type)
     const cstListType = await createOrGetListType({
-      name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+      name: "CST_WEEKLY_HEARING_LIST",
       friendlyName: "Care Standards Tribunal Weekly Hearing List",
       welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
       url: "/care-standards-tribunal-weekly-hearing-list",
@@ -512,7 +479,7 @@ test.describe("Non-Strategic Publication (CST Excel Upload)", () => {
     await uploadCSTExcel(page, excelBuffer, testLocation.locationId, cstListType.id);
 
     // Step 4: Verify summary page displays correctly
-    await expect(page.locator("h1")).toContainText("File upload summary");
+    await expect(page.locator("h1")).toContainText("File Upload Summary");
 
     // Verify form data is shown
     const summaryValues = page.locator(".govuk-summary-list__value");
@@ -525,7 +492,7 @@ test.describe("Non-Strategic Publication (CST Excel Upload)", () => {
     // Verify success page
     const successPanel = page.locator(".govuk-panel");
     await expect(successPanel).toBeVisible();
-    await expect(page.locator(".govuk-panel__title")).toContainText("File upload successful");
+    await expect(page.locator(".govuk-panel__title")).toContainText("File Upload Successful");
 
     // Step 6: Navigate to summary of publications and verify CST list appears
     await page.goto(`/summary-of-publications?locationId=${testLocation.locationId}`);
@@ -575,7 +542,7 @@ test.describe("Non-Strategic Publication (CST Excel Upload)", () => {
     await authenticateSystemAdmin(page);
 
     const cstListType = await createOrGetListType({
-      name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+      name: "CST_WEEKLY_HEARING_LIST",
       friendlyName: "Care Standards Tribunal Weekly Hearing List",
       welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
       url: "/care-standards-tribunal-weekly-hearing-list",

@@ -21,12 +21,14 @@
         </span>
       </summary>
       <div class="govuk-details__text">
-        <p class="govuk-body">{{ t.importantInformationText }}</p>
+        <p class="govuk-body">{{ importantInformationText }}</p>
+        <p class="govuk-body">{{ t.importantInformationSecondParagraph }}</p>
         <p class="govuk-body">
           <a href="{{ t.importantInformationLinkUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
             {{ t.importantInformationLinkText }}
           </a>
         </p>
+        {% if extraInformationText %}<p class="govuk-body govuk-!-font-weight-bold">{{ extraInformationText }}</p>{% endif %}
       </div>
     </details>
 

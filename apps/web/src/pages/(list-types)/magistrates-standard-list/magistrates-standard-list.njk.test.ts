@@ -170,6 +170,15 @@ describe("magistrates-standard-list template", () => {
       const searchHeading = $("h2.govuk-heading-m").filter((_, el) => $(el).text().includes(en.searchCases));
       expect(searchHeading).toHaveLength(1);
     });
+
+    // initTableSearch (apps/web/src/assets/js/table-search.ts) only highlights inside
+    // #court-lists-container / #hearings-table-container. Without this id the search box
+    // renders but does nothing.
+    it("should wrap the hearing content in the container the search script highlights", () => {
+      const { $ } = renderList([]);
+
+      expect($("#court-lists-container")).toHaveLength(1);
+    });
   });
 
   describe("Venue address", () => {

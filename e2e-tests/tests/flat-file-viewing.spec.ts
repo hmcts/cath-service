@@ -93,9 +93,10 @@ async function createFlatFileArtefact(
   } = options;
 
   // Look up the actual list type ID (don't hardcode - DB IDs are not guaranteed sequential)
-  const crownDailyList = (await getListTypeByName("CROWN_DAILY_LIST")) as { id: number };
+  const crownDailyList = (await getListTypeByName("CROWN_DAILY_PDDA_LIST")) as { id: number };
 
-  // Create artefact via API and get the returned artefactId
+  // Inserted directly rather than ingested: the spec tests how the viewer serves a stored flat file
+  // (including PDF/download headers for arbitrary content), not the ingestion pipeline
   const createdArtefact = await createTestArtefact({
     locationId,
     listTypeId: crownDailyList.id, // Crown Daily List

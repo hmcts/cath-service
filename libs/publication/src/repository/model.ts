@@ -7,13 +7,12 @@ export interface Artefact {
   contentDate: Date;
   sensitivity: string;
   language: string;
-  displayFrom: Date;
-  displayTo: Date;
+  displayFrom: Date | null;
+  displayTo: Date | null;
   lastReceivedDate: Date;
   isFlatFile: boolean;
   provenance: string;
   supersededCount?: number;
-  noMatch: boolean;
 }
 
 // Only getArtefactById performs the listType join that populates listTypeName.

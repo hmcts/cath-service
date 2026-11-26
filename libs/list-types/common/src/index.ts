@@ -20,14 +20,23 @@ export {
   registerConverterByName
 } from "./conversion/non-strategic-list-registry.js";
 export { RCJ_EXCEL_CONFIG, RCJ_EXCEL_CONFIG_SIMPLE_TIME } from "./conversion/rcj-field-configs.js";
-export { DD_MM_YYYY_PATTERN, TIME_PATTERN, validateTimeFormat, validateTimeFormatSimple } from "./conversion/validators.js";
+export { DD_MM_YYYY_PATTERN, EMAIL_PATTERN, TIME_PATTERN, validateEmailFormat, validateTimeFormat, validateTimeFormatSimple } from "./conversion/validators.js";
 export {
   type CaseSummary,
   type CaseSummaryField,
   formatCaseSummaryForEmail,
   SPECIAL_CATEGORY_DATA_WARNING
 } from "./email-summary/case-summary-formatter.js";
+export { autoFitColumns, createSingleSheetExcelBuffer, sanitiseCellValue, saveExcelToStorage } from "./excel/excel-utilities.js";
+export {
+  type FlatListExcelColumn,
+  type FlatListExcelOptions,
+  type FlatListExcelResult,
+  generateFlatListExcel
+} from "./excel/flat-list-excel-generator.js";
+export { type ReformatSheetConfig, reformatUploadedWorkbook } from "./excel/uploaded-workbook-reformatter.js";
 export { type ListTypeData, listTypeData } from "./list-type-data.js";
+export { assertValidProvenances, PUBLISHER_PROVENANCES } from "./list-type-provenance.js";
 export { provenanceLabels as provenanceLabelsCy } from "./locales/cy.js";
 export { provenanceLabels as provenanceLabelsEn } from "./locales/en.js";
 export type {
@@ -52,7 +61,6 @@ export {
   generateListPdf,
   type ListPdfOptions,
   loadTranslations,
-  MAX_PDF_SIZE_BYTES,
   type PdfFromHtmlResult,
   type PdfGenerationResult,
   type RenderedListData,
@@ -72,7 +80,8 @@ export {
   type PddaCitizenName
 } from "./rendering/crown-utilities.js";
 export { formatDdMmYyyyDate, formatDisplayDate, formatHHMMTime, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
-export { normaliseHearings } from "./rendering/hearing-normalisation.js";
+export { normaliseHearing, normaliseHearings } from "./rendering/hearing-normalisation.js";
+export { formatAccusedDateOfBirth } from "./sjp/accused-date-of-birth.js";
 export * from "./sjp/json-parser.js";
 export * from "./sjp/sjp-paginator.js";
 export * from "./sjp/sjp-service.js";

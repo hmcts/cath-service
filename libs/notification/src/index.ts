@@ -1,5 +1,5 @@
+export { extractNotifyError } from "@hmcts/govuk-notify";
 export {
-  extractNotifyError,
   sendMediaDuplicateAccountEmail,
   sendMediaNewAccountEmail,
   sendMediaRejectionEmail

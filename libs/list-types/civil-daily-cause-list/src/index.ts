@@ -1,5 +1,6 @@
 export type { ValidationResult } from "@hmcts/publication";
 export * from "./email-summary/summary-builder.js";
+export { generateCivilDailyCauseListExcel } from "./excel/excel-generator.js";
 export { cy as civilDailyCauseListCy } from "./locales/cy.js";
 export { en as civilDailyCauseListEn } from "./locales/en.js";
 export * from "./models/types.js";

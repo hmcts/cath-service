@@ -10,5 +10,6 @@ export const cy = {
   deleteButtonText: "Dileu",
   errorSummaryTitle: "Mae yna broblem",
   atLeastOneMessageRequired: "Rhowch o leiaf un neges",
+  htmlTagsNotAllowed: (fieldLabel: string, tags: string[]) => `Mae ${fieldLabel} yn cynnwys tagiau HTML na ellir eu defnyddio: ${tags.join(", ")}`,
   locationNotFoundInSession: "Heb ddod o hyd i leoliad. Chwiliwch eto."
 };

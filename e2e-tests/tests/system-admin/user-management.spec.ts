@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
+import { switchLanguage } from "../../utils/language-helpers.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 import { generateTestEmail } from "../../utils/test-prefix.js";
 import { createTestUser } from "../../utils/test-support-api.js";
@@ -75,11 +76,12 @@ test.describe("User Management", () => {
     await expect(page.getByText(/\d+ users? found/)).toBeVisible();
     await expect(page.getByText(testEmail)).toBeVisible();
 
-    // Verify filter heading appears in selected filters
-    await expect(page.getByRole("heading", { name: "Email", level: 4 })).toBeVisible();
+    // Verify filter heading appears in selected filters (MOJ renders category
+    // headings as h3 inside .moj-filter__selected)
+    await expect(page.getByRole("heading", { name: "Email", level: 3 })).toBeVisible();
 
-    // Test removing a filter by clicking the tag
-    const filterTag = page.locator(".user-management-filter-tag").first();
+    // Test removing a filter by clicking the MOJ filter tag
+    const filterTag = page.locator(".moj-filter__tag").first();
     await filterTag.click();
 
     // Verify filter was removed (should show all results again)
@@ -92,9 +94,9 @@ test.describe("User Management", () => {
     await page.getByRole("button", { name: "Apply filters" }).click();
 
     // Verify filter headings appear in selected filters
-    await expect(page.getByRole("heading", { name: "Email", level: 4 })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Roles", level: 4 })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Provenance", level: 4 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Email", level: 3 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Roles", level: 3 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Provenance", level: 3 })).toBeVisible();
 
     // Test Clear filters button
     await page.getByRole("link", { name: "Clear filters" }).click();
@@ -106,12 +108,12 @@ test.describe("User Management", () => {
     await expect(page.getByRole("cell", { name: testEmail })).toBeVisible();
 
     // Test Welsh translation on find users page
-    await page.getByRole("link", { name: "Cymraeg" }).click();
+    await switchLanguage(page, "cy");
     await expect(page.getByRole("heading", { name: "Dod o hyd i, diweddaru a dileu defnyddiwr", level: 1 })).toBeVisible();
     await expect(page.getByRole("button", { name: "Cymhwyso hidlwyr" })).toBeVisible();
 
     // Switch back to English
-    await page.getByRole("link", { name: "English" }).click();
+    await switchLanguage(page, "en");
     await expect(page.getByRole("heading", { name: "Find, update and delete a user", level: 1 })).toBeVisible();
 
     // Click "Manage" on the test user
@@ -132,12 +134,12 @@ test.describe("User Management", () => {
     expect(manageUserAccessibility.violations).toEqual([]);
 
     // Test Welsh translation on manage user page
-    await page.getByRole("link", { name: "Cymraeg" }).click();
+    await switchLanguage(page, "cy");
     await expect(page.getByRole("heading", { name: `Rheoli ${testEmail}`, level: 1 })).toBeVisible();
     await expect(page.getByRole("button", { name: "Dileu defnyddiwr" })).toBeVisible();
 
     // Switch back to English
-    await page.getByRole("link", { name: "English" }).click();
+    await switchLanguage(page, "en");
 
     // Click delete user button
     await page.getByRole("button", { name: "Delete user" }).click();
@@ -154,12 +156,12 @@ test.describe("User Management", () => {
     await expect(page.locator(".govuk-error-message")).toContainText("Select yes or no to continue");
 
     // Test Welsh translation on delete confirmation page
-    await page.getByRole("link", { name: "Cymraeg" }).click();
+    await switchLanguage(page, "cy");
     await expect(page.getByRole("heading", { name: `Ydych chi'n siŵr eich bod am ddileu ${testEmail}?`, level: 1 })).toBeVisible();
     await expect(page.getByRole("button", { name: "Parhau" })).toBeVisible();
 
     // Switch back to English
-    await page.getByRole("link", { name: "English" }).click();
+    await switchLanguage(page, "en");
 
     // Select yes and submit
     await page.locator('input[name="confirmation"][value="yes"]').check();

@@ -3,6 +3,7 @@ export {
   extractCaseSummary as extractMagistratesPublicListCaseSummary,
   formatCaseSummaryForEmail as formatMagistratesPublicListCaseSummaryForEmail
 } from "./email-summary/summary-builder.js";
+export { generateMagistratesPublicListExcel } from "./excel/excel-generator.js";
 export { cy as magistratesPublicListCy } from "./locales/cy.js";
 export { en as magistratesPublicListEn } from "./locales/en.js";
 export * from "./pdf/pdf-generator.js";

@@ -17,16 +17,18 @@ vi.mock("../rendering/renderer.js", () => ({
   renderAdminCourt: vi.fn()
 }));
 
-vi.mock("@hmcts/publication", () => ({
-  PROVENANCE_LABELS: {
-    MANUAL_UPLOAD: "Manual Upload",
-    SNL: "SNL"
-  }
-}));
-
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
+import { cy } from "../locales/cy.js";
+import { en } from "../locales/en.js";
 import { renderAdminCourt } from "../rendering/renderer.js";
 import { generateAdministrativeCourtDailyCauseListPdf } from "./pdf-generator.js";
+
+const LIST_TYPE_NAMES = [
+  "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+  "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+  "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+  "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
+] as const;
 
 const mockRenderedData = {
   header: {
@@ -72,7 +74,7 @@ describe("generateAdministrativeCourtDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeName: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
+      listTypeName: "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
     });
 
     expect(result.success).toBe(true);
@@ -94,12 +96,12 @@ describe("generateAdministrativeCourtDailyCauseListPdf", () => {
       locale: "en",
       locationId: "999",
       jsonData: mockHearingList,
-      listTypeName: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
+      listTypeName: "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
     });
 
     expect(renderAdminCourt).toHaveBeenCalledWith(mockHearingList, {
       locale: "en",
-      listTypeName: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+      listTypeName: "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
       listTitle: "Bristol and Cardiff Administrative Court Daily Cause List",
       contentDate: contentDate,
       lastReceivedDate: expect.any(String)
@@ -179,5 +181,93 @@ describe("generateAdministrativeCourtDailyCauseListPdf", () => {
     });
 
     expect(renderAdminCourt).toHaveBeenCalledWith(mockHearingList, expect.objectContaining({ listTitle: "Administrative Court Daily Cause List" }));
+  });
+
+  describe("localised title and data source", () => {
+    beforeEach(() => {
+      vi.mocked(renderAdminCourt).mockImplementation((_hearings, options) => ({
+        ...mockRenderedData,
+        header: { ...mockRenderedData.header, listTitle: options.listTitle }
+      }));
+      vi.mocked(generatePdfFromHtml).mockResolvedValue({
+        success: true,
+        pdfBuffer: Buffer.from("PDF"),
+        sizeBytes: 100
+      });
+    });
+
+    function renderedHtml(): string {
+      return vi.mocked(generatePdfFromHtml).mock.calls[0][0];
+    }
+
+    it.each(LIST_TYPE_NAMES)("should render the Welsh title and Welsh data source for %s in the cy locale", async (listTypeName) => {
+      // Act
+      await generateAdministrativeCourtDailyCauseListPdf({
+        artefactId: "welsh-pdf",
+        contentDate: new Date("2025-01-01"),
+        locale: "cy",
+        locationId: "240",
+        jsonData: mockHearingList,
+        listTypeName,
+        provenance: "MANUAL_UPLOAD"
+      });
+
+      // Assert
+      const html = renderedHtml();
+      expect(renderAdminCourt).toHaveBeenCalledWith(mockHearingList, expect.objectContaining({ listTitle: cy[listTypeName].pageTitle }));
+      expect(html).toContain(`<h1>${cy[listTypeName].pageTitle}</h1>`);
+      expect(html).toContain(`${cy.common.dataSource}: Lanlwytho â Llaw`);
+      expect(html).not.toContain(en[listTypeName].pageTitle);
+      expect(html).not.toContain("Manual Upload");
+    });
+
+    it.each(LIST_TYPE_NAMES)("should render the English title and English data source for %s in the en locale", async (listTypeName) => {
+      // Act
+      await generateAdministrativeCourtDailyCauseListPdf({
+        artefactId: "english-pdf",
+        contentDate: new Date("2025-01-01"),
+        locale: "en",
+        locationId: "240",
+        jsonData: mockHearingList,
+        listTypeName,
+        provenance: "MANUAL_UPLOAD"
+      });
+
+      // Assert
+      const html = renderedHtml();
+      expect(html).toContain(`<h1>${en[listTypeName].pageTitle}</h1>`);
+      expect(html).toContain(`${en.common.dataSource}: Manual Upload`);
+    });
+
+    it("should fall back to the raw provenance when it has no label", async () => {
+      // Act
+      await generateAdministrativeCourtDailyCauseListPdf({
+        artefactId: "unknown-provenance",
+        contentDate: new Date("2025-01-01"),
+        locale: "cy",
+        locationId: "240",
+        jsonData: mockHearingList,
+        listTypeName: LIST_TYPE_NAMES[0],
+        provenance: "SOME_NEW_SOURCE"
+      });
+
+      // Assert
+      expect(renderedHtml()).toContain(`${cy.common.dataSource}: SOME_NEW_SOURCE`);
+    });
+
+    it("should omit the data source when there is no provenance", async () => {
+      // Act
+      await generateAdministrativeCourtDailyCauseListPdf({
+        artefactId: "no-provenance",
+        contentDate: new Date("2025-01-01"),
+        locale: "en",
+        locationId: "240",
+        jsonData: mockHearingList,
+        listTypeName: LIST_TYPE_NAMES[0]
+      });
+
+      // Assert
+      expect(renderedHtml()).not.toContain(`${en.common.dataSource}:`);
+    });
   });
 });

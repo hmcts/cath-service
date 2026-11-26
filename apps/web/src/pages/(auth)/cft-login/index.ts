@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { getCftIdamConfig, isCftIdamConfigured } from "@hmcts/auth";
 import type { Request, Response } from "express";
 
@@ -13,11 +14,15 @@ export const GET = (req: Request, res: Response) => {
   // Store language preference in session to preserve it after CFT IDAM redirect
   req.session.lng = locale;
 
+  const state = randomUUID();
+  req.session.cftOauthState = state;
+
   const params = new URLSearchParams({
     client_id: config.clientId,
     response_type: "code",
     redirect_uri: config.redirectUri,
     scope: config.scope,
+    state,
     ui_locales: locale
   });
 

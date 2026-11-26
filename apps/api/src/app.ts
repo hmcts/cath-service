@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { getPropertiesVolumeSecrets, healthcheck } from "@hmcts-cft/cloud-native-platform";
+import { getPropertiesVolumeSecrets, healthcheck, monitoringMiddleware } from "@hmcts-cft/cloud-native-platform";
 import { createSimpleRouter } from "@hmcts-cft/simple-router";
 import compression from "compression";
 import cors from "cors";
@@ -9,14 +9,19 @@ import express from "express";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const chartPath = path.join(__dirname, "../helm/values.yaml");
+const isLocalDev = process.env.LOCAL_DEV === "true";
+const helmValues = isLocalDev ? "values.dev.yaml" : "values.yaml";
+const chartPath = path.join(__dirname, `../helm/${helmValues}`);
 
 export async function createApp(): Promise<Express> {
-  await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL"] });
+  await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL", ...localEnvOverrides()] });
+
+  const { default: config } = await import("config");
 
   const app = express();
 
   app.use(healthcheck());
+  app.use(monitoringMiddleware(config.get("applicationInsights")));
 
   app.use(compression());
   app.use(
@@ -26,9 +31,8 @@ export async function createApp(): Promise<Express> {
     })
   );
 
-  app.use(express.json({ limit: "100mb" }));
-  app.use(express.urlencoded({ extended: true, limit: "100mb" }));
-
+  // No global body parser: routes that accept bodies parse them after authentication,
+  // so unauthenticated callers cannot make the pod buffer large payloads.
   const routeMounts = [{ path: `${__dirname}/routes` }];
 
   // Register public-pages API routes (flat-file download)
@@ -40,6 +44,7 @@ export async function createApp(): Promise<Express> {
   if (process.env.NODE_ENV !== "production" || process.env.ENABLE_TEST_SUPPORT === "true") {
     const { apiRoutes: testSupportRoutes } = await import("@hmcts/test-support/config");
     routeMounts.push(testSupportRoutes);
+    app.use("/test-support", express.json({ limit: "100mb" }), express.urlencoded({ extended: true, limit: "100mb" }));
   }
 
   app.use(await createSimpleRouter(...routeMounts));
@@ -54,4 +59,12 @@ export async function createApp(): Promise<Express> {
   });
 
   return app;
+}
+
+// Locally, a non-empty value from .env or the shell takes precedence over Key Vault.
+function localEnvOverrides(): string[] {
+  if (!isLocalDev) return [];
+  return Object.entries(process.env)
+    .filter(([, value]) => value !== undefined && value.trim() !== "")
+    .map(([key]) => key);
 }
