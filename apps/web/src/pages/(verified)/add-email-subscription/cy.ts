@@ -4,7 +4,7 @@ export const cy = {
   insetText: "Gallwch ond chwilio am wybodaeth sydd eisoes wedi'i chyhoeddi.",
   courtOrTribunalOption: "Yn ôl enw'r llys neu dribiwnlys",
   caseNameOption: "Yn ôl enw'r achos",
-  caseReferenceOption: "Yn ôl cyfeirnod yr achos, ID yr achos neu gyfeirnod unigryw (URN)",
+  caseReferenceOption: "Yn ôl cyfeirnod yr achos",
   continueButton: "Parhau",
   back: "Yn ôl",
   errorSummaryTitle: "Mae problem wedi codi",

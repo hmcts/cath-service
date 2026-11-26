@@ -26,6 +26,13 @@ describe("delete-user-confirm/[userId] template", () => {
   });
 
   describe("English content", () => {
+    it("should render the document title with the user email", () => {
+      const { $ } = render(env, TEMPLATE, DATA);
+
+      expect($("title").text()).toContain(en.pageTitle(USER.email));
+      expect($("title").text()).not.toContain("=>");
+    });
+
     it("should render the page heading with the user email", () => {
       const data = { ...en, user: USER, lng: "" };
 

@@ -27,13 +27,13 @@ describe("add-email-subscription template", () => {
       expect($("h1").text().trim()).toBe(en.heading);
     });
 
-    it("should render the former inset text as the radio hint", () => {
+    it("should render the radio hint styled as inset text", () => {
       const data = { ...en };
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($(".govuk-inset-text")).toHaveLength(0);
       const hint = $("fieldset.govuk-fieldset .govuk-hint");
+      expect(hint.hasClass("govuk-inset-text")).toBe(true);
       expect(hint.text().trim()).toBe(en.insetText);
       expect($("fieldset.govuk-fieldset").attr("aria-describedby")).toContain(hint.attr("id"));
     });
