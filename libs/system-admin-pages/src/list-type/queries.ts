@@ -15,6 +15,7 @@ export async function findAllListTypes() {
       allowedProvenance: true,
       isNonStrategic: true,
       locationType: true,
+      isHidden: true,
       deletedAt: true,
       subJurisdictions: {
         select: {
@@ -47,6 +48,7 @@ export async function findListTypeById(id: number) {
       defaultSensitivity: true,
       allowedProvenance: true,
       isNonStrategic: true,
+      isHidden: true,
       deletedAt: true,
       subJurisdictions: {
         select: {
@@ -116,8 +118,9 @@ export async function createListType(data: CreateListTypeData) {
         caseNumberJsonFieldName: data.caseNumberJsonFieldName ?? null,
         caseNameJsonFieldName: data.caseNameJsonFieldName ?? null,
         defaultSensitivity: data.defaultSensitivity,
-        allowedProvenance: data.allowedProvenance.join(","),
+        allowedProvenance: data.allowedProvenance,
         isNonStrategic: data.isNonStrategic,
+        isHidden: false,
         deletedAt: null,
         subJurisdictions: {
           deleteMany: {},
@@ -139,7 +142,7 @@ export async function createListType(data: CreateListTypeData) {
       caseNumberJsonFieldName: data.caseNumberJsonFieldName ?? null,
       caseNameJsonFieldName: data.caseNameJsonFieldName ?? null,
       defaultSensitivity: data.defaultSensitivity,
-      allowedProvenance: data.allowedProvenance.join(","),
+      allowedProvenance: data.allowedProvenance,
       isNonStrategic: data.isNonStrategic,
       subJurisdictions: {
         create: data.subJurisdictionIds.map((subJurisdictionId) => ({
@@ -167,7 +170,7 @@ export async function updateListType(id: number, data: UpdateListTypeData) {
         caseNumberJsonFieldName: data.caseNumberJsonFieldName ?? null,
         caseNameJsonFieldName: data.caseNameJsonFieldName ?? null,
         defaultSensitivity: data.defaultSensitivity,
-        allowedProvenance: data.allowedProvenance.join(","),
+        allowedProvenance: data.allowedProvenance,
         isNonStrategic: data.isNonStrategic,
         subJurisdictions: {
           create: data.subJurisdictionIds.map((subJurisdictionId) => ({
@@ -226,7 +229,7 @@ export async function findListTypesBySubJurisdictionIds(subJurisdictionIds: numb
 
 export async function findNonStrategicListTypes() {
   return prisma.listType.findMany({
-    where: { isNonStrategic: true, deletedAt: null },
+    where: { isNonStrategic: true, deletedAt: null, isHidden: false },
     orderBy: { shortenedFriendlyName: "asc" },
     select: {
       id: true,
@@ -240,7 +243,7 @@ export async function findNonStrategicListTypes() {
 
 export async function findStrategicListTypes() {
   return prisma.listType.findMany({
-    where: { isNonStrategic: false, deletedAt: null },
+    where: { isNonStrategic: false, deletedAt: null, isHidden: false },
     orderBy: { shortenedFriendlyName: "asc" },
     select: {
       id: true,
@@ -257,6 +260,14 @@ export async function softDeleteListType(id: number) {
     where: { id },
     data: { deletedAt: new Date() }
   });
+}
+
+export async function updateListTypeVisibility(id: number, isHidden: boolean): Promise<number> {
+  const { count } = await prisma.listType.updateMany({
+    where: { id, deletedAt: null, isHidden: !isHidden },
+    data: { isHidden }
+  });
+  return count;
 }
 
 export async function hasArtefactsForListType(listTypeId: number): Promise<boolean> {

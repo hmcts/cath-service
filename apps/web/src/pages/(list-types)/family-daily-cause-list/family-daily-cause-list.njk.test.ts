@@ -154,6 +154,19 @@ function firstDataRowCells($: CheerioAPI) {
     .get();
 }
 
+function courtHouseBlock($: CheerioAPI) {
+  return $("#court-lists-container > div.site-header");
+}
+
+// The address paragraph joins its parts with <br>, so split on the tag rather than
+// reading the collapsed text, which would run the lines together.
+function courtHouseAddressParts($: CheerioAPI) {
+  return (courtHouseBlock($).find("p.govuk-body").html() ?? "")
+    .split("<br>")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+}
+
 let env: nunjucks.Environment;
 
 beforeEach(() => {
@@ -206,25 +219,39 @@ describe("family-daily-cause-list template", () => {
       expect(bodyText).toContain(`${en.lastUpdated} 10 July 2026 at 9:00am`);
     });
 
-    it("should render the header address lines", () => {
+    it("should render exactly the header address lines it is given", () => {
       const { $ } = renderList([], { header: { ...baseData().header, addressLines: ["Line 1", "Line 2", "TC1 1AA"] } });
 
-      const bodyText = $(".govuk-body").text();
-      for (const line of ["Line 1", "Line 2", "TC1 1AA"]) {
-        expect(bodyText).toContain(line);
-      }
+      const addressParagraph = $("p.govuk-body")
+        .filter((_, el) => $(el).text().includes("Line 1"))
+        .first();
+      expect(
+        addressParagraph
+          .html()
+          ?.split("<br>")
+          .map((part) => part.trim())
+      ).toEqual(["Line 1", "Line 2", "TC1 1AA"]);
     });
 
-    it("should render the important-information open-justice section", () => {
-      const { $ } = renderList([]);
+    it("should render the important-information open-justice section naming the open justice venue", () => {
+      const { $ } = renderList([], {
+        openJustice: { venueName: "Barnet Civil and Family Courts Centre", email: "family@example.com", phone: "0300 123 5577" }
+      });
 
       const details = $("details.govuk-details");
       expect(details).toHaveLength(1);
       expect(details.find(".govuk-details__summary-text").text()).toContain(en.importantInformation);
       const openJusticeLink = details.find(`a[href="${en.openJusticeLink}"]`);
       expect(openJusticeLink).toHaveLength(1);
-      expect(details.text()).toContain("Test Family Venue");
-      expect(details.text()).toContain("family@example.com");
+      expect(details.text()).toContain(en.openJusticeContact("Barnet Civil and Family Courts Centre", "family@example.com", "0300 123 5577"));
+    });
+
+    it("should name the open justice venue in the Welsh details block", () => {
+      const { $ } = renderList([], { openJustice: { venueName: "Llys Prawf", email: "family@example.com", phone: "0300 123 5577" } }, cy);
+
+      const details = $("details.govuk-details");
+      expect(details.find(".govuk-details__summary-text").text()).toContain(cy.importantInformation);
+      expect(details.text()).toContain(cy.openJusticeContact("Llys Prawf", "family@example.com", "0300 123 5577"));
     });
 
     it("should render the search-cases input", () => {
@@ -236,7 +263,7 @@ describe("family-daily-cause-list template", () => {
   });
 
   describe("Court house address", () => {
-    it("should render the court house name and full address", () => {
+    it("should render the full court house address as one paragraph with a line break between each part", () => {
       const { $ } = renderList([
         buildCourtHouse({
           courtHouseName: "Main Family Court House",
@@ -245,16 +272,14 @@ describe("family-daily-cause-list template", () => {
         })
       ]);
 
-      const block = $("#court-lists-container > div.govuk-\\!-margin-bottom-6");
+      const block = courtHouseBlock($);
       expect(block.find("h2.govuk-heading-l").text()).toContain("Main Family Court House");
-      const paragraphs = block
-        .find("p.govuk-body")
-        .map((_, el) => $(el).text().trim())
-        .get();
-      expect(paragraphs).toEqual(["1 Family Court Street", "Building B", "London", "Greater London", "SW1A 1AA"]);
+      expect(block.find("p.govuk-body")).toHaveLength(1);
+      expect(courtHouseAddressParts($)).toEqual(["1 Family Court Street", "Building B", "London", "Greater London", "SW1A 1AA"]);
+      expect(block.find("p.govuk-body br")).toHaveLength(4);
     });
 
-    it("should omit empty address fields such as county", () => {
+    it("should render the address lines, town and postcode when no county is supplied", () => {
       const { $ } = renderList([
         buildCourtHouse({
           courtHouseName: "Branch Family Court",
@@ -263,16 +288,28 @@ describe("family-daily-cause-list template", () => {
         })
       ]);
 
-      const block = $("#court-lists-container > div.govuk-\\!-margin-bottom-6");
-      const paragraphs = block
-        .find("p.govuk-body")
-        .map((_, el) => $(el).text().trim())
-        .get();
-      expect(paragraphs).toEqual(["2 Branch Family Road", "Manchester", "M1 1AA"]);
-      expect(paragraphs).not.toContain("Greater London");
+      expect(courtHouseBlock($).find("p.govuk-body")).toHaveLength(1);
+      expect(courtHouseAddressParts($)).toEqual(["2 Branch Family Road", "Manchester", "M1 1AA"]);
+      expect(courtHouseBlock($).find("p.govuk-body br")).toHaveLength(2);
     });
 
-    it("should skip empty address lines", () => {
+    it("should end the address at the county with no trailing line break when no postcode is supplied", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtHouseName: "Town Only Family Court",
+          courtHouseAddress: { town: "Leeds", county: "West Yorkshire" },
+          courtRoom: []
+        })
+      ]);
+
+      const block = courtHouseBlock($);
+      expect(block.find("h2.govuk-heading-l").text()).toContain("Town Only Family Court");
+      expect(courtHouseAddressParts($)).toEqual(["Leeds", "West Yorkshire"]);
+      expect(block.find("p.govuk-body br")).toHaveLength(1);
+      expect(block.find("p.govuk-body").html()?.trim().endsWith("<br>")).toBe(false);
+    });
+
+    it("should skip empty address lines without leaving extra line breaks", () => {
       const { $ } = renderList([
         buildCourtHouse({
           courtHouseName: "Simple Family Court",
@@ -281,18 +318,30 @@ describe("family-daily-cause-list template", () => {
         })
       ]);
 
-      const block = $("#court-lists-container > div.govuk-\\!-margin-bottom-6");
-      const paragraphs = block
-        .find("p.govuk-body")
-        .map((_, el) => $(el).text().trim())
-        .get();
-      expect(paragraphs).toEqual(["Valid Family Line", "AB1 2CD"]);
+      expect(courtHouseBlock($).find("p.govuk-body")).toHaveLength(1);
+      expect(courtHouseAddressParts($)).toEqual(["Valid Family Line", "AB1 2CD"]);
+      expect(courtHouseBlock($).find("p.govuk-body br")).toHaveLength(1);
+    });
+
+    it("should render the court house name but no address paragraph when every address part is empty", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtHouseName: "Blank Address Family Court",
+          courtHouseAddress: { line: ["", ""], town: "", county: "", postCode: "" },
+          courtRoom: []
+        })
+      ]);
+
+      const block = courtHouseBlock($);
+      expect(block).toHaveLength(1);
+      expect(block.find("h2.govuk-heading-l").text()).toContain("Blank Address Family Court");
+      expect(block.find("p.govuk-body")).toHaveLength(0);
     });
 
     it("should not render the name/address block when the address is missing", () => {
       const { $ } = renderList([buildCourtHouse({ courtHouseName: "Address-less Family Court", omitAddress: true, courtRoom: [] })]);
 
-      expect($("#court-lists-container > div.govuk-\\!-margin-bottom-6")).toHaveLength(0);
+      expect($("#court-lists-container > div.site-header")).toHaveLength(0);
       const headings = $(".govuk-heading-l")
         .map((_, el) => $(el).text())
         .get();
@@ -313,7 +362,7 @@ describe("family-daily-cause-list template", () => {
         })
       ]);
 
-      const courtHouseNames = $("#court-lists-container > div.govuk-\\!-margin-bottom-6 h2.govuk-heading-l")
+      const courtHouseNames = $("#court-lists-container > div.site-header h2.govuk-heading-l")
         .map((_, el) => $(el).text().trim())
         .get();
       expect(courtHouseNames).toEqual(["First Family Court", "Second Family Court"]);
@@ -645,7 +694,7 @@ describe("family-daily-cause-list template", () => {
         buildCourtHouse({ courtHouseName: "Empty Family Court", courtHouseAddress: { line: ["Empty Street"], postCode: "E1 1AA" }, courtRoom: [] })
       ]);
 
-      expect($("#court-lists-container > div.govuk-\\!-margin-bottom-6 h2.govuk-heading-l").text()).toContain("Empty Family Court");
+      expect($("#court-lists-container > div.site-header h2.govuk-heading-l").text()).toContain("Empty Family Court");
       expect($("table")).toHaveLength(0);
     });
 

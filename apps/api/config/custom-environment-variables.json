@@ -1,0 +1,12 @@
+{
+  "redis": {
+    "url": "REDIS_URL",
+    "managedIdentity": {
+      "__name": "REDIS_MI",
+      "__format": "boolean"
+    }
+  },
+  "applicationInsights": {
+    "connectionString": "APPLICATION_INSIGHTS_CONNECTION_STRING"
+  }
+}

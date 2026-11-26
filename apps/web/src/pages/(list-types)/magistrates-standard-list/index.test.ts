@@ -96,8 +96,7 @@ describe("magistrates-standard-list controller", () => {
         lastReceivedDate: new Date("2025-01-13"),
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       } as any;
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
       vi.mocked(canAccessPublicationData).mockReturnValue(false);
@@ -122,8 +121,7 @@ describe("magistrates-standard-list controller", () => {
         lastReceivedDate: new Date("2025-01-13"),
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       } as any;
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
       vi.mocked(getPublicationJson).mockResolvedValue(null);
@@ -149,8 +147,7 @@ describe("magistrates-standard-list controller", () => {
         lastReceivedDate: new Date("2025-01-13"),
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       } as any;
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
       vi.mocked(getPublicationJson).mockResolvedValue({ invalid: "data" });
@@ -183,8 +180,7 @@ describe("magistrates-standard-list controller", () => {
         lastReceivedDate: new Date("2025-01-13"),
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       } as any;
       const mockJsonData = {
         document: { publicationDate: "2025-01-13T09:30:00.000Z" },
@@ -243,8 +239,7 @@ describe("magistrates-standard-list controller", () => {
         lastReceivedDate: new Date("2025-01-13"),
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       } as any;
       const mockJsonData = {
         document: { publicationDate: "2025-01-13T09:30:00.000Z" },
@@ -304,8 +299,7 @@ describe("magistrates-standard-list controller", () => {
         lastReceivedDate: new Date("2025-01-13"),
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       } as any;
       const mockJsonData = {
         document: { publicationDate: "2025-01-13T09:30:00.000Z" },
@@ -349,7 +343,6 @@ describe("magistrates-standard-list controller", () => {
         isFlatFile: false,
         provenance: "UNKNOWN_PROVENANCE",
         supersededCount: 0,
-        noMatch: false,
         excelPath: null
       } as any;
       const mockJsonData = {

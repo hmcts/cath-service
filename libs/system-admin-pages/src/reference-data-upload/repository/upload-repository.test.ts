@@ -84,8 +84,7 @@ describe("upsertLocations", () => {
       }),
       update: expect.objectContaining({
         name: "Test Court",
-        welshName: "Llys Prawf",
-        deletedAt: null
+        welshName: "Llys Prawf"
       })
     });
 
@@ -110,7 +109,7 @@ describe("upsertLocations", () => {
     });
   });
 
-  it("should clear deletedAt when upserting a previously soft-deleted location", async () => {
+  it("should not set a deletedAt field when upserting a location", async () => {
     const mockTx = {
       subJurisdiction: { findMany: vi.fn().mockResolvedValue([]) },
       region: { findMany: vi.fn().mockResolvedValue([]) },
@@ -125,11 +124,8 @@ describe("upsertLocations", () => {
     await upsertLocations([{ ...mockData[0], locationReferences: [] }]);
 
     // Assert
-    expect(mockTx.location.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        update: expect.objectContaining({ deletedAt: null })
-      })
-    );
+    const upsertArg = mockTx.location.upsert.mock.calls.at(-1)?.[0];
+    expect(upsertArg.update).not.toHaveProperty("deletedAt");
   });
 
   it("should not call locationReference.createMany when locationReferences is empty", async () => {

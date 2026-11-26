@@ -7,6 +7,8 @@ vi.mock("@hmcts/azure-blob", () => ({
 }));
 
 vi.mock("@hmcts/publication", () => ({
+  // Faithful stub of the real predicate: a null date is unbounded at that end.
+  isWithinDisplayWindow: (from: Date | null, to: Date | null, now: Date = new Date()) => !(from && now < from) && !(to && now > to),
   getArtefactById: vi.fn(),
   getFileBuffer: vi.fn(),
   getFileExtension: vi.fn(),
@@ -61,8 +63,7 @@ describe("flat-file-service", () => {
       displayFrom: new Date("2020-01-01"),
       displayTo: new Date("2099-12-31"),
       isFlatFile: true,
-      provenance: "MANUAL_UPLOAD",
-      noMatch: false
+      provenance: "MANUAL_UPLOAD"
     };
 
     it("should return success for valid flat file", async () => {
@@ -213,8 +214,7 @@ describe("flat-file-service", () => {
       displayFrom: new Date("2020-01-01"),
       displayTo: new Date("2099-12-31"),
       isFlatFile: true,
-      provenance: "MANUAL_UPLOAD",
-      noMatch: false
+      provenance: "MANUAL_UPLOAD"
     };
 
     it("should return file buffer and metadata for valid file", async () => {
@@ -335,8 +335,7 @@ describe("flat-file-service", () => {
       displayFrom: new Date("2020-01-01"),
       displayTo: new Date("2099-12-31"),
       isFlatFile: false,
-      provenance: "MANUAL_UPLOAD",
-      noMatch: false
+      provenance: "MANUAL_UPLOAD"
     };
 
     it("should return file buffer and xlsx metadata when excel file exists", async () => {

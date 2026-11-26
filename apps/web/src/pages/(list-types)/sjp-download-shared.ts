@@ -1,6 +1,7 @@
-import { downloadBlob, getBlobProperties } from "@hmcts/azure-blob";
+import { CONTAINER, downloadBlob, getBlobProperties } from "@hmcts/azure-blob";
 import { getContentType } from "@hmcts/publication";
 import type { Request, RequestHandler, Response } from "express";
+import { AccessReason, checkArtefactDataAccess, renderAccessDenied, renderNotFound, sendAccessDenied, sendFileNotFound } from "./publication-access.js";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ALLOWED_TYPES = new Set(["pdf", "xlsx"]);
@@ -13,9 +14,16 @@ export async function handleBlobDownload(req: Request, res: Response): Promise<R
     return res.status(400).json({ error: "Invalid request" });
   }
 
+  const access = await checkArtefactDataAccess(req.user, artefactId);
+  if (access.reason === AccessReason.ACCESS_DENIED) {
+    return sendAccessDenied(res);
+  } else if (!access.allowed) {
+    return sendFileNotFound(res);
+  }
+
   const extension = `.${type}`;
   const fileName = `${artefactId}${extension}`;
-  const fileBuffer = await downloadBlob(fileName);
+  const fileBuffer = await downloadBlob(fileName, CONTAINER.PUBLICATIONS);
 
   if (!fileBuffer) {
     return res.status(404).json({ error: "File not found" });
@@ -31,7 +39,7 @@ export async function handleBlobDownload(req: Request, res: Response): Promise<R
 export async function getAvailableFiles(artefactId: string, prefix: string) {
   const files: { type: string; url: string; sizeLabel: string }[] = [];
 
-  const [pdfProps, excelProps] = await Promise.all([getBlobProperties(`${artefactId}.pdf`), getBlobProperties(`${artefactId}.xlsx`)]);
+  const { pdf: pdfProps, xlsx: excelProps } = await getGeneratedFileProperties(artefactId);
 
   if (pdfProps) {
     files.push({
@@ -52,6 +60,16 @@ export async function getAvailableFiles(artefactId: string, prefix: string) {
   return files;
 }
 
+export async function hasDownloadableFiles(artefactId: string): Promise<boolean> {
+  try {
+    const { pdf, xlsx } = await getGeneratedFileProperties(artefactId);
+    return !!(pdf || xlsx);
+  } catch (error) {
+    console.error(`Failed to check downloadable files for artefact ${artefactId}`, error);
+    return false;
+  }
+}
+
 export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes}B`;
   const kb = bytes / 1024;
@@ -67,6 +85,13 @@ export function createListDownloadFilesHandler(en: object, cy: object, downloadF
 
     if (!artefactId || !UUID_REGEX.test(artefactId)) {
       return res.status(400).render("errors/400", { en, cy, locale });
+    }
+
+    const access = await checkArtefactDataAccess(req.user, artefactId);
+    if (access.reason === AccessReason.ACCESS_DENIED) {
+      return renderAccessDenied(res, locale);
+    } else if (!access.allowed) {
+      return renderNotFound(res, locale, { en, cy });
     }
 
     const content = locale === "cy" ? cy : en;
@@ -87,4 +112,12 @@ export function createListDownloadFilesHandler(en: object, cy: object, downloadF
       files
     });
   };
+}
+
+async function getGeneratedFileProperties(artefactId: string) {
+  const [pdf, xlsx] = await Promise.all([
+    getBlobProperties(`${artefactId}.pdf`, CONTAINER.PUBLICATIONS),
+    getBlobProperties(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS)
+  ]);
+  return { pdf, xlsx };
 }

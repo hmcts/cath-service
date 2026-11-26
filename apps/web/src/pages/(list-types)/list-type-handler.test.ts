@@ -39,7 +39,6 @@ const mockArtefact = {
   sensitivity: "CLASSIFIED",
   provenance: "MANUAL_UPLOAD",
   isFlatFile: false,
-  noMatch: false,
   supersededCount: 0
 };
 
@@ -66,6 +65,21 @@ describe("createSimpleListTypeHandler — access control", () => {
     vi.mocked(resolveListType).mockResolvedValue({ id: 999, provenance: "CFT_IDAM", isNonStrategic: true });
     vi.mocked(canAccessPublicationData).mockReturnValue(true);
     vi.mocked(getPublicationJson).mockResolvedValue([]);
+  });
+
+  it("should return 404 when the artefact's list type is hidden", async () => {
+    // Arrange — getArtefactById resolves to null for artefacts whose list type is hidden
+    vi.mocked(getArtefactById).mockResolvedValue(null);
+    const handler = createSimpleListTypeHandler(handlerOptions);
+
+    // Act
+    await handler(req as Request, res as Response);
+
+    // Assert
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
+    expect(getPublicationJson).not.toHaveBeenCalled();
+    expect(mockRender).not.toHaveBeenCalled();
   });
 
   it("should return 403 when unauthenticated user requests a CLASSIFIED artefact", async () => {

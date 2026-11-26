@@ -21,6 +21,11 @@ export const en = {
   searchCases: "Search Cases",
   legalAdvisor: "Legal Advisor",
   dataSource: "Data Source",
+  cautionNote:
+    "Note this document contains Special Category Data as defined by Data Protection Act 2018, formally known as Sensitive Personal Data, and should be handled appropriately.",
+  cautionReporting:
+    "This document contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.",
+  thanks: "Thank you for reading this document thoroughly.",
   time: "Time",
   caseRef: "Case ref",
   caseName: "Case name",
@@ -38,5 +43,20 @@ export const en = {
   errorMessage:
     "This publication cannot be viewed at the moment. Please check again later. If the problem persists, contact the court directly for assistance.",
   error403Title: "Access Denied",
-  error403Message: "You do not have permission to view this publication."
+  error403Message: "You do not have permission to view this publication.",
+  excelColumns: {
+    courtHouse: "Court House",
+    courtRoom: "Court Room",
+    judge: "Judge",
+    time: "Time",
+    caseRef: "Case ref",
+    caseName: "Case name",
+    caseType: "Case type",
+    hearingType: "Hearing type",
+    location: "Location",
+    duration: "Duration",
+    applicant: "Applicant",
+    respondent: "Respondent",
+    reportingRestrictions: "Reporting Restriction"
+  }
 };

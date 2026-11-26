@@ -143,14 +143,14 @@ describe("delete-court-confirm page", () => {
       );
     });
 
-    it("should redirect to dashboard when user selects no", async () => {
+    it("should redirect to delete-court when user selects no", async () => {
       req.session = { deleteCourt: { locationId: 123, name: "Test", welshName: "Prawf" } } as any;
       req.body = { confirmDelete: "no" };
       (validateDeleteCourtRadioSelection as any).mockReturnValue(null);
 
       await postHandler(req as Request, res as Response);
 
-      expect(res.redirect).toHaveBeenCalledWith("/system-admin-dashboard");
+      expect(res.redirect).toHaveBeenCalledWith("/delete-court");
       expect((req.session as any).deleteCourt).toBeUndefined();
     });
 
@@ -175,7 +175,8 @@ describe("delete-court-confirm page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "delete-court-confirm/index",
         expect.objectContaining({
-          errors: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })])
+          errors: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
+          deletionLink: expect.objectContaining({ href: "/delete-court-subscriptions", text: expect.any(String) })
         })
       );
     });
@@ -201,7 +202,8 @@ describe("delete-court-confirm page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "delete-court-confirm/index",
         expect.objectContaining({
-          errors: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })])
+          errors: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
+          deletionLink: expect.objectContaining({ href: "/delete-court-publications", text: expect.any(String) })
         })
       );
     });
@@ -225,6 +227,7 @@ describe("delete-court-confirm page", () => {
     it("should perform deletion and redirect to success page", async () => {
       req.session = { deleteCourt: { locationId: 123, name: "Test", welshName: "Prawf" } } as any;
       req.body = { confirmDelete: "yes" };
+      req.user = { email: "requester@example.com" } as any;
       (validateDeleteCourtRadioSelection as any).mockReturnValue(null);
       (validateLocationForDeletion as any).mockResolvedValue({
         isValid: true
@@ -233,7 +236,7 @@ describe("delete-court-confirm page", () => {
 
       await postHandler(req as Request, res as Response);
 
-      expect(performLocationDeletion).toHaveBeenCalledWith(123);
+      expect(performLocationDeletion).toHaveBeenCalledWith(123, "Test", "requester@example.com");
       expect(res.redirect).toHaveBeenCalledWith("/delete-court-success");
     });
 

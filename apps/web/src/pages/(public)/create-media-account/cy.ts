@@ -9,11 +9,18 @@ export const cy = {
   emailLabel: "Cyfeiriad e-bost",
   emailHint: "Dim ond i drafod eich cyfrif a'r gwasanaeth hwn y byddwn yn defnyddio hwn i gysylltu â chi",
   employerLabel: "Cyflogwr",
-  uploadLabel: "Uwchlwytho llun o'ch prawf hunaniaeth",
-  uploadHint:
-    "Dim ond i gadarnhau pwy ydych ar gyfer y gwasanaeth hwn y byddwn yn defnyddio hwn, a byddwn yn ei ddileu wedi i'ch cais gael ei gymeradwyo neu ei wrthod. Trwy uwchlwytho eich dogfen, rydych yn cadarnhau eich bod yn cydsynio i'r prosesu hwn o'ch data. Rhaid iddi fod yn ffeil jpg, pdf neu png ac yn llai na 2mb o ran maint",
-  termsText:
-    "Caniateir ichi gael cyfrif ar gyfer gwrandawiadau llys a thribiwnlys ar yr amod bod gennych resymau cyfreithiol dros gael mynediad at wybodaeth nad yw ar gael i'r cyhoedd e.e. rydych yn aelod o sefydliad cyfryngau ac angen gwybodaeth ychwanegol i riportio ar wrandawiadau. Os bydd eich amgylchiadau'n newid ac nid oes gennych mwyach resymau cyfreithiol dros gael cyfrif ar gyfer gwrandawiadau llys a thribiwnlys e.e. rydych yn gadael eich cyflogwr a enwyd uchod, eich cyfrifoldeb chi yw hysbysu GLlTEM am hyn fel y gellir dadactifadu eich cyfrif.",
+  uploadLabel: "Llwytho llun clir o Gerdyn y Wasg neu gerdyn adnabod gwaith",
+  uploadHintIdentity:
+    "Dim ond i gadarnhau pwy ydych ar gyfer y gwasanaeth hwn y byddwn yn defnyddio hwn, a byddwn yn ei ddileu wedi i'ch cais gael ei gymeradwyo neu ei wrthod.",
+  uploadHintConsent: "Trwy lwytho eich dogfen, rydych yn cadarnhau eich bod yn cydsynio i'ch data gael ei brosesu",
+  uploadHintFileType: "Rhaid i'r ffeil fod ar ffurf jpg, pdf neu png a rhaid bod yn llai na 2MB mewn maint.",
+  termsHeading: "Telerau ac Amodau",
+  termsText1:
+    "Caniateir ichi gael cyfrif ar gyfer gwrandawiadau Llys a thribiwnlys ar yr amod bod gennych resymau cyfreithiol dros gael mynediad at wybodaeth nad yw ar gael i'r cyhoedd e.e. rydych yn aelod o sefydliad cyfryngau ac angen gwybodaeth ychwanegol i riportio ar wrandawiadau.",
+  termsText2:
+    "Fel rhan o'n proses ddilysu flynyddol, fe anfonir e-bost atoch yn gofyn i chi gadarnhau bod gennych dal fynediad i'r cyfeiriad e-bost a ddefnyddiwyd i greu eich cyfrif. Os na fyddwch yn dilysu eich cyfeiriad e-bost o fewn yr amser a bennwyd, caiff eich cyfrif ei ddileu, a bydd rhaid i chi wneud cais am gyfrif newydd os bydd angen mynediad arnoch o hyd.",
+  termsText3:
+    "Os bydd eich amgylchiadau'n newid ac nid oes gennych mwyach resymau cyfreithiol dros gael cyfrif ar gyfer gwrandawiadau Llys a thribiwnlys e.e. rydych yn gadael eich cyflogwr a enwyd uchod, eich cyfrifoldeb chi yw hysbysu GLlTEF am hyn fel y gellir dadactifadu eich cyfrif.",
   termsCheckboxLabel: "Ticiwch y blwch hwn, os gwelwch yn dda i gytuno i'r telerau ac amodau uchod",
   continueButton: "Parhau",
   backToTop: "Yn ôl i'r brig",

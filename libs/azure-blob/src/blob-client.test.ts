@@ -5,7 +5,10 @@ const mockDownload = vi.fn();
 const mockDelete = vi.fn();
 const mockCreateIfNotExists = vi.fn();
 const mockGetProperties = vi.fn();
-const mockGetBlockBlobClient = vi.fn(() => ({ uploadData: mockUploadData }));
+const mockGetBlockBlobClient = vi.fn((blobName: string) => ({
+  uploadData: mockUploadData,
+  url: `https://devstoreaccount1.blob.core.windows.net/artefact/${blobName}`
+}));
 const mockGetBlobClient = vi.fn(() => ({ download: mockDownload, delete: mockDelete, getProperties: mockGetProperties }));
 const mockGetContainerClient = vi.fn(() => ({
   createIfNotExists: mockCreateIfNotExists,
@@ -133,6 +136,34 @@ describe("blob-client", () => {
       await expect(uploadBlob("abc.json", Buffer.from("{}"))).rejects.toThrow(
         "AZURE_STORAGE_ACCOUNT_NAME is required when AZURE_STORAGE_CONNECTION_STRING is not set"
       );
+    });
+  });
+
+  describe("getBlobUrl", () => {
+    it("should return the block blob url for the default artefact container", async () => {
+      // Arrange
+      vi.stubEnv("AZURE_STORAGE_CONNECTION_STRING", "conn-string");
+      const { getBlobUrl } = await import("./blob-client.js");
+
+      // Act
+      const result = getBlobUrl("abc123");
+
+      // Assert
+      expect(result).toBe("https://devstoreaccount1.blob.core.windows.net/artefact/abc123");
+      expect(mockGetContainerClient).toHaveBeenCalledWith("artefact");
+      expect(mockGetBlockBlobClient).toHaveBeenCalledWith("abc123");
+    });
+
+    it("should use the supplied container name", async () => {
+      // Arrange
+      vi.stubEnv("AZURE_STORAGE_CONNECTION_STRING", "conn-string");
+      const { CONTAINER, getBlobUrl } = await import("./blob-client.js");
+
+      // Act
+      getBlobUrl("abc123.pdf", CONTAINER.PUBLICATIONS);
+
+      // Assert
+      expect(mockGetContainerClient).toHaveBeenCalledWith("publications");
     });
   });
 

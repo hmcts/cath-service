@@ -96,7 +96,7 @@ vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
       findUnique: vi.fn(({ where: { id } }: any) => {
-        if (id === 6) return Promise.resolve({ name: "CROWN_DAILY_LIST", friendlyName: "Crown Daily List" });
+        if (id === 6) return Promise.resolve({ name: "CROWN_DAILY_PDDA_LIST", friendlyName: "Crown Daily List" });
         return Promise.resolve(null);
       })
     }
@@ -690,6 +690,7 @@ describe("manual-upload-summary page", () => {
           artefactId: "test-artefact-id-123",
           locationId: "1",
           locale: "en",
+          payloadSizeBytes: mockUploadData.file.length,
           logPrefix: "[Manual Upload]"
         })
       );

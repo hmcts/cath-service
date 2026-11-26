@@ -34,6 +34,7 @@ describe("English Locale", () => {
     expect(en.footer.termsAndConditions).toBe("Terms and conditions");
     expect(en.footer.contactUs).toBe("Contact");
     expect(en.footer.language).toBe("Welsh");
+    expect(en.footer.publishingPolicy).toBe("Publishing policy");
   });
 
   it("should have contentLicence in footer", () => {

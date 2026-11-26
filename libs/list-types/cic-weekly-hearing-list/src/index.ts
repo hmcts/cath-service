@@ -2,6 +2,7 @@ import "./conversion/cic-config.js"; // Register converter on module load
 
 export type { ValidationResult } from "@hmcts/publication";
 export * from "./email-summary/summary-builder.js";
+export { reformatCicWeeklyHearingListExcel } from "./excel/excel-reformatter.js";
 export { cy as cicWeeklyHearingListCy } from "./locales/cy.js";
 export { en as cicWeeklyHearingListEn } from "./locales/en.js";
 export * from "./models/types.js";

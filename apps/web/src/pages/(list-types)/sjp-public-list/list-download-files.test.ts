@@ -2,12 +2,23 @@ import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./list-download-files.js";
 
-vi.mock("@hmcts/azure-blob", () => ({
-  getBlobProperties: vi.fn()
+vi.mock("@hmcts/azure-blob", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/azure-blob")>();
+  return {
+    ...actual,
+    getBlobProperties: vi.fn()
+  };
+});
+vi.mock("@hmcts/publication", () => ({
+  getArtefactById: vi.fn(),
+  resolveListType: vi.fn(),
+  canAccessPublicationData: vi.fn()
 }));
-vi.mock("@hmcts/publication", () => ({}));
 
-import { getBlobProperties } from "@hmcts/azure-blob";
+import { CONTAINER, getBlobProperties } from "@hmcts/azure-blob";
+import { canAccessPublicationData, getArtefactById } from "@hmcts/publication";
+
+const ARTEFACT_ID = "12345678-1234-1234-1234-123456789abc";
 
 const middleware = GET[0] as RequestHandler;
 const handler = GET[GET.length - 1] as RequestHandler;
@@ -24,6 +35,7 @@ describe("List Download Files Controller", () => {
     const res = {} as Response;
     res.status = vi.fn().mockReturnValue(res);
     res.render = vi.fn().mockReturnValue(res);
+    res.setHeader = vi.fn().mockReturnValue(res);
     res.locals = { locale: "en" };
     return res;
   };
@@ -31,6 +43,23 @@ describe("List Download Files Controller", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getBlobProperties).mockResolvedValue(null);
+    vi.mocked(getArtefactById).mockResolvedValue({ artefactId: ARTEFACT_ID, listTypeId: 999, sensitivity: "PUBLIC" } as never);
+    vi.mocked(canAccessPublicationData).mockReturnValue(true);
+  });
+
+  it("should render 403 when the user cannot access the artefact", async () => {
+    // Arrange
+    const req = mockRequest({ query: { artefactId: ARTEFACT_ID } });
+    const res = mockResponse();
+    vi.mocked(canAccessPublicationData).mockReturnValue(false);
+
+    // Act
+    await handler(req, res, () => {});
+
+    // Assert
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.render).toHaveBeenCalledWith("errors/403", expect.any(Object));
+    expect(getBlobProperties).not.toHaveBeenCalled();
   });
 
   it("should render 400 when artefactId is missing", async () => {
@@ -117,6 +146,8 @@ describe("List Download Files Controller", () => {
         ]
       })
     );
+    expect(getBlobProperties).toHaveBeenCalledWith("12345678-1234-1234-1234-123456789abc.pdf", CONTAINER.PUBLICATIONS);
+    expect(getBlobProperties).toHaveBeenCalledWith("12345678-1234-1234-1234-123456789abc.xlsx", CONTAINER.PUBLICATIONS);
   });
 
   it("should render files page with MB size label for large files", async () => {

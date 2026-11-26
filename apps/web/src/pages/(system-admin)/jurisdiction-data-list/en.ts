@@ -7,6 +7,8 @@ export const en = {
   clearFilters: "Clear filters",
   typeHeading: "Type",
   applyFiltersButton: "Apply filters",
+  showFilters: "Show filters",
+  hideFilters: "Hide filters",
   typeLabels: {
     Jurisdiction: "Jurisdiction",
     "Sub-Jurisdiction": "Sub-Jurisdiction"

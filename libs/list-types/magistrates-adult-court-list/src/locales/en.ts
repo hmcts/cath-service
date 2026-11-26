@@ -37,11 +37,32 @@ export const en = {
   listingTime: "Listing time",
   searchCases: "Search Cases",
   dataSource: "Data Source",
+  cautionNote:
+    "Note this document contains Special Category Data as defined by Data Protection Act 2018, formally known as Sensitive Personal Data, and should be handled appropriately.",
+  cautionReporting:
+    "This document contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.",
+  thanks: "Thank you for reading this document thoroughly.",
   errorTitle: "Publication not available",
   errorMessage:
     "This publication cannot be viewed at the moment. Please check again later. If the problem persists, contact the court directly for assistance.",
   error403Title: "Access Denied",
-  error403Message: "You do not have permission to view this publication."
+  error403Message: "You do not have permission to view this publication.",
+  excelColumns: {
+    courtHouse: "Court House",
+    sittingAt: "Sitting at",
+    lja: "LJA",
+    sessionStart: "Session Start",
+    blockStart: "Block Start",
+    defendantName: "Defendant Name",
+    dateOfBirth: "Date of Birth",
+    address: "Address",
+    age: "Age",
+    informant: "Informant",
+    caseNumber: "Case Number",
+    offenceCode: "Offence Code",
+    offenceTitle: "Offence Title",
+    offenceSummary: "Offence Summary"
+  }
 };
 
 export const enDaily = { ...en, title: en.titleDaily };

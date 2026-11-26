@@ -1,0 +1,40 @@
+<policies>
+  <inbound>
+    <validate-azure-ad-token tenant-id="${tenant_id}" header-name="Authorization" failed-validation-httpcode="401" failed-validation-error-message="Access denied due to invalid OAuth information">
+      <audiences>
+        <audience>${client_id}</audience>
+      </audiences>
+    </validate-azure-ad-token>
+    <cors>
+      <allowed-origins>
+        <origin>*</origin>
+      </allowed-origins>
+      <allowed-methods>
+        <method>PUT</method>
+      </allowed-methods>
+    </cors>
+    <return-response>
+      <set-status code="200" />
+      <set-header name="Content-Type">
+        <value>application/json</value>
+      </set-header>
+      <set-body>@{
+        return new JObject(
+        new JProperty("response code", 200),
+        new JProperty("description", "Updated publication request was received successfully.")
+        ).ToString();
+        }
+      </set-body>
+    </return-response>
+    <base />
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>

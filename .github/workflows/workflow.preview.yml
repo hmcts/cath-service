@@ -15,14 +15,17 @@ jobs:
     name: Detect Code Changes
     uses: ./.github/workflows/job.detect-changes.yml
     with:
-      paths: "^(yarn\\.lock|apps/|libs/|helm/)"
+      # e2e-tests/ is included because the E2E stage can only run against a
+      # deployed preview environment, and Deploy cascades off Build. Without it a
+      # PR that only changes an E2E test skips the very tests it changed.
+      paths: "^(yarn\\.lock|apps/|libs/|helm/|e2e-tests/|Dockerfile|\\.dockerignore)"
       cache-key: code-pr-${{ github.event.pull_request.number }}
 
   detect-infra-changes:
     name: Detect Infrastructure Changes
     uses: ./.github/workflows/job.detect-changes.yml
     with:
-      paths: "^infrastructure/"
+      paths: "^(infrastructure/|docs/api/openapi\\.yaml$)"
       cache-key: infra-pr-${{ github.event.pull_request.number }}
 
   build-stage:
@@ -41,6 +44,14 @@ jobs:
     uses: ./.github/workflows/stage.infrastructure.yml
     with:
       plan-only: true
+      # Plan every environment master will apply. Reviewing only aat here would
+      # mean the first sight of a demo/ithc/perftest plan is the master run that
+      # is already applying it. Only aat and prod post a PR comment - see
+      # post-plan-to-pr in stage.infrastructure.yml.
+      # prod is planned here before master applies it (#1096); workflow.main.yml
+      # adds it separately, so merging this alone applies nothing to prod.
+      # ithc is parked - see the note in workflow.main.yml.
+      environments: '["aat","demo","perftest","prod"]'
     secrets: inherit
 
   deploy-stage:
@@ -54,6 +65,7 @@ jobs:
       short-sha: ${{ needs.build-stage.outputs.short-sha }}
       affected-apps: ${{ needs.build-stage.outputs.affected-apps }}
       helm-apps: ${{ needs.build-stage.outputs.helm-apps }}
+      environment: preview
     secrets: inherit
 
   smoke-test-stage:
@@ -64,7 +76,10 @@ jobs:
     with:
       change-id: ${{ github.event.pull_request.number }}
       urls: ${{ needs.deploy-stage.outputs.urls }}
+      ui-baseline-url: ${{ needs.deploy-stage.outputs.ui-baseline-url }}
       is-pr: true
+      run-publication-smoke: true
+    secrets: inherit
 
   e2e-stage:
     name: E2E

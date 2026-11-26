@@ -18,6 +18,10 @@ vi.mock("./filter-panel.js", () => ({
   initFilterPanel: vi.fn()
 }));
 
+vi.mock("./filter-toggle.js", () => ({
+  initFilterToggle: vi.fn()
+}));
+
 vi.mock("./search-autocomplete.js", () => ({
   initSearchAutocomplete: vi.fn(() => Promise.resolve())
 }));
@@ -59,6 +63,11 @@ describe("web.ts", () => {
     it("should initialize GOV.UK Frontend", async () => {
       const { initAll } = await import("govuk-frontend");
       expect(initAll).toHaveBeenCalled();
+    });
+
+    it("should initialize the MOJ filter toggle", async () => {
+      const { initFilterToggle } = await import("./filter-toggle.js");
+      expect(initFilterToggle).toHaveBeenCalled();
     });
 
     it("should initialize cookie manager with correct config", async () => {
