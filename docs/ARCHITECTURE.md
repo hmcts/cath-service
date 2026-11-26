@@ -180,10 +180,11 @@ The application uses a **separation of concerns** architecture:
 - TLS only, on port 10000, through a private endpoint. Public access is disabled.
 - `EnterpriseCluster` clustering, so the single-endpoint client works without cluster redirects. Database 0 only.
 - `VolatileLRU` eviction, with no persistence.
+- Access keys are disabled. The only way in is Entra ID through the Data Owner access policy held by `cath-<env>-mi`.
 
 **Client**: `createRedisClient(url, managedIdentity)` in `@hmcts/redis`, used for the web session store and by `getRedisClient()`. It pings every 5 minutes to keep idle connections open.
-- `REDIS_MI` unset or `false`: authenticates with the access key in `REDIS_URL` (Key Vault `managed-redis-url`).
-- `REDIS_MI=true`: authenticates through Entra ID as the pod's managed identity, `cath-<env>-mi` (`MANAGED_IDENTITY_CLIENT_ID`), which holds the Data Owner access policy. Any credentials in the URL are ignored, and the URL must be `rediss://`.
+- Deployed environments and previews set `REDIS_MI=true` and map Key Vault `managed-redis-entra-url` (`rediss://<host>:10000`, no credentials) to `REDIS_URL`. The client authenticates as the pod's workload identity, `cath-<env>-mi`, whose client ID the AKS workload identity webhook injects as `AZURE_CLIENT_ID`. The URL must be `rediss://`, and any credentials in it are ignored.
+- `REDIS_MI` unset or `false` uses whatever credentials are in `REDIS_URL`. That is only for local development, because deployed instances no longer accept keys.
 
 **Local**: docker `redis:8-alpine` on `redis://localhost:6380` with no auth and no `REDIS_MI`, so no Azure login is needed.
 

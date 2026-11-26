@@ -1,6 +1,6 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { prisma } from "@hmcts/postgres-prisma";
-import { replaceSubscriptionListTypes } from "@hmcts/subscriptions";
+import { getAllowedListTypeIdsForLocations, getAllSubscriptionsByUserId, replaceSubscriptionListTypes } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -13,12 +13,20 @@ const LANGUAGE_DISPLAY: Record<string, { en: string; cy: string }> = {
 
 async function resolveListTypeNames(listTypeIds: number[], locale: string) {
   const listTypeRecords = await prisma.listType.findMany({
-    where: { id: { in: listTypeIds } }
+    where: { id: { in: listTypeIds }, isHidden: false }
   });
   return listTypeRecords.map((lt) => ({
     listTypeId: lt.id,
     name: (locale === "cy" ? lt.welshFriendlyName : lt.friendlyName) ?? lt.friendlyName ?? lt.name
   }));
+}
+
+// Session ids come from a POST body, so they are re-checked against the user's courts before saving.
+// This also drops hidden list types, which getAllowedListTypeIdsForLocations excludes.
+async function getAllowedListTypeIdsForUser(userId: string): Promise<number[]> {
+  const subscriptions = await getAllSubscriptionsByUserId(userId);
+  const locationIds = subscriptions.flatMap((s) => ("locationId" in s && typeof s.locationId === "number" ? [s.locationId] : []));
+  return getAllowedListTypeIdsForLocations(locationIds);
 }
 
 async function renderPage(req: Request, res: Response, locale: string) {
@@ -88,7 +96,14 @@ const postHandler = async (req: Request, res: Response) => {
       return res.redirect("/subscription-configure-list-language");
     }
 
-    await replaceSubscriptionListTypes(userId, pendingListTypeIds, pendingLanguage);
+    const allowedListTypeIds = await getAllowedListTypeIdsForUser(userId);
+    const validListTypeIds = pendingListTypeIds.filter((id: number) => allowedListTypeIds.includes(id));
+
+    if (validListTypeIds.length === 0) {
+      return renderPage(req, res, locale);
+    }
+
+    await replaceSubscriptionListTypes(userId, validListTypeIds, pendingLanguage);
 
     if (!req.session.emailSubscriptions) {
       req.session.emailSubscriptions = {};

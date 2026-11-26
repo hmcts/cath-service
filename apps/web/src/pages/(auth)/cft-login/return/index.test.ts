@@ -83,7 +83,8 @@ describe("CFT Login Return Handler", () => {
         email: "test@example.com",
         displayName: "Test User",
         role: "VERIFIED",
-        provenance: "CFT_IDAM"
+        provenance: "CFT_IDAM",
+        idToken: "id_token"
       },
       expect.any(Function)
     );

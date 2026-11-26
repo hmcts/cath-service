@@ -6,7 +6,6 @@ import { loginWithSSO } from "../../utils/sso-helpers.js";
 import { getTestPrefix } from "../../utils/test-prefix.js";
 import { findTestThirdPartyUserByName, getTestThirdPartyUser } from "../../utils/test-support-api.js";
 
-const MAX_SUBSCRIPTION_PAGES = 10;
 // Dummy values: the journey stops at the summary page, so nothing is written to Key Vault
 const OAUTH_CONFIG = {
   destinationUrl: "https://third-party.example.com/publication",
@@ -158,7 +157,9 @@ test.describe("Third party subscriber", () => {
     expect((await axeCheck(page).analyze()).violations).toEqual([]);
 
     await subscribeFirstListTypeAsPublic(page);
-    await saveSubscriptions(page);
+    // Save is offered on every page, so subscriptions can be saved without paging to the end
+    await expect(page.getByRole("button", { name: "Next" })).toBeVisible();
+    await page.getByRole("button", { name: "Save subscriptions" }).click();
     await page.waitForURL(`**/third-party-subscribers/${subscriberId}/subscriptions/success`);
     await expect(page.locator(".govuk-panel--confirmation")).toContainText("Third Party Subscriptions Updated");
     await expect(page.getByRole("link", { name: "Manage third party subscribers" })).toBeVisible();
@@ -248,22 +249,4 @@ async function subscribeFirstListTypeAsPublic(page: Page) {
   } else {
     await firstSensitivitySelect.selectOption("PUBLIC");
   }
-}
-
-async function saveSubscriptions(page: Page) {
-  for (let pageNumber = 0; pageNumber < MAX_SUBSCRIPTION_PAGES; pageNumber++) {
-    const saveButton = page.getByRole("button", { name: "Save subscriptions" });
-    const nextButton = page.getByRole("button", { name: "Next" });
-    await expect(saveButton.or(nextButton)).toBeVisible();
-
-    if (await saveButton.isVisible()) {
-      await saveButton.click();
-      return;
-    }
-
-    await nextButton.click();
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Manage subscriptions");
-  }
-
-  throw new Error(`"Save subscriptions" was not found within ${MAX_SUBSCRIPTION_PAGES} pages`);
 }

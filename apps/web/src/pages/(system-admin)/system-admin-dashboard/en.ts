@@ -55,6 +55,11 @@ export const en = {
       title: "Download MI Report",
       description: "Download User accounts, Publication, Location subscriptions and All subscription data",
       href: "/mi-report"
+    },
+    {
+      title: "Migration",
+      description: "Tools for the PIP to CaTH migration, including checking connections to PIP",
+      href: "/migration"
     }
   ]
 };

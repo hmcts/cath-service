@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as queries from "./queries.js";
-import { saveListType } from "./service.js";
+import { saveListType, setListTypeVisibility } from "./service.js";
 
 vi.mock("./queries.js", () => ({
+  findListTypeById: vi.fn(),
   findListTypeByName: vi.fn(),
   createListType: vi.fn(),
-  updateListType: vi.fn()
+  updateListType: vi.fn(),
+  updateListTypeVisibility: vi.fn()
 }));
 
 describe("list-type-service", () => {
@@ -99,6 +101,57 @@ describe("list-type-service", () => {
         expect(queries.createListType).not.toHaveBeenCalled();
         expect(result).toEqual(mockUpdatedListType);
       });
+    });
+  });
+
+  describe("setListTypeVisibility", () => {
+    it("should return UPDATED when the visibility changes", async () => {
+      // Arrange
+      vi.mocked(queries.findListTypeById).mockResolvedValue({ id: 1, deletedAt: null } as any);
+      vi.mocked(queries.updateListTypeVisibility).mockResolvedValue(1);
+
+      // Act
+      const result = await setListTypeVisibility(1, true);
+
+      // Assert
+      expect(queries.updateListTypeVisibility).toHaveBeenCalledWith(1, true);
+      expect(result).toBe("UPDATED");
+    });
+
+    it("should return ALREADY_IN_STATE when no row was updated", async () => {
+      // Arrange
+      vi.mocked(queries.findListTypeById).mockResolvedValue({ id: 1, deletedAt: null } as any);
+      vi.mocked(queries.updateListTypeVisibility).mockResolvedValue(0);
+
+      // Act
+      const result = await setListTypeVisibility(1, false);
+
+      // Assert
+      expect(result).toBe("ALREADY_IN_STATE");
+    });
+
+    it("should return NOT_FOUND when the list type does not exist", async () => {
+      // Arrange
+      vi.mocked(queries.findListTypeById).mockResolvedValue(null);
+
+      // Act
+      const result = await setListTypeVisibility(99, true);
+
+      // Assert
+      expect(result).toBe("NOT_FOUND");
+      expect(queries.updateListTypeVisibility).not.toHaveBeenCalled();
+    });
+
+    it("should return NOT_FOUND when the list type is soft-deleted", async () => {
+      // Arrange
+      vi.mocked(queries.findListTypeById).mockResolvedValue({ id: 1, deletedAt: new Date() } as any);
+
+      // Act
+      const result = await setListTypeVisibility(1, true);
+
+      // Assert
+      expect(result).toBe("NOT_FOUND");
+      expect(queries.updateListTypeVisibility).not.toHaveBeenCalled();
     });
   });
 });
