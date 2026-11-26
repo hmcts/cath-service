@@ -1,0 +1,10 @@
+{%- set partNames = { lists: "list pages", pages: "other pages", journeys: "journeys", files: "PDF and Excel files", downloads: "downloads" } -%}
+{%- if run.kind == "files" -%}
+  Files: pip <code>{{ run.pipArtefactId }}</code> and CaTH <code>{{ run.cathArtefactId }}</code>
+{%- elif run.scope == "all" -%}
+  All of CaTH{% if run.skip and run.skip.length %}, without {% for part in run.skip %}{{ partNames[part] }}{{ ", " if not loop.last }}{% endfor %}{% endif %}
+{%- elif run.scope == "list-types" -%}
+  List types: {{ run.listTypes | join(", ") }}
+{%- else -%}
+  Pages: {{ run.routes | join(", ") }}
+{%- endif -%}

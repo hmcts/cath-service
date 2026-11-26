@@ -11,10 +11,15 @@ export const en = {
   allowedProvenanceLabel: "Allowed provenance",
   isNonStrategicLabel: "Is non-strategic",
   subJurisdictionsLabel: "Sub-jurisdictions",
+  statusLabel: "Status",
+  visibleTag: "Visible",
+  hiddenTag: "Hidden",
   yesText: "Yes",
   noText: "No",
   editButton: "Edit list type",
   deleteButton: "Delete list type",
+  hideButton: "Hide list type",
+  showButton: "Show list type",
   notSet: "Not set",
   noneSelected: "None selected"
 };

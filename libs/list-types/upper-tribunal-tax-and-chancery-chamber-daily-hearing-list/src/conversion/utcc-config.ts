@@ -55,4 +55,4 @@ export const UTCC_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const utccConverter = createConverter(UTCC_EXCEL_CONFIG);
-registerConverterByName("UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST", utccConverter);
+registerConverterByName("UT_T_AND_CC_DAILY_HEARING_LIST", utccConverter);

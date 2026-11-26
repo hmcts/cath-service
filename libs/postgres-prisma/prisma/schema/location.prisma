@@ -56,6 +56,7 @@ model ListType {
   locationType            String?   @map("location_type") @db.VarChar(50)
   caseNumberJsonFieldName String?   @map("case_number_json_field_name") @db.VarChar(255)
   caseNameJsonFieldName   String?   @map("case_name_json_field_name") @db.VarChar(255)
+  isHidden                Boolean   @default(false) @map("is_hidden")
   createdAt               DateTime  @default(now()) @map("created_at")
   updatedAt               DateTime  @updatedAt @map("updated_at")
   deletedAt               DateTime? @map("deleted_at")

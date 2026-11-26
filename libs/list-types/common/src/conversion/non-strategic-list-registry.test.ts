@@ -5,7 +5,7 @@ import { convertExcelForListTypeName, getConverterForListTypeName, hasConverterF
 // Import CST module to register its converter
 import "@hmcts/care-standards-tribunal-weekly-hearing-list";
 
-const CST_NAME = "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST";
+const CST_NAME = "CST_WEEKLY_HEARING_LIST";
 
 async function createExcelBuffer(data: unknown[][]): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();

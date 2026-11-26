@@ -26,6 +26,26 @@ vi.mock("@hmcts/postgres-prisma", () => ({
     },
     thirdPartyUser: {
       deleteMany: vi.fn()
+    },
+    subJurisdiction: {
+      findMany: vi.fn(),
+      deleteMany: vi.fn()
+    },
+    jurisdiction: {
+      deleteMany: vi.fn()
+    },
+    region: {
+      findMany: vi.fn(),
+      deleteMany: vi.fn()
+    },
+    locationSubJurisdiction: {
+      deleteMany: vi.fn()
+    },
+    listTypeSubJurisdiction: {
+      deleteMany: vi.fn()
+    },
+    locationRegion: {
+      deleteMany: vi.fn()
     }
   }
 }));
@@ -47,6 +67,10 @@ describe("cleanup routes", () => {
       status: vi.fn().mockReturnThis()
     };
     consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 0 } as any);
+    vi.mocked(prisma.subJurisdiction.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.jurisdiction.deleteMany).mockResolvedValue({ count: 0 } as any);
+    vi.mocked(prisma.region.findMany).mockResolvedValue([]);
   });
 
   describe("DELETE", () => {
@@ -119,8 +143,12 @@ describe("cleanup routes", () => {
           locations: 2,
           listTypes: 1,
           mediaApplications: 1,
-          thirdPartyUsers: 1
-        }
+          thirdPartyUsers: 1,
+          subJurisdictions: 0,
+          jurisdictions: 0,
+          regions: 0
+        },
+        failures: []
       });
     });
 
@@ -141,7 +169,10 @@ describe("cleanup routes", () => {
       await DELETE(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(prisma.artefact.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.artefact.deleteMany).toHaveBeenCalledWith({
+        where: { OR: [{ locationId: { in: [] } }, { listType: { name: { startsWith: "test_prefix" } } }] }
+      });
+      expect(mockResponse.status).not.toHaveBeenCalled();
       expect(mockResponse.json).toHaveBeenCalledWith({
         prefix: "test_prefix",
         deleted: 0,
@@ -152,8 +183,12 @@ describe("cleanup routes", () => {
           locations: 0,
           listTypes: 0,
           mediaApplications: 0,
-          thirdPartyUsers: 0
-        }
+          thirdPartyUsers: 0,
+          subJurisdictions: 0,
+          jurisdictions: 0,
+          regions: 0
+        },
+        failures: []
       });
     });
 
@@ -208,9 +243,160 @@ describe("cleanup routes", () => {
       });
     });
 
-    it("should return 500 on database error", async () => {
+    it("should delete users and their subscriptions by prefixed email or prefixed provenance id", async () => {
+      // Arrange
+      mockRequest.body = { prefix: "E2E_123_" };
+      mockEmptyCleanup();
+      vi.mocked(prisma.user.findMany).mockResolvedValue([{ userId: "notify-user" }] as any);
+      vi.mocked(prisma.subscription.deleteMany).mockResolvedValue({ count: 1 } as any);
+      vi.mocked(prisma.user.deleteMany).mockResolvedValue({ count: 1 } as any);
+
+      // Act
+      await DELETE(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      const prefixedUserWhere = { OR: [{ email: { startsWith: "E2E_123_" } }, { userProvenanceId: { startsWith: "E2E_123_" } }] };
+      expect(prisma.user.findMany).toHaveBeenCalledWith({ where: prefixedUserWhere, select: { userId: true } });
+      expect(prisma.subscription.deleteMany).toHaveBeenCalledWith({ where: { userId: { in: ["notify-user"] } } });
+      expect(prisma.user.deleteMany).toHaveBeenCalledWith({ where: prefixedUserWhere });
+    });
+
+    it("should delete prefixed sub-jurisdictions after their link rows, then childless prefixed jurisdictions, then prefixed regions", async () => {
+      // Arrange
+      mockRequest.body = { prefix: "E2E_123_" };
+      mockEmptyCleanup();
+      vi.mocked(prisma.subJurisdiction.findMany).mockResolvedValue([{ subJurisdictionId: 80001 }] as any);
+      vi.mocked(prisma.locationSubJurisdiction.deleteMany).mockResolvedValue({ count: 1 } as any);
+      vi.mocked(prisma.listTypeSubJurisdiction.deleteMany).mockResolvedValue({ count: 1 } as any);
+      vi.mocked(prisma.subJurisdiction.deleteMany).mockResolvedValue({ count: 1 } as any);
+      vi.mocked(prisma.jurisdiction.deleteMany).mockResolvedValue({ count: 1 } as any);
+      vi.mocked(prisma.region.findMany).mockResolvedValue([{ regionId: 80002 }] as any);
+      vi.mocked(prisma.locationRegion.deleteMany).mockResolvedValue({ count: 1 } as any);
+      vi.mocked(prisma.region.deleteMany).mockResolvedValue({ count: 1 } as any);
+
+      // Act
+      await DELETE(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.subJurisdiction.findMany).toHaveBeenCalledWith({ where: { name: { startsWith: "E2E_123_" } }, select: { subJurisdictionId: true } });
+      expect(prisma.locationSubJurisdiction.deleteMany).toHaveBeenCalledWith({ where: { subJurisdictionId: { in: [80001] } } });
+      expect(prisma.listTypeSubJurisdiction.deleteMany).toHaveBeenCalledWith({ where: { subJurisdictionId: { in: [80001] } } });
+      expect(prisma.subJurisdiction.deleteMany).toHaveBeenCalledWith({ where: { subJurisdictionId: { in: [80001] } } });
+      expect(prisma.jurisdiction.deleteMany).toHaveBeenCalledWith({ where: { name: { startsWith: "E2E_123_" }, subJurisdictions: { none: {} } } });
+      expect(prisma.region.findMany).toHaveBeenCalledWith({ where: { name: { startsWith: "E2E_123_" } }, select: { regionId: true } });
+      expect(prisma.locationRegion.deleteMany).toHaveBeenCalledWith({ where: { regionId: { in: [80002] } } });
+      expect(prisma.region.deleteMany).toHaveBeenCalledWith({ where: { regionId: { in: [80002] } } });
+
+      const subJurisdictionDeleteOrder = vi.mocked(prisma.subJurisdiction.deleteMany).mock.invocationCallOrder[0];
+      expect(vi.mocked(prisma.locationSubJurisdiction.deleteMany).mock.invocationCallOrder[0]).toBeLessThan(subJurisdictionDeleteOrder);
+      expect(vi.mocked(prisma.listTypeSubJurisdiction.deleteMany).mock.invocationCallOrder[0]).toBeLessThan(subJurisdictionDeleteOrder);
+      expect(subJurisdictionDeleteOrder).toBeLessThan(vi.mocked(prisma.jurisdiction.deleteMany).mock.invocationCallOrder[0]);
+      expect(vi.mocked(prisma.locationRegion.deleteMany).mock.invocationCallOrder[0]).toBeLessThan(
+        vi.mocked(prisma.region.deleteMany).mock.invocationCallOrder[0]
+      );
+      expect(vi.mocked(prisma.location.deleteMany).mock.invocationCallOrder[0]).toBeLessThan(subJurisdictionDeleteOrder);
+
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({ details: expect.objectContaining({ subJurisdictions: 1, jurisdictions: 1, regions: 1 }) })
+      );
+    });
+
+    it("should skip reference-data link deletion when nothing is prefixed", async () => {
+      // Arrange
+      mockRequest.body = { prefix: "E2E_123_" };
+      mockEmptyCleanup();
+
+      // Act
+      await DELETE(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.locationSubJurisdiction.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.listTypeSubJurisdiction.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.subJurisdiction.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.locationRegion.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.region.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it("should only ever select or delete rows by the prefix or by ids found through the prefix", async () => {
+      // Arrange
+      const prefix = "E2E_123_";
+      mockRequest.body = { prefix };
+      mockEmptyCleanup();
+      vi.mocked(prisma.location.findMany).mockResolvedValue([{ locationId: 90001 }] as any);
+      vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.user.findMany).mockResolvedValue([{ userId: "prefixed-user" }] as any);
+      vi.mocked(prisma.subJurisdiction.findMany).mockResolvedValue([{ subJurisdictionId: 80001 }] as any);
+      vi.mocked(prisma.locationSubJurisdiction.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.listTypeSubJurisdiction.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.subJurisdiction.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.region.findMany).mockResolvedValue([{ regionId: 80002 }] as any);
+      vi.mocked(prisma.locationRegion.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.region.deleteMany).mockResolvedValue({ count: 0 } as any);
+      const idsFoundThroughPrefix = ["90001", "prefixed-user", "80001", "80002"];
+
+      // Act
+      await DELETE(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      const models = prisma as unknown as Record<string, Record<string, { mock: { calls: unknown[][] } }>>;
+      const queries = Object.values(models).flatMap((model) =>
+        ["findMany", "deleteMany"].flatMap((method) => model[method]?.mock.calls.map(([args]) => JSON.stringify(args)) ?? [])
+      );
+      expect(queries.length).toBeGreaterThan(0);
+      for (const query of queries) {
+        const isScopedToRun =
+          query.includes(`"startsWith":"${prefix}"`) || query.includes(`"startsWith":"E2E-123-"`) || idsFoundThroughPrefix.some((id) => query.includes(id));
+        expect(isScopedToRun, `unscoped cleanup query ${query}`).toBe(true);
+      }
+    });
+
+    it("should delete artefacts at prefixed locations and artefacts using a prefixed list type before deleting list types", async () => {
+      // Arrange
+      mockRequest.body = { prefix: "E2E_123_" };
+      mockEmptyCleanup();
+      vi.mocked(prisma.location.findMany).mockResolvedValue([{ locationId: 90001 }] as any);
+      vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 2 } as any);
+
+      // Act
+      await DELETE(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.artefact.deleteMany).toHaveBeenCalledWith({
+        where: { OR: [{ locationId: { in: ["90001"] } }, { listType: { name: { startsWith: "E2E_123_" } } }] }
+      });
+      expect(vi.mocked(prisma.artefact.deleteMany).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(prisma.listType.deleteMany).mock.invocationCallOrder[0]);
+      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ details: expect.objectContaining({ artefacts: 2 }) }));
+    });
+
+    it("should carry on with the remaining steps and return 500 with the failed steps when a step fails", async () => {
       // Arrange
       mockRequest.body = { prefix: "test_prefix" };
+      mockEmptyCleanup();
+      vi.mocked(prisma.listType.deleteMany).mockRejectedValue(new Error("Foreign key constraint violated"));
+      vi.mocked(prisma.thirdPartyUser.deleteMany).mockResolvedValue({ count: 1 } as any);
+
+      // Act
+      await DELETE(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.region.findMany).toHaveBeenCalled();
+      expect(prisma.mediaApplication.deleteMany).toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(500);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: "Failed to cleanup test data",
+          prefix: "test_prefix",
+          deleted: 1,
+          failures: [{ step: "listTypes", error: "Foreign key constraint violated" }]
+        })
+      );
+      expect(consoleSpy).toHaveBeenCalled();
+    });
+
+    it("should record every step that depends on a failed location lookup", async () => {
+      // Arrange
+      mockRequest.body = { prefix: "test_prefix" };
+      mockEmptyCleanup();
       vi.mocked(prisma.location.findMany).mockRejectedValue(new Error("DB error"));
 
       // Act
@@ -218,8 +404,26 @@ describe("cleanup routes", () => {
 
       // Assert
       expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({ error: "Failed to cleanup test data" });
-      expect(consoleSpy).toHaveBeenCalled();
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          failures: [
+            { step: "artefacts", error: "DB error" },
+            { step: "subscriptions", error: "DB error" }
+          ]
+        })
+      );
+      expect(prisma.listType.deleteMany).toHaveBeenCalled();
     });
   });
 });
+
+function mockEmptyCleanup() {
+  vi.mocked(prisma.location.findMany).mockResolvedValue([]);
+  vi.mocked(prisma.user.findMany).mockResolvedValue([]);
+  vi.mocked(prisma.subscription.deleteMany).mockResolvedValue({ count: 0 } as any);
+  vi.mocked(prisma.user.deleteMany).mockResolvedValue({ count: 0 } as any);
+  vi.mocked(prisma.location.deleteMany).mockResolvedValue({ count: 0 } as any);
+  vi.mocked(prisma.listType.deleteMany).mockResolvedValue({ count: 0 } as any);
+  vi.mocked(prisma.mediaApplication.deleteMany).mockResolvedValue({ count: 0 } as any);
+  vi.mocked(prisma.thirdPartyUser.deleteMany).mockResolvedValue({ count: 0 } as any);
+}

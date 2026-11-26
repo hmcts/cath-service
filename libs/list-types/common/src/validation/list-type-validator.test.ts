@@ -17,7 +17,24 @@ const testListTypes: ListTypeInfo[] = [
   { id: 99, name: "CROWN_COURT_DAILY_LIST", friendlyName: "Crown Court Daily List" },
   { id: 100, name: "CROWN_DAILY_PDDA_LIST", friendlyName: "Crown Daily List" },
   { id: 101, name: "CROWN_FIRM_PDDA_LIST", friendlyName: "Crown Firm List" },
-  { id: 102, name: "CROWN_ADVANCED_PDDA_LIST", friendlyName: "Crown Advance List" }
+  { id: 102, name: "CROWN_ADVANCED_PDDA_LIST", friendlyName: "Crown Advance List" },
+  { id: 110, name: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST", friendlyName: "Civil Courts at the RCJ Daily Cause List" },
+  { id: 111, name: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST", friendlyName: "Birmingham Administrative Court Daily Cause List" },
+  { id: 112, name: "SSCS_LONDON_DAILY_HEARING_LIST", friendlyName: "SSCS London Daily Hearing List" },
+  { id: 113, name: "SIAC_WEEKLY_HEARING_LIST", friendlyName: "SIAC Weekly Hearing List" },
+  { id: 114, name: "RPT_EASTERN_WEEKLY_HEARING_LIST", friendlyName: "FTT RPT Eastern Weekly Hearing List" },
+  { id: 115, name: "UT_T_AND_CC_DAILY_HEARING_LIST", friendlyName: "UT Tax and Chancery Chamber Daily Hearing List" },
+  { id: 116, name: "UT_LC_DAILY_HEARING_LIST", friendlyName: "UT Lands Chamber Daily Hearing List" },
+  { id: 117, name: "UT_AAC_DAILY_HEARING_LIST", friendlyName: "UT Administrative Appeals Chamber Daily Hearing List" },
+  { id: 201, name: "CST_WEEKLY_HEARING_LIST", friendlyName: "Care Standards Tribunal Weekly Hearing List" },
+  { id: 202, name: "FTT_LR_WEEKLY_HEARING_LIST", friendlyName: "First-tier Tribunal (Lands Registration Tribunal) Weekly Hearing List" },
+  { id: 203, name: "FTT_TAX_WEEKLY_HEARING_LIST", friendlyName: "First-tier Tribunal (Tax Chamber) Weekly Hearing List" },
+  { id: 204, name: "UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST", friendlyName: "UTIAC Statutory Appeals Daily Hearing List" },
+  { id: 205, name: "UT_IAC_JR_LONDON_DAILY_HEARING_LIST", friendlyName: "UTIAC JR London Daily Hearing List" },
+  { id: 206, name: "UT_IAC_JR_LEEDS_DAILY_HEARING_LIST", friendlyName: "UTIAC JR Leeds Daily Hearing List" },
+  { id: 207, name: "UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST", friendlyName: "UTIAC JR Manchester Daily Hearing List" },
+  { id: 208, name: "UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST", friendlyName: "UTIAC JR Birmingham Daily Hearing List" },
+  { id: 209, name: "UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST", friendlyName: "UTIAC JR Cardiff Daily Hearing List" }
 ];
 
 // Mock the dynamic import for @hmcts/civil-daily-cause-list
@@ -112,6 +129,113 @@ vi.mock("@hmcts/iac-daily-list", () => ({
   formatCaseSummaryForEmail: vi.fn().mockReturnValue("")
 }));
 
+// Mock the dynamic imports for the regional and court variants of the non-strategic list type packages
+vi.mock("@hmcts/rcj-standard-daily-cause-list", () => ({
+  validateRcjStandardDailyCauseList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0"
+  })
+}));
+
+vi.mock("@hmcts/administrative-court-daily-cause-list", () => ({
+  validateAdministrativeCourtDailyCauseList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0"
+  })
+}));
+
+vi.mock("@hmcts/sscs-daily-hearing-list", () => ({
+  validateSscsDailyHearingList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0"
+  })
+}));
+
+vi.mock("@hmcts/siac-poac-paac-weekly-hearing-list", () => ({
+  validateSiacPoacPaacWeeklyHearingList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0"
+  })
+}));
+
+vi.mock("@hmcts/ftt-rpt-weekly-hearing-list", () => ({
+  validateFttRptWeeklyHearingList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0"
+  })
+}));
+
+vi.mock("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list", () => ({
+  validateUtTaxAndChanceryChamberDailyHearingList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0"
+  })
+}));
+
+vi.mock("@hmcts/upper-tribunal-lands-chamber-daily-hearing-list", () => ({
+  validateUtLandsChamberDailyHearingList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0"
+  })
+}));
+
+vi.mock("@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list", () => ({
+  validateUtAdministrativeAppealsChamberDailyHearingList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0"
+  })
+}));
+
+// Mock the dynamic imports for the packages reached via the shared-model rename aliases (#1077).
+// schemaVersion carries the package name so tests can prove which package the alias resolved to.
+vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list", () => ({
+  validateCareStandardsTribunalWeeklyHearingList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "care-standards-tribunal-weekly-hearing-list"
+  })
+}));
+
+vi.mock("@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list", () => ({
+  validateFttLandsRegistrationTribunalWeeklyHearingList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "ftt-lands-registration-tribunal-weekly-hearing-list"
+  })
+}));
+
+vi.mock("@hmcts/ftt-tax-chamber-weekly-hearing-list", () => ({
+  validateFttTaxChamberWeeklyHearingList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "ftt-tax-chamber-weekly-hearing-list"
+  })
+}));
+
+vi.mock("@hmcts/utiac-statutory-appeal-daily-hearing-list", () => ({
+  validateUtiacStatutoryAppealDailyHearingList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "utiac-statutory-appeal-daily-hearing-list"
+  })
+}));
+
+vi.mock("@hmcts/utiac-jr-daily-hearing-list", () => ({
+  validateUtiacJrDailyHearingList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "utiac-jr-daily-hearing-list"
+  })
+}));
+
 describe("list-type-validator", () => {
   describe("validateListTypeJson", () => {
     it("should return error for invalid list type ID", async () => {
@@ -183,7 +307,15 @@ describe("list-type-validator", () => {
       ["60", "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE", "magistrates-public-adult-court-list"],
       ["71", "IAC_DAILY_LIST_ADDITIONAL_CASES", "iac-daily-list"],
       ["100", "CROWN_DAILY_PDDA_LIST", "crown-daily-list"],
-      ["101", "CROWN_FIRM_PDDA_LIST", "crown-firm-list"]
+      ["101", "CROWN_FIRM_PDDA_LIST", "crown-firm-list"],
+      ["110", "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST", "rcj-standard-daily-cause-list"],
+      ["111", "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST", "administrative-court-daily-cause-list"],
+      ["112", "SSCS_LONDON_DAILY_HEARING_LIST", "sscs-daily-hearing-list"],
+      ["113", "SIAC_WEEKLY_HEARING_LIST", "siac-poac-paac-weekly-hearing-list"],
+      ["114", "RPT_EASTERN_WEEKLY_HEARING_LIST", "ftt-rpt-weekly-hearing-list"],
+      ["115", "UT_T_AND_CC_DAILY_HEARING_LIST", "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list"],
+      ["116", "UT_LC_DAILY_HEARING_LIST", "upper-tribunal-lands-chamber-daily-hearing-list"],
+      ["117", "UT_AAC_DAILY_HEARING_LIST", "upper-tribunal-administrative-appeals-chamber-daily-hearing-list"]
     ])("should validate %s (%s) using the %s package alias", async (id) => {
       const result = await validateListTypeJson(id, { test: "data" }, testListTypes);
 
@@ -194,6 +326,25 @@ describe("list-type-validator", () => {
       const result = await validateListTypeJson("102", { test: "data" }, testListTypes);
 
       expect(result.isValid).toBe(true);
+    });
+
+    it.each([
+      ["201", "CST_WEEKLY_HEARING_LIST", "care-standards-tribunal-weekly-hearing-list"],
+      ["202", "FTT_LR_WEEKLY_HEARING_LIST", "ftt-lands-registration-tribunal-weekly-hearing-list"],
+      ["203", "FTT_TAX_WEEKLY_HEARING_LIST", "ftt-tax-chamber-weekly-hearing-list"],
+      ["204", "UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST", "utiac-statutory-appeal-daily-hearing-list"],
+      ["205", "UT_IAC_JR_LONDON_DAILY_HEARING_LIST", "utiac-jr-daily-hearing-list"],
+      ["206", "UT_IAC_JR_LEEDS_DAILY_HEARING_LIST", "utiac-jr-daily-hearing-list"],
+      ["207", "UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST", "utiac-jr-daily-hearing-list"],
+      ["208", "UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST", "utiac-jr-daily-hearing-list"],
+      ["209", "UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST", "utiac-jr-daily-hearing-list"]
+    ])("should resolve renamed list type %s (%s) to the existing %s package", async (id, _name, packageName) => {
+      // Act
+      const result = await validateListTypeJson(id, { test: "data" }, testListTypes);
+
+      // Assert
+      expect(result.isValid).toBe(true);
+      expect(result.schemaVersion).toBe(packageName);
     });
 
     it("should validate MAGISTRATES_ADULT_COURT_LIST_DAILY using the magistrates-adult-court-list package alias", async () => {

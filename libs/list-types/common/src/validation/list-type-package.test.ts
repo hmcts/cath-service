@@ -47,7 +47,7 @@ describe("list-type-package", () => {
 
     it("should resolve every UTIAC JR regional list type to the shared package", () => {
       // Arrange
-      const names = ["LONDON", "LEEDS", "MANCHESTER", "BIRMINGHAM", "CARDIFF"].map((region) => `UTIAC_JR_${region}_DAILY_HEARING_LIST`);
+      const names = ["LONDON", "LEEDS", "MANCHESTER", "BIRMINGHAM", "CARDIFF"].map((region) => `UT_IAC_JR_${region}_DAILY_HEARING_LIST`);
 
       // Act
       const result = names.map(resolveListTypePackageName);

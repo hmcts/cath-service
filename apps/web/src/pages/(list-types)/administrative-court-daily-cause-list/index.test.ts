@@ -179,7 +179,7 @@ describe("Administrative Court page controller", () => {
       const mockArtefact = {
         artefactId: "test-artefact-789",
         listTypeId: 999,
-        listTypeName: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+        listTypeName: "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -208,7 +208,7 @@ describe("Administrative Court page controller", () => {
       expect(renderAdminCourt).toHaveBeenCalledWith(
         mockJsonData,
         expect.objectContaining({
-          listTypeName: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
+          listTypeName: "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
         })
       );
       const renderCall = vi.mocked(res.render!).mock.calls[0]!;

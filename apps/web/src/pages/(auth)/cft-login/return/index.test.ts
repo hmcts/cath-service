@@ -16,12 +16,13 @@ describe("CFT Login Return Handler", () => {
     vi.resetAllMocks();
 
     mockSession = {
+      cftOauthState: "test-state-token",
       regenerate: vi.fn((callback) => callback(null)),
       save: vi.fn((callback) => callback(null))
     };
 
     mockReq = {
-      query: { code: "test-code" },
+      query: { code: "test-code", state: "test-state-token" },
       session: mockSession,
       login: vi.fn((_user, callback) => callback(null))
     };
@@ -82,7 +83,8 @@ describe("CFT Login Return Handler", () => {
         email: "test@example.com",
         displayName: "Test User",
         role: "VERIFIED",
-        provenance: "CFT_IDAM"
+        provenance: "CFT_IDAM",
+        idToken: "id_token"
       },
       expect.any(Function)
     );
@@ -122,6 +124,32 @@ describe("CFT Login Return Handler", () => {
 
     expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=no_code&lng=en");
     expect(exchangeCodeForToken).not.toHaveBeenCalled();
+  });
+
+  it("should redirect to sign-in with invalid_state when state does not match", async () => {
+    mockReq.query = { code: "test-code", state: "wrong-state" };
+
+    await GET(mockReq as Request, mockRes as Response);
+
+    expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=invalid_state&lng=en");
+    expect(exchangeCodeForToken).not.toHaveBeenCalled();
+  });
+
+  it("should redirect to sign-in with invalid_state when state is absent", async () => {
+    mockReq.query = { code: "test-code" };
+
+    await GET(mockReq as Request, mockRes as Response);
+
+    expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=invalid_state&lng=en");
+    expect(exchangeCodeForToken).not.toHaveBeenCalled();
+  });
+
+  it("should clear the stored OAuth state so it cannot be replayed", async () => {
+    vi.mocked(exchangeCodeForToken).mockRejectedValue(new Error("Token exchange failed"));
+
+    await GET(mockReq as Request, mockRes as Response);
+
+    expect(mockSession.cftOauthState).toBeUndefined();
   });
 
   it("should redirect to sign-in when token exchange fails", async () => {

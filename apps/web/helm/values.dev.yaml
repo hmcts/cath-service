@@ -37,7 +37,7 @@ nodejs:
         # CFT IDAM secret for local development
         - name: cft-idam-client-secret
           alias: CFT_IDAM_CLIENT_SECRET
-        # GOV.UK Notify
+        # GOV.UK Notify - test key by default; a live key in .env overrides it and sends real emails
         - name: gov-uk-notify-test-api-key
           alias: GOVUK_NOTIFY_API_KEY
         # Azure AD B2C secrets (media user account management)
@@ -59,3 +59,14 @@ nodejs:
           alias: COURTEL_API_URL
         - name: courtel-certificate
           alias: COURTEL_CERTIFICATE
+        # System admin PIP connection check (/migration-connection-check, #1482)
+        - name: app-tenant-id
+          alias: AZURE_TENANT_ID
+        - name: pip-frontend-id
+          alias: PIP_API_CLIENT_ID
+        - name: pip-frontend-pwd
+          alias: PIP_API_CLIENT_SECRET
+        - name: pip-data-management-scope
+          alias: PIP_DATA_MANAGEMENT_SCOPE
+        - name: pip-account-management-scope
+          alias: PIP_ACCOUNT_MANAGEMENT_SCOPE

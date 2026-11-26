@@ -61,7 +61,6 @@ export {
   generateListPdf,
   type ListPdfOptions,
   loadTranslations,
-  MAX_PDF_SIZE_BYTES,
   type PdfFromHtmlResult,
   type PdfGenerationResult,
   type RenderedListData,
@@ -82,6 +81,7 @@ export {
 } from "./rendering/crown-utilities.js";
 export { formatDdMmYyyyDate, formatDisplayDate, formatHHMMTime, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
 export { normaliseHearing, normaliseHearings } from "./rendering/hearing-normalisation.js";
+export { formatAccusedDateOfBirth } from "./sjp/accused-date-of-birth.js";
 export * from "./sjp/json-parser.js";
 export * from "./sjp/sjp-paginator.js";
 export * from "./sjp/sjp-service.js";

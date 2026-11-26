@@ -1,11 +1,11 @@
 import { provenanceLabelsEn as provenanceLabels } from "@hmcts/list-types-common";
 
 export const pageTitleByListType: Record<string, string> = {
-  UTIAC_JR_LEEDS_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List",
-  UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List",
-  UTIAC_JR_CARDIFF_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List",
-  UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List",
-  UTIAC_JR_LONDON_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List"
+  UT_IAC_JR_LEEDS_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List",
+  UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List",
+  UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Bristol and Cardiff Daily Hearing List",
+  UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List",
+  UT_IAC_JR_LONDON_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List"
 };
 
 export const londonTableHeaders = {
@@ -43,11 +43,12 @@ export const en = {
     hearingType: "Hearing type",
     additionalInformation: "Additional information"
   },
-  dataSource: "Data source",
+  dataSource: "Data Source",
   backToTop: "Back to top",
   cautionNote:
     "Note this document contains Special Category Data as defined by Data Protection Act 2018, formally known as Sensitive Personal Data, and should be handled appropriately.",
   cautionReporting:
     "This document contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.",
+  thanks: "Thank you for reading this document thoroughly.",
   provenanceLabels
 };

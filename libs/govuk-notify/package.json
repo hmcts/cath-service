@@ -18,11 +18,12 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
+    "@hmcts/email-rate-limit": "workspace:*",
     "notifications-node-client": "8.4.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
+    "@types/node": "24.19.2",
     "typescript": "6.0.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.12"
   }
 }

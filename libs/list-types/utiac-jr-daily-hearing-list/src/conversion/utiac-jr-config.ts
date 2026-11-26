@@ -103,10 +103,10 @@ export const UTIAC_JR_LONDON_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const utiacJrRegionalConverter = createConverter(UTIAC_JR_REGIONAL_EXCEL_CONFIG);
-registerConverterByName("UTIAC_JR_LEEDS_DAILY_HEARING_LIST", utiacJrRegionalConverter);
-registerConverterByName("UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST", utiacJrRegionalConverter);
-registerConverterByName("UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST", utiacJrRegionalConverter);
-registerConverterByName("UTIAC_JR_CARDIFF_DAILY_HEARING_LIST", utiacJrRegionalConverter);
+registerConverterByName("UT_IAC_JR_LEEDS_DAILY_HEARING_LIST", utiacJrRegionalConverter);
+registerConverterByName("UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST", utiacJrRegionalConverter);
+registerConverterByName("UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST", utiacJrRegionalConverter);
+registerConverterByName("UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST", utiacJrRegionalConverter);
 
 const utiacJrLondonConverter = createConverter(UTIAC_JR_LONDON_EXCEL_CONFIG);
-registerConverterByName("UTIAC_JR_LONDON_DAILY_HEARING_LIST", utiacJrLondonConverter);
+registerConverterByName("UT_IAC_JR_LONDON_DAILY_HEARING_LIST", utiacJrLondonConverter);

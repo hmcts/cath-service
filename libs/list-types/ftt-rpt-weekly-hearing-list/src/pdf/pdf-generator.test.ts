@@ -76,32 +76,6 @@ describe("generateFttRptWeeklyHearingListPdf", () => {
     expect(result.success).toBe(true);
     expect(result.pdfPath).toContain("test-artefact-123.pdf");
     expect(result.sizeBytes).toBe(1024);
-    expect(result.exceedsMaxSize).toBe(false);
-  });
-
-  it("should return exceedsMaxSize true when PDF is over 2MB", async () => {
-    // Arrange
-    const largePdfBuffer = Buffer.alloc(3 * 1024 * 1024);
-    vi.mocked(generatePdfFromHtml).mockResolvedValue({
-      success: true,
-      pdfBuffer: largePdfBuffer,
-      sizeBytes: 3 * 1024 * 1024
-    });
-
-    // Act
-    const result = await generateFttRptWeeklyHearingListPdf({
-      artefactId: "large-pdf-123",
-      contentDate: new Date("2025-01-01"),
-      locale: "en",
-      locationId: "240",
-      jsonData: mockHearingList,
-      courtName: "First-tier Tribunal (Residential Property Tribunal): London region",
-      listTitle: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List"
-    });
-
-    // Assert
-    expect(result.success).toBe(true);
-    expect(result.exceedsMaxSize).toBe(true);
   });
 
   it("should return error when PDF generation fails", async () => {
@@ -215,7 +189,7 @@ describe("generateFttRptWeeklyHearingListPdf", () => {
       jsonData: mockHearingList,
       courtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
       listTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
-      listTypeName: "FTT_RPT_EASTERN_WEEKLY_HEARING_LIST"
+      listTypeName: "RPT_EASTERN_WEEKLY_HEARING_LIST"
     });
 
     // Assert
@@ -292,7 +266,7 @@ describe("generateFttRptWeeklyHearingListPdf", () => {
       jsonData: mockHearingList,
       courtName: "First-tier Tribunal (Residential Property Tribunal): Southern region",
       listTitle: "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List",
-      listTypeName: "FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST"
+      listTypeName: "RPT_SOUTHERN_WEEKLY_HEARING_LIST"
     });
 
     // Assert

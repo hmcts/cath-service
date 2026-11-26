@@ -12,8 +12,8 @@ const __dirname = path.dirname(__filename);
 const TEMPLATE = "(system-admin)/manage-list-types/index.njk";
 
 const listTypes = [
-  { id: 1, name: "Civil Daily Cause List", configureUrl: "/list-search-config/1" },
-  { id: 8, name: "Civil and Family Daily Cause List", configureUrl: "/list-search-config/8" }
+  { id: 1, name: "Civil Daily Cause List", isHidden: false, configureUrl: "/list-search-config/1" },
+  { id: 8, name: "Civil and Family Daily Cause List", isHidden: true, configureUrl: "/list-search-config/8" }
 ];
 
 describe("manage-list-types template", () => {
@@ -54,6 +54,31 @@ describe("manage-list-types template", () => {
       expect($("tbody").text()).toContain("Civil and Family Daily Cause List");
     });
 
+    it("should render a status column heading and a visually hidden action column heading", () => {
+      const data = { ...en, listTypes };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const headers = $("thead th");
+      expect(headers).toHaveLength(3);
+      expect(headers.eq(1).text().trim()).toBe(en.statusColumnHeading);
+      expect(headers.eq(2).find(".govuk-visually-hidden").text().trim()).toBe(en.actionColumnHeading);
+    });
+
+    it("should render a green Visible tag for visible list types and a grey Hidden tag for hidden ones", () => {
+      const data = { ...en, listTypes };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const rows = $("tbody .govuk-table__row");
+      const visibleTag = rows.eq(0).find(".govuk-tag");
+      const hiddenTag = rows.eq(1).find(".govuk-tag");
+      expect(visibleTag.text().trim()).toBe(en.visibleTag);
+      expect(visibleTag.hasClass("govuk-tag--green")).toBe(true);
+      expect(hiddenTag.text().trim()).toBe(en.hiddenTag);
+      expect(hiddenTag.hasClass("govuk-tag--grey")).toBe(true);
+    });
+
     it("should render an empty table body when there are no list types", () => {
       const data = { ...en, listTypes: [] };
 
@@ -74,6 +99,12 @@ describe("manage-list-types template", () => {
       expect($("th.govuk-table__header").first().text().trim()).toBe(cy.nameColumnHeading);
       expect($("caption").text().trim()).toBe(cy.tableCaption);
       expect($('a[href="/list-search-config/1"]').text().trim()).toBe(cy.configureLink);
+      expect($("tbody .govuk-tag").eq(0).text().trim()).toBe(cy.visibleTag);
+      expect($("tbody .govuk-tag").eq(1).text().trim()).toBe(cy.hiddenTag);
+    });
+
+    it("should have matching keys in English and Welsh content", () => {
+      expect(Object.keys(cy).sort()).toEqual(Object.keys(en).sort());
     });
   });
 });

@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { cy } from "../locales/cy.js";
+import { en } from "../locales/en.js";
 import type { AstDailyHearingList } from "../models/types.js";
 import { generateAstDailyHearingListPdf } from "./pdf-generator.js";
 
@@ -78,14 +80,13 @@ describe("generateAstDailyHearingListPdf", () => {
     expect(result.error).toBe("PDF generation failed");
   });
 
-  it("should use the correct list title", async () => {
-    await generateAstDailyHearingListPdf(baseOptions);
+  it.each([
+    ["en", en.pageTitle],
+    ["cy", cy.pageTitle]
+  ])("should use the %s locale list title", async (locale, expectedTitle) => {
+    await generateAstDailyHearingListPdf({ ...baseOptions, locale });
 
-    expect(generateListPdf).toHaveBeenCalledWith(
-      expect.objectContaining({
-        listTitle: "Asylum Support Tribunal Daily Hearing List"
-      })
-    );
+    expect(generateListPdf).toHaveBeenCalledWith(expect.objectContaining({ listTitle: expectedTitle }));
   });
 
   it("should provide working importEn and importCy callbacks", async () => {
@@ -97,5 +98,16 @@ describe("generateAstDailyHearingListPdf", () => {
 
     expect(enModule.en).toBeDefined();
     expect(cyModule.cy).toBeDefined();
+  });
+
+  it.each([
+    ["en", "MANUAL_UPLOAD", "Manual Upload"],
+    ["cy", "MANUAL_UPLOAD", "Lanlwytho â Llaw"],
+    ["en", "SNL", "ListAssist"],
+    ["cy", "SNL", "ListAssist"]
+  ])("should use the %s locale data source label for %s, as legacy does", async (locale, provenance, expectedLabel) => {
+    await generateAstDailyHearingListPdf({ ...baseOptions, locale, provenance });
+
+    expect(generateListPdf).toHaveBeenCalledWith(expect.objectContaining({ provenanceLabel: expectedLabel }));
   });
 });

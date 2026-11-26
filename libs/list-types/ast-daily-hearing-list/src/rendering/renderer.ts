@@ -1,4 +1,4 @@
-import { formatDisplayDate, formatLastUpdatedDateTime } from "@hmcts/list-types-common";
+import { formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "@hmcts/list-types-common";
 import type { AstDailyHearing, AstDailyHearingList } from "../models/types.js";
 
 export interface RenderOptions {
@@ -29,6 +29,6 @@ export function renderAstDailyHearingListData(hearingList: AstDailyHearingList, 
       lastUpdatedDate,
       lastUpdatedTime
     },
-    hearings: hearingList.map((hearing) => ({ ...hearing }))
+    hearings: hearingList.map((hearing) => ({ ...hearing, hearingTime: normalizeTime(hearing.hearingTime) }))
   };
 }

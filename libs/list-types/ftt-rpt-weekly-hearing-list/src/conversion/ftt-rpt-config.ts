@@ -69,9 +69,9 @@ export const FTT_RPT_EXCEL_CONFIG: ExcelConverterConfig = {
 
 const fttRptConverter = createConverter(FTT_RPT_EXCEL_CONFIG);
 
-registerConverterByName("FTT_RPT_EASTERN_WEEKLY_HEARING_LIST", fttRptConverter);
-registerConverterByName("FTT_RPT_LONDON_WEEKLY_HEARING_LIST", fttRptConverter);
-registerConverterByName("FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST", fttRptConverter);
-registerConverterByName("FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST", fttRptConverter);
-registerConverterByName("FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST", fttRptConverter);
+registerConverterByName("RPT_EASTERN_WEEKLY_HEARING_LIST", fttRptConverter);
+registerConverterByName("RPT_LONDON_WEEKLY_HEARING_LIST", fttRptConverter);
+registerConverterByName("RPT_MIDLANDS_WEEKLY_HEARING_LIST", fttRptConverter);
+registerConverterByName("RPT_NORTHERN_WEEKLY_HEARING_LIST", fttRptConverter);
+registerConverterByName("RPT_SOUTHERN_WEEKLY_HEARING_LIST", fttRptConverter);
 registerConverterByName("FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST", fttRptConverter);

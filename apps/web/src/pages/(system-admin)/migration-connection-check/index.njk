@@ -1,0 +1,73 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/inset-text/macro.njk" import govukInsetText %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% block backLink %}
+  <a href="/migration{{ lngParam }}" class="govuk-back-link">{{ back }}</a>
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    {% if not isConfigured %}
+      {{ govukInsetText({ text: notConfigured }) }}
+    {% else %}
+      {% set hintHtml %}
+        <p class="govuk-hint">{{ urlHint }}</p>
+        <ul class="govuk-list govuk-list--bullet govuk-hint" id="allowed-hosts">
+          {% for host in allowedHosts %}
+            <li>{{ host }}</li>
+          {% endfor %}
+        </ul>
+        <p class="govuk-hint">{{ authHint }}</p>
+      {% endset %}
+
+      <form method="post" novalidate>
+        {{ govukInput({
+          id: "url",
+          name: "url",
+          type: "text",
+          inputmode: "url",
+          prefix: { text: "https://" },
+          spellcheck: false,
+          autocomplete: "off",
+          label: { text: urlLabel, classes: "govuk-label--s" },
+          hint: { html: hintHtml },
+          value: data.url,
+          errorMessage: { text: errors[0].text } if errors else undefined
+        }) }}
+
+        {{ govukButton({
+          text: testConnectionButton,
+          preventDoubleClick: true
+        }) }}
+      </form>
+
+      {% if connectionResult %}
+        <div class="connection-result {{ 'connection-result--success' if connectionResult.isSuccess else 'connection-result--fail' }} govuk-!-margin-bottom-5" role="alert">
+          <p class="govuk-body connection-result__title">{{ connectionResult.title }}</p>
+          {% set summaryRows = [] %}
+          {% for row in connectionResult.rows %}
+            {% set summaryRows = (summaryRows.push({ key: { text: row.key }, value: { text: row.value } }), summaryRows) %}
+          {% endfor %}
+          {{ govukSummaryList({ rows: summaryRows, classes: "govuk-!-margin-bottom-0" }) }}
+        </div>
+      {% endif %}
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

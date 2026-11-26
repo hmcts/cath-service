@@ -3,6 +3,7 @@ import "./conversion/business-and-property-division-rolls-building-daily-cause-l
 // Business logic exports
 export type { ValidationResult } from "@hmcts/publication";
 export * from "./email-summary/summary-builder.js";
+export { reformatBusinessAndPropertyDivisionRollsBuildingDailyCauseListExcel } from "./excel/excel-reformatter.js";
 export { cy as businessAndPropertyDivisionRollsBuildingDailyCauseListCy } from "./locales/cy.js";
 export { en as businessAndPropertyDivisionRollsBuildingDailyCauseListEn } from "./locales/en.js";
 export * from "./models/types.js";

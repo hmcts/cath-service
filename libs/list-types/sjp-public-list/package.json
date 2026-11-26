@@ -13,8 +13,9 @@
     }
   },
   "scripts": {
-    "build": "tsc && yarn build:schemas",
+    "build": "tsc && yarn build:schemas && yarn build:pdf-templates",
     "build:schemas": "mkdir -p dist/schemas && cp src/schemas/*.json dist/schemas/",
+    "build:pdf-templates": "mkdir -p dist/pdf && cp src/pdf/*.njk dist/pdf/",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -31,9 +32,9 @@
     "nunjucks": "3.2.4"
   },
   "devDependencies": {
-    "@types/node": "24.10.4",
+    "@types/node": "24.19.2",
     "typescript": "6.0.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.12"
   },
   "peerDependencies": {
     "express": "^5.1.0"
