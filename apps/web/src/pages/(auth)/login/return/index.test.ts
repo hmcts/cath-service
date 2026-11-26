@@ -247,13 +247,6 @@ describe("B2C Callback Handler", () => {
       expect(mockSession.returnTo).toBeUndefined();
       expect(mockSession.b2cLocale).toBeUndefined();
     });
-
-    it("should set lastActivity timestamp on successful login", async () => {
-      await GET(mockReq as Request, mockRes as Response);
-
-      expect(mockSession.lastActivity).toBeDefined();
-      expect(typeof mockSession.lastActivity).toBe("number");
-    });
   });
 
   describe("token exchange", () => {

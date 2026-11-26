@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generatePublicationExcel, generatePublicationPdf, listTypeHasExcel, processPublication, sendPublicationNotificationsForArtefact } from "./service.js";
 
 const mockSendThirdPartyPublications = vi.hoisted(() => vi.fn());
+const mockSendPublicationToThirdParties = vi.hoisted(() => vi.fn());
 
 vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list", () => ({
   generateCareStandardsTribunalWeeklyHearingListPdf: vi.fn(),
@@ -209,6 +210,10 @@ vi.mock("@hmcts/legacy-third-party-fulfilment", () => ({
   sendThirdPartyPublications: mockSendThirdPartyPublications
 }));
 
+vi.mock("@hmcts/third-party-subscription-fulfilment", () => ({
+  sendPublicationToThirdParties: mockSendPublicationToThirdParties
+}));
+
 vi.mock("../repository/queries.js", () => ({
   isListTypeHidden: vi.fn()
 }));
@@ -304,6 +309,7 @@ describe("publication-processor", async () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSendThirdPartyPublications.mockResolvedValue(undefined);
+    mockSendPublicationToThirdParties.mockResolvedValue(undefined);
     vi.mocked(isListTypeHidden).mockResolvedValue(false);
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: false } as any);
     vi.mocked(prisma.listType.findUnique).mockResolvedValue({
@@ -1758,6 +1764,7 @@ describe("publication-processor", async () => {
       expect(sendLocationAndCaseSubscriptionNotifications).not.toHaveBeenCalled();
       expect(sendListTypePublicationNotifications).not.toHaveBeenCalled();
       expect(mockSendThirdPartyPublications).not.toHaveBeenCalled();
+      expect(mockSendPublicationToThirdParties).not.toHaveBeenCalled();
       expect(result.notificationsSent).toBeUndefined();
       expect(consoleLogSpy).toHaveBeenCalledWith(
         "[Publication] List type hidden; notifications and third-party push skipped",
@@ -1824,6 +1831,45 @@ describe("publication-processor", async () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Third-party push failed:", expect.any(Error));
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("should call sendPublicationToThirdParties with the artefact, update flag, payload and log prefix", async () => {
+      // Act
+      await processPublication({ ...baseParams, skipNotifications: true, isUpdate: true, logPrefix: "[Test]" });
+
+      // Assert
+      expect(mockSendPublicationToThirdParties).toHaveBeenCalledWith({
+        artefactId: baseParams.artefactId,
+        isUpdate: true,
+        jsonData: baseParams.jsonData,
+        logPrefix: "[Test]"
+      });
+    });
+
+    it("should not call sendPublicationToThirdParties when skipThirdPartyPush is true", async () => {
+      // Act
+      await processPublication({ ...baseParams, skipThirdPartyPush: true });
+
+      // Assert
+      expect(mockSendPublicationToThirdParties).not.toHaveBeenCalled();
+    });
+
+    it("should log and still resolve when sendPublicationToThirdParties rejects", async () => {
+      // Arrange
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      mockSendPublicationToThirdParties.mockRejectedValue(new Error("OAuth fulfilment down"));
+
+      // Act
+      const result = processPublication({ ...baseParams, skipNotifications: true, jsonData: undefined });
+
+      // Assert
+      await expect(result).resolves.toBeDefined();
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Third-party OAuth fulfilment failed:", {
+        artefactId: baseParams.artefactId,
+        error: "OAuth fulfilment down"
+      });
       consoleErrorSpy.mockRestore();
     });
 

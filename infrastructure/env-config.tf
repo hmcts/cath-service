@@ -15,9 +15,8 @@ locals {
     # perftest vnets have their own subnets, so they take the module default.
     # null (rather than "") means "argument not set", so the module's own
     # default applies.
-    # core_infra_subscription_id is non-null only where the core-infra vnet is NOT
-    # in var.subscription. aat and demo leave it null so cnp-module-redis keeps
-    # doing its own lookup, exactly as today - their vnets are in DCD-CNP-DEV.
+    # core_infra_subscription_id pins the core-infra vnet's subscription for ithc
+    # and perftest (DCD-CNP-QA); the others leave it null and use var.subscription.
     # Every entry carries the same attributes, including the explicit nulls: a map
     # of objects with differing attribute sets fails type unification.
     # environment_tag overrides only the `environment` TAG, never var.env, so
@@ -34,11 +33,13 @@ locals {
     # Prod publishes through cft-api-mgmt-prod (#1161).
     # crime_federation_enabled reads crime-oidc-config from the app vault - see
     # tf-crime-connection-mi.tf. The secret must exist in the vault before this is true.
-    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "stg", crime_federation_enabled = true }
-    demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null, apim_suffix = "demo", crime_federation_enabled = true }
-    ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = null, apim_suffix = null, crime_federation_enabled = true }
-    perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = "testing", apim_suffix = "test", crime_federation_enabled = true }
-    prod     = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "prod", crime_federation_enabled = true }
+    # ui_baseline adds the storage for apps/ui-baseline (recorded pip baselines and check
+    # results) where testers run parity checks, aat.
+    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "stg", crime_federation_enabled = true, ui_baseline = true }
+    demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null, apim_suffix = "demo", crime_federation_enabled = true, ui_baseline = false }
+    ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = null, apim_suffix = null, crime_federation_enabled = true, ui_baseline = false }
+    perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = "testing", apim_suffix = "test", crime_federation_enabled = true, ui_baseline = false }
+    prod     = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "prod", crime_federation_enabled = true, ui_baseline = false }
   }
 
   # Prod-or-not facts, the same split the CNP modules make internally. Not keys
@@ -63,18 +64,21 @@ locals {
   crime_federation_enabled = try(local.env_config[var.env].crime_federation_enabled, false)
 
   # Redis only: Postgres sizing is left to terraform-module-postgresql-flexible's
-  # defaults in every environment (#1096 task 5). Non-prod stays on Basic for
-  # cost; prod needs Premium's replication and SLA.
+  # defaults in every environment (#1096 task 5).
+  #
+  # Sized from the Azure Cache for Redis it replaced (#697): B0 without HA for
+  # non-prod's Basic C0, to keep cost down, and B3 with HA for prod's Premium P1
+  # and its replica (the CNP guide's P1 mapping). Microsoft limits scaling a
+  # Managed Redis down, so prod starts at B3 and grows if needed. Changing high
+  # availability recreates the instance.
   default_sizing = {
-    redis_sku_name = "Basic"
-    redis_family   = "C"
-    redis_capacity = 0
+    managed_redis_sku_name          = "Balanced_B0"
+    managed_redis_high_availability = false
   }
   sizing_overrides = {
     prod = {
-      redis_sku_name = "Premium"
-      redis_family   = "P"
-      redis_capacity = 1
+      managed_redis_sku_name          = "Balanced_B3"
+      managed_redis_high_availability = true
     }
   }
   sizing = merge(local.default_sizing, try(local.sizing_overrides[var.env], {}))
@@ -83,14 +87,19 @@ locals {
   # a missing map key.
   postgres_subnet_suffix = try(local.env_config[var.env].subnet_suffix, null)
 
-  # cnp-module-redis looks up core-infra-vnet-<env> with the DEFAULT provider,
-  # i.e. var.subscription. That is where aat's and demo's core-infra vnets live,
-  # but ithc's and perftest's are in a different subscription, so the lookup
-  # inside the module fails with "Subnet ... was not found". When this is set we
-  # resolve the subnet ourselves against that subscription and hand the module an
-  # explicit id, which makes it skip its own lookup entirely.
+  # The subscription for the azurerm.core_infra provider (main.tf), used to look
+  # up the Managed Redis private-endpoint subnet. null falls back to
+  # var.subscription.
   core_infra_subscription_id = try(local.env_config[var.env].core_infra_subscription_id, null)
-  redis_subnet_override      = local.core_infra_subscription_id != null
+
+  # The platform's shared zone for Managed Redis private endpoints, in
+  # DTS-CFTPTL-INTSVC and linked to every core-infra vnet (platops
+  # azure-private-dns). The Managed Redis module does
+  # not find a zone itself, so without this the endpoint gets no DNS record and
+  # the hostname resolves to the public IP, which is blocked. Joining the zone
+  # needs Private DNS Zone Contributor on it, granted to the prod principal by
+  # DTSPO for #697.
+  managed_redis_private_dns_zone_id = "/subscriptions/1baf5470-1c3e-40d3-a6f7-74bfbce4b348/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net"
 
   # The subscription holding the platform Log Analytics workspace for this
   # environment: hmcts-nonprod for every non-prod environment, hmcts-prod for
@@ -127,4 +136,6 @@ locals {
   # resource, not per-environment configuration, and putting it in the map would
   # imply a new environment might want to opt in.
   storage_uses_legacy_rg = var.env == "aat"
+
+  ui_baseline = try(local.env_config[var.env].ui_baseline, false)
 }
