@@ -49,8 +49,8 @@ FROM deps AS build
 COPY --chown=hmcts:hmcts . /opt/app
 # Turbo cache mount, so unchanged packages skip recompiling. CI persists it in
 # job.build-and-publish-images.yml (same id/uid/gid). Kept to the newest 1500
-# files (~750 task results): a hit doesn't refresh an entry's mtime, so an age
-# limit would drop packages that haven't changed for a while.
+# files (~750 task results) by mtime. A hit doesn't refresh mtime, so a package
+# that hasn't changed in a long time is eventually dropped and rebuilt once.
 RUN --mount=type=cache,id=cath-turbo,target=/opt/app/.turbo,uid=1000,gid=1000 \
     yarn build \
  && if [ -d .turbo/cache ]; then \
