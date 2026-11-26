@@ -22,15 +22,10 @@
 #             currently produce more telemetry than the real deployment, so without
 #             this the watchdog mostly alerts on other people's open pull requests.
 #
-# Error checks also return seen_at: when each occurrence happened and on which pod, up
-# to 20 of them. A count alone cannot tell a timer from an incident — one pod failing
-# every 10 minutes and every pod failing in the same second both read as "3 in the
-# window" — and the watchdog records seen_at on the tracking issue each time a problem
-# recurs, so a later triage can see the pattern that one window cannot. It is not in
-# fingerprint-by and no rule reads it, so adding it changes nothing that fires.
-#
-# make_list keeps whichever 20 it meets first, so above 20 occurrences seen_at is a
-# sample, not the first or the last 20. The triage prompt says so.
+# Error checks also return seen_at: up to 20 "timestamp pod" entries. A count cannot
+# tell one pod failing every 10 minutes from every pod failing at once; the timing
+# can, once sightings build up on the tracking issue. No rule or fingerprint reads it.
+# Above 20 occurrences it is an arbitrary sample, not the first or last 20.
 #
 # Thresholds calibrated 2026-09-04 against cath-appinsights-aat: roughly 1800
 # non-health requests/day. Revisit when traffic changes materially.

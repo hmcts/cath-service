@@ -157,11 +157,9 @@ jobs:
             // re-notify window; this stops two concurrent runs both triaging the same
             // thing, and gives a human somewhere to comment.
             //
-            // The gate is not permanent. Each time an open issue's problem is detected
-            // again, the sighting is recorded on the issue, and once enough have built up
-            // since the last triage the problem is triaged again on the same thread. A
-            // problem that never stops firing never closes its issue, so without this one
-            // inconclusive triage would be the only look it ever got.
+            // The gate is not permanent: repeat detections are recorded on the issue and
+            // eventually re-triaged there. A problem that never stops firing never closes
+            // its issue, so otherwise one inconclusive triage would be its only look.
             //
             // A problem that recurs after someone closed its issue still gets a new
             // issue rather than reopening a thread that was deliberately ended. Closed
@@ -270,32 +268,18 @@ jobs:
               };
             };
 
-            // Sightings of a problem whose issue is still open. One comment per issue,
-            // edited in place rather than added to, because a problem that fires all
-            // day is re-detected every few hours and a comment each time would bury the
-            // thread and email every watcher. The rows are what one triage cannot see:
-            // a single window holds one or two occurrences per pod, but a dozen windows
-            // across a week show whether they keep a rhythm or arrive together.
+            // Sightings live in one comment per issue, edited in place so a problem
+            // re-detected every few hours does not bury the thread or email watchers.
+            // One window shows one or two occurrences per pod; a week of them shows
+            // whether they keep a rhythm or arrive together.
             //
-            // Six sightings is roughly three working days at the detect job's
-            // re-notify window. The count lives in the comment beside the rows, not in
-            // the rows themselves, because the rows are trimmed to fit and the count
-            // must not be. It restarts at each triage attempt, and a re-triage counts
-            // as attempted the moment it is claimed here, before Claude runs: a triage
-            // that crashes, or whose report fails to post, still waits its turn rather
-            // than retrying on every detection. The workflow's concurrency group is
-            // what makes the read-modify-write of that comment safe.
-            //
-            // A trusted person's comment restarts the count too, the same as a triage
-            // attempt: whoever wrote it gets a clear stretch to act, and if it keeps
-            // firing after that the re-triage reads what they said, which outranks any
-            // report. Re-triage pauses, while sightings are still recorded, when a fix is
-            // already in review, and stops for good after MAX_RETRIAGES, by which point
-            // more of the same evidence has stopped helping and a person has to decide.
-            //
-            // The limits reach the prompt through prior.json rather than being repeated
-            // in its text, so changing one here cannot leave the prompt describing the
-            // old value.
+            // Six sightings is about three working days at the 6h re-notify window. The
+            // count is stored beside the rows because the rows get trimmed. It restarts
+            // on a triage attempt, counted at claim time so a crashed run cannot loop, and
+            // on a trusted person's comment, so they get a clear stretch to act. Paused
+            // while a fix is in review; stops after MAX_RETRIAGES. The concurrency group
+            // makes the read-modify-write safe. Limits go to the prompt via prior.json so
+            // it cannot drift from these constants.
             const SIGHTINGS_MARKER = '<!-- watchdog-sightings -->';
             const RETRIAGE_AFTER_SIGHTINGS = 6;
             const MAX_RETRIAGES = 3;
@@ -305,22 +289,19 @@ jobs:
             // GitHub rejects a comment over 65536 characters.
             const SIGHTINGS_COMMENT_CHARS = 60000;
             const TRIAGE_ATTEMPT_HEADINGS = [TRIAGE_REPORT_HEADING, '## ⚠️ Triage did not complete'];
-            // The line the comment step puts on a re-triage's report. Counting those as
-            // well as the stored count keeps the cap when the sightings comment has to
-            // be replaced, which loses the stored count with it.
+            // Opens the comment step's re-triage line. Counting those reports keeps the
+            // cap if the sightings comment, and its stored count, is replaced.
             const RETRIAGE_NOTE = 'Triaged again:';
             const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
 
-            // Samples and stack traces are cut down; seen_at is kept whole, because the
-            // timing is the evidence.
+            // seen_at is kept whole: the timing is the evidence.
             const trimRow = (row) => Object.fromEntries(Object.entries(row ?? {}).map(([k, v]) =>
               [k, typeof v === 'string' && v.length > SIGHTING_STRING_CHARS
                 ? `${v.slice(0, SIGHTING_STRING_CHARS)}… (truncated)`
                 : v]));
 
-            // Line endings normalised first, because the API can hand bodies back with
-            // them rewritten. Then sliced on the outermost fence rather than matched,
-            // because a quoted exception message can itself contain a code fence.
+            // CRLF normalised because the API can rewrite line endings; sliced on the
+            // outermost fence because quoted exception text can contain one.
             const EMPTY_SIGHTINGS = { claimedAt: null, countFrom: null, sinceAttempt: 0, retriages: 0, sightings: [] };
             const sightingsStateIn = (rawBody) => {
               if (rawBody == null) return EMPTY_SIGHTINGS;
@@ -344,7 +325,7 @@ jobs:
               }
             };
 
-            // Compact JSON, so the trim keeps as many sightings as it can.
+            // Compact JSON keeps more sightings under the limit.
             const sightingsBody = (state, pausedBecause) => {
               let kept = state.sightings.slice(-SIGHTINGS_KEPT);
               const progress = pausedBecause
@@ -375,17 +356,15 @@ jobs:
             for (const finding of findings) {
               const existing = open.find(i => i.body?.includes(marker(finding.normalisedFingerprint)));
               if (existing) {
-                // Per finding, so one failed API call costs this sighting rather than the
-                // whole run: a throw here would leave claimed.json unwritten, and every
-                // other finding in the run, new problems included, untriaged.
+                // Caught per finding: a throw would leave claimed.json unwritten and every
+                // other finding in the run untriaged.
                 try {
                   const comments = await commentsOn(existing.number);
                   const sightingsComment = comments
                     .filter(c => c.user?.type === 'Bot' && c.body?.startsWith(SIGHTINGS_MARKER))
                     .at(-1);
                   const state = sightingsStateIn(sightingsComment?.body);
-                  // Left in place and a fresh comment started, so whatever was in it is
-                  // still there for a person to read rather than overwritten.
+                  // Left in place for a person to read; a fresh one is started.
                   if (state.unreadable) {
                     core.warning(`${finding.fingerprint}: the sightings comment on #${existing.number} could not be read — starting a new one`);
                   }
@@ -423,8 +402,7 @@ jobs:
                       ...(rows.length > SIGHTING_ROWS ? { rowsOmitted: rows.length - SIGHTING_ROWS } : {}),
                     }],
                   }, pausedBecause);
-                  // Written before anything is claimed, so a re-triage is only ever
-                  // claimed once its attempt is on record.
+                  // Written before claiming, so a claimed re-triage is always on record.
                   if (sightingsComment && !state.unreadable) {
                     await github.rest.issues.updateComment({ owner, repo, comment_id: sightingsComment.id, body });
                   } else {
@@ -444,8 +422,7 @@ jobs:
                     fingerprint: finding.fingerprint,
                     checkId: finding.checkId,
                     issue: existing.number,
-                    // The earlier triage already had the closed-issue priors, and its
-                    // report carries whatever it made of them.
+                    // The first triage had these; its report carries what it made of them.
                     priorIssue: null,
                     priorTriage: null,
                     priorHumanComments: [],
@@ -456,8 +433,7 @@ jobs:
                       issueOpenedAt: existing.created_at,
                       daysOpen: Math.floor((Date.now() - Date.parse(existing.created_at)) / 86400000),
                       alerted: existing.labels.some(l => (l.name ?? l) === 'claude:watchdog-alerted'),
-                      // From the same comment as the report, so the two always agree; a
-                      // later attempt that did not complete has no report to date.
+                      // Dated from the report itself, not a later failed attempt.
                       lastTriageAt: conclusions.reportAt,
                       lastTriage: conclusions.report,
                       humanComments: conclusions.humanComments,
@@ -883,7 +859,7 @@ jobs:
             const bodyFor = (finding) => [
               heading, '',
               finding.retriage
-                // The claim step counts reports carrying this line, so keep its opening.
+                // The claim step counts reports by this opening (RETRIAGE_NOTE).
                 ? 'Triaged again: this problem kept firing after the last triage, and this one also had the sightings gathered since.'
                 : null,
               process.env.PR_URL ? `Draft PR: ${process.env.PR_URL}` : null,
