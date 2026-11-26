@@ -1,6 +1,7 @@
 import { normaliseHost } from "./pip-apis.js";
 
 const MAX_URL_LENGTH = 2048;
+const SCHEME_OR_ROOT_PATTERN = /^([a-z][a-z\d+.-]*:\/\/|\/)/i;
 
 export function validatePipUrl(input: unknown, isAllowedHost: (host: string) => boolean): UrlValidationResult {
   const value = typeof input === "string" ? input.trim() : "";
@@ -13,7 +14,7 @@ export function validatePipUrl(input: unknown, isAllowedHost: (host: string) => 
     return { kind: "invalid", error: "too-long" };
   }
 
-  const url = parseHttpsUrl(value);
+  const url = parseHttpsUrl(withHttpsScheme(value));
   if (!url) {
     return { kind: "invalid", error: "invalid-format" };
   }
@@ -24,6 +25,12 @@ export function validatePipUrl(input: unknown, isAllowedHost: (host: string) => 
   }
 
   return { kind: "valid", url };
+}
+
+// The form asks for the URL without its scheme: Front Door's WAF blocks request
+// bodies that contain "https://", so the scheme is added here instead.
+function withHttpsScheme(value: string): string {
+  return SCHEME_OR_ROOT_PATTERN.test(value) ? value : `https://${value}`;
 }
 
 function parseHttpsUrl(value: string): URL | undefined {

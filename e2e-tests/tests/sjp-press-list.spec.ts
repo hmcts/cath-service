@@ -17,9 +17,10 @@ function createSjpPressListPayload(locationId: number) {
   ];
   const names = [
     { forenames: "John", surname: "Smith", dob: "1985-05-15", age: 40 },
-    { forenames: "Jane", surname: "Doe", dob: "1990-08-22", age: 34 },
+    // dd/MM/yyyy is almost certainly the format the live feed sends (as PIP assumed); "unknown" checks a value the parser cannot read is shown as sent
+    { forenames: "Jane", surname: "Doe", dob: "22/08/1990", age: 34 },
     { forenames: "Bob", surname: "Wilson", dob: "1982-03-10", age: 43 },
-    { forenames: "Alice", surname: "Brown", dob: "1995-12-05", age: 29 }
+    { forenames: "Alice", surname: "Brown", dob: "unknown", age: 29 }
   ];
 
   const hearings = [];
@@ -160,6 +161,12 @@ test.describe("SJP Press List @nightly", () => {
 
     // Check Show/Hide filters button
     await expect(page.getByRole("button", { name: /filters/ })).toBeVisible();
+
+    // Check dates of birth: ISO and dd/MM/yyyy are shown as parsed dates, an unreadable value as sent
+    const caseSummary = (name: string) => page.locator(".govuk-summary-list").filter({ hasText: name }).first();
+    await expect(caseSummary("John Smith")).toContainText("15 May 1985 (40)");
+    await expect(caseSummary("Jane Doe")).toContainText("22 August 1990 (34)");
+    await expect(caseSummary("Alice Brown")).toContainText("unknown (29)");
 
     // Test accessibility (disable region rule - known site-wide issue)
     const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();

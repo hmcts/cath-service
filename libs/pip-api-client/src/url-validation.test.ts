@@ -15,6 +15,15 @@ describe("validatePipUrl", () => {
     expect(result.kind === "valid" && result.url.toString()).toBe(`https://${DATA_MANAGEMENT_HOST}/locations/111`);
   });
 
+  it("should add the https scheme when the URL is entered without one", () => {
+    // Act
+    const result = validatePipUrl(`${DATA_MANAGEMENT_HOST}/locations/111`, isAllowedHost);
+
+    // Assert
+    expect(result.kind).toBe("valid");
+    expect(result.kind === "valid" && result.url.toString()).toBe(`https://${DATA_MANAGEMENT_HOST}/locations/111`);
+  });
+
   it("should accept any allowed host, so other PIP APIs can be checked", () => {
     // Act
     const result = validatePipUrl("https://pip-account-management.staging.platform.hmcts.net/account/1", isAllowedHost);
@@ -27,7 +36,8 @@ describe("validatePipUrl", () => {
     ["an upper-case host", `https://${DATA_MANAGEMENT_HOST.toUpperCase()}/locations/1`],
     ["a trailing dot on the host", `https://${DATA_MANAGEMENT_HOST}./locations/1`],
     ["an explicit port 443", `https://${DATA_MANAGEMENT_HOST}:443/locations/1`],
-    ["surrounding whitespace", `  https://${DATA_MANAGEMENT_HOST}/locations/1  `]
+    ["surrounding whitespace", `  https://${DATA_MANAGEMENT_HOST}/locations/1  `],
+    ["an explicit port 443 without a scheme", `${DATA_MANAGEMENT_HOST}:443/locations/1`]
   ])("should accept %s", (_description, input) => {
     // Act
     const result = validatePipUrl(input, isAllowedHost);
@@ -67,7 +77,9 @@ describe("validatePipUrl", () => {
     ["a javascript URL", "javascript:alert(1)"],
     ["a file URL", "file:///etc/passwd"],
     ["text that is not a URL", "not a url"],
-    ["a path without a host", "/locations/1"]
+    ["a path without a host", "/locations/1"],
+    ["plain http written in upper case", `HTTP://${DATA_MANAGEMENT_HOST}/locations/1`],
+    ["a mailto URL", `mailto:admin@${DATA_MANAGEMENT_HOST}`]
   ])("should return invalid-format for %s", (_description, input) => {
     // Act
     const result = validatePipUrl(input, isAllowedHost);
@@ -83,7 +95,9 @@ describe("validatePipUrl", () => {
     ["an allowed host hidden in a fragment", `https://evil.com#@${DATA_MANAGEMENT_HOST}/locations/1`],
     ["an allowed host on a different port", `https://${DATA_MANAGEMENT_HOST}:8443/locations/1`],
     ["the Azure instance metadata address", "https://169.254.169.254/metadata/instance"],
-    ["localhost", "https://localhost/locations/1"]
+    ["localhost", "https://localhost/locations/1"],
+    ["a host that is not on the list, entered without a scheme", "example.com/locations/1"],
+    ["the Azure instance metadata address, entered without a scheme", "169.254.169.254/metadata/instance"]
   ])("should return host-not-allowed for %s", (_description, input) => {
     // Act
     const result = validatePipUrl(input, isAllowedHost);

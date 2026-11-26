@@ -131,4 +131,24 @@ describe("validateMagistratesAdultCourtList", () => {
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
+
+  it("should return valid when case[0].def_dob is in dd/MM/yyyy format", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    data.document.data.job.sessions.session[0].blocks.block[0].cases.case[0].def_dob = "06/11/1975";
+    const result = validateMagistratesAdultCourtList(data);
+    expect(result.isValid).toBe(true);
+  });
+
+  it.each([
+    ["an ISO date", "1975-11-06"],
+    ["a dashed date", "06-11-1975"],
+    ["an unpadded date", "6/11/1975"],
+    ["text", "unknown"]
+  ])("should return invalid when case[0].def_dob is %s", (_description, defDob) => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    data.document.data.job.sessions.session[0].blocks.block[0].cases.case[0].def_dob = defDob;
+    const result = validateMagistratesAdultCourtList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
 });
