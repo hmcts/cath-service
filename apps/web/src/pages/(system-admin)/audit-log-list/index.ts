@@ -88,6 +88,8 @@ const getHandler = async (req: Request, res: Response) => {
     selectedFiltersText: content.filters.selectedFilters,
     clearFiltersText: content.filters.clearFilters,
     applyFiltersText: content.filters.applyFilters,
+    showFiltersText: content.filters.showFilters,
+    hideFiltersText: content.filters.hideFilters,
     emailLabel: content.filters.emailLabel,
     userIdLabel: content.filters.userIdLabel,
     userIdHint: content.filters.userIdHint,

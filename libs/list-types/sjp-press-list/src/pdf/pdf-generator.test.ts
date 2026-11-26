@@ -5,6 +5,7 @@ vi.mock("@hmcts/pdf-generation", () => ({
 }));
 
 vi.mock("@hmcts/list-types-common", () => ({
+  formatAccusedDateOfBirth: vi.fn().mockReturnValue("FORMATTED_DOB"),
   extractPressCases: vi.fn().mockReturnValue([]),
   loadTranslations: vi.fn().mockResolvedValue({
     common: { at: "at" },
@@ -23,7 +24,7 @@ vi.mock("@hmcts/list-types-common", () => ({
   PDF_BASE_STYLES: ""
 }));
 
-import { configureNunjucks, extractPressCases, savePdfToStorage } from "@hmcts/list-types-common";
+import { configureNunjucks, extractPressCases, formatAccusedDateOfBirth, savePdfToStorage } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { generateSjpPressListPdf } from "./pdf-generator.js";
 
@@ -33,8 +34,7 @@ describe("generateSjpPressListPdf", () => {
     vi.mocked(savePdfToStorage).mockResolvedValue({
       success: true,
       pdfPath: "test-press-artefact-123.pdf",
-      sizeBytes: 2048,
-      exceedsMaxSize: false
+      sizeBytes: 2048
     });
   });
 
@@ -98,65 +98,48 @@ describe("generateSjpPressListPdf", () => {
     expect(result.error).toContain("Unexpected failure");
   });
 
-  it("should include age in formattedDob when age is present", async () => {
-    const pdfBuffer = Buffer.from("PDF content");
-    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer, sizeBytes: 512 });
-    vi.mocked(extractPressCases).mockReturnValue([
-      {
-        name: "A Defendant",
-        dateOfBirth: new Date("1990-01-01"),
-        age: 35,
-        reference: null,
-        address: null,
-        postcode: null,
-        prosecutor: "CPS",
-        offences: []
-      }
-    ]);
-    const mockRender = vi.fn().mockReturnValue("<html>test</html>");
-    vi.mocked(configureNunjucks).mockReturnValue({ render: mockRender } as any);
+  describe("formattedDob", () => {
+    // The formatting itself is covered by accused-date-of-birth.test.ts; here we check the PDF
+    // formats from the value as sent, not the parsed date
+    it.each([
+      { scenario: "a parsed date of birth", dateOfBirth: new Date(1985, 2, 15), rawDateOfBirth: "15/03/1985", age: 40 },
+      { scenario: "an unreadable date of birth", dateOfBirth: null, rawDateOfBirth: "unknown", age: 35 },
+      { scenario: "no date of birth but an age", dateOfBirth: null, rawDateOfBirth: null, age: 40 },
+      { scenario: "no date of birth", dateOfBirth: null, rawDateOfBirth: null, age: null }
+    ])("should format the date of birth as sent for $scenario", async ({ dateOfBirth, rawDateOfBirth, age }) => {
+      // Arrange
+      vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF content"), sizeBytes: 512 });
+      vi.mocked(extractPressCases).mockReturnValue([
+        {
+          caseId: "case-1",
+          name: "A Defendant",
+          dateOfBirth,
+          rawDateOfBirth,
+          age,
+          reference: null,
+          address: null,
+          postcode: null,
+          prosecutor: "CPS",
+          offences: []
+        }
+      ]);
+      const mockRender = vi.fn().mockReturnValue("<html>test</html>");
+      vi.mocked(configureNunjucks).mockReturnValue({ render: mockRender } as any);
 
-    await generateSjpPressListPdf({
-      artefactId: "test-dob-age",
-      contentDate: new Date("2025-01-01"),
-      locale: "en",
-      locationId: "240",
-      jsonData: { document: { publicationDate: "2025-01-01" }, courtLists: [] },
-      listTypeName: "SJP_PRESS_LIST"
+      // Act
+      await generateSjpPressListPdf({
+        artefactId: "test-dob",
+        contentDate: new Date("2025-01-01"),
+        locale: "en",
+        locationId: "240",
+        jsonData: { document: { publicationDate: "2025-01-01" }, courtLists: [] },
+        listTypeName: "SJP_PRESS_LIST"
+      });
+
+      // Assert
+      const renderCall = mockRender.mock.calls[0][1];
+      expect(formatAccusedDateOfBirth).toHaveBeenCalledWith(rawDateOfBirth, age);
+      expect(renderCall.cases[0].formattedDob).toBe("FORMATTED_DOB");
     });
-
-    const renderCall = mockRender.mock.calls[0][1];
-    expect(renderCall.cases[0].formattedDob).toMatch(/\(35\)$/);
-  });
-
-  it("should omit age from formattedDob when age is null", async () => {
-    const pdfBuffer = Buffer.from("PDF content");
-    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer, sizeBytes: 512 });
-    vi.mocked(extractPressCases).mockReturnValue([
-      {
-        name: "A Defendant",
-        dateOfBirth: new Date("1990-01-01"),
-        age: null,
-        reference: null,
-        address: null,
-        postcode: null,
-        prosecutor: "CPS",
-        offences: []
-      }
-    ]);
-    const mockRender = vi.fn().mockReturnValue("<html>test</html>");
-    vi.mocked(configureNunjucks).mockReturnValue({ render: mockRender } as any);
-
-    await generateSjpPressListPdf({
-      artefactId: "test-dob-no-age",
-      contentDate: new Date("2025-01-01"),
-      locale: "en",
-      locationId: "240",
-      jsonData: { document: { publicationDate: "2025-01-01" }, courtLists: [] },
-      listTypeName: "SJP_PRESS_LIST"
-    });
-
-    const renderCall = mockRender.mock.calls[0][1];
-    expect(renderCall.cases[0].formattedDob).not.toContain("(");
   });
 });

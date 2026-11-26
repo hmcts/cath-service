@@ -25,7 +25,7 @@ const mockListTypeData = [
     shortenedFriendlyName: "LT1",
     urlPath: "list-type-1",
     defaultSensitivity: "Public",
-    provenance: "CFT_IDAM",
+    provenance: ["CFT_IDAM"],
     isNonStrategic: false,
     subJurisdictionIds: [1]
   },
@@ -35,7 +35,7 @@ const mockListTypeData = [
     welshFriendlyName: "Math Rhestr 2",
     urlPath: "list-type-2",
     defaultSensitivity: "Private",
-    provenance: "CRIME_IDAM",
+    provenance: ["CRIME_IDAM"],
     isNonStrategic: true,
     subJurisdictionIds: [2]
   }
@@ -90,6 +90,20 @@ describe("seedListTypes", () => {
         update: expect.objectContaining({ deletedAt: null })
       })
     );
+  });
+
+  it("should never set isHidden in the upsert so an admin's hide setting survives a reseed", async () => {
+    // Arrange
+    const { seedListTypes } = await import("./seed-list-types.js");
+
+    // Act
+    await seedListTypes();
+
+    // Assert
+    for (const [args] of mockPrisma.listType.upsert.mock.calls) {
+      expect(args.create).not.toHaveProperty("isHidden");
+      expect(args.update).not.toHaveProperty("isHidden");
+    }
   });
 
   it("should soft-delete active list types no longer in listTypeData, excluding test types", async () => {

@@ -54,7 +54,10 @@ describe("select-account page", () => {
             hmctsLabel: "With a MyHMCTS account",
             commonPlatformLabel: "With a Common Platform account",
             cathLabel: "With a Court and tribunal hearings account",
-            continueButton: "Continue"
+            continueButton: "Continue",
+            createAccountText: "Don't have an account?",
+            createAccountLink: "Create a Court and tribunal hearings account",
+            userResearchText: expect.stringContaining("You may be contacted to take part in user research")
           })
         })
       );
@@ -70,7 +73,10 @@ describe("select-account page", () => {
             hmctsLabel: "Gyda chyfrif MyHMCTS",
             commonPlatformLabel: "Gyda chyfrif Common Platform",
             cathLabel: "Gyda chyfrif gwrandawiadau Llys a thribiwnlys",
-            continueButton: "Parhau"
+            continueButton: "Parhau",
+            createAccountText: "Nid oes gennych gyfrif?",
+            createAccountLink: "Creu cyfrif gwrandawiadau Llys a thribiwnlys",
+            userResearchText: expect.stringContaining("ymchwil defnyddwyr")
           })
         })
       );

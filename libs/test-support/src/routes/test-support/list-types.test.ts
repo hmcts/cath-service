@@ -78,9 +78,9 @@ describe("list-types routes", () => {
       expect(mockResponse.json).toHaveBeenCalledWith({ error: "List type not found" });
     });
 
-    it("should return list type by name", async () => {
+    it("should return list type by exact name", async () => {
       // Arrange
-      mockRequest.query = { name: "CIVIL" };
+      mockRequest.query = { name: "CIVIL_DAILY_LIST" };
       const mockListType = { id: 1, name: "CIVIL_DAILY_LIST" };
       vi.mocked((prisma as any).listType.findFirst).mockResolvedValue(mockListType);
 
@@ -89,9 +89,23 @@ describe("list-types routes", () => {
 
       // Assert
       expect((prisma as any).listType.findFirst).toHaveBeenCalledWith({
-        where: { name: { contains: "CIVIL" } }
+        where: { name: "CIVIL_DAILY_LIST" }
       });
       expect(mockResponse.json).toHaveBeenCalledWith(mockListType);
+    });
+
+    it("should return 404 when only a partial name match exists", async () => {
+      // Arrange
+      mockRequest.query = { name: "CIVIL" };
+      vi.mocked((prisma as any).listType.findFirst).mockResolvedValue(null);
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect((prisma as any).listType.findFirst).toHaveBeenCalledWith({ where: { name: "CIVIL" } });
+      expect(mockResponse.status).toHaveBeenCalledWith(404);
+      expect(mockResponse.json).toHaveBeenCalledWith({ error: "List type not found" });
     });
 
     it("should return first list type when first=true", async () => {

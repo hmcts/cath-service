@@ -25,7 +25,7 @@ export function auditLogMiddleware() {
 
     // Only log if user is authenticated and has system admin role
     const user = req.user;
-    if (!user || user.role !== "SYSTEM_ADMIN") {
+    if (user?.role !== "SYSTEM_ADMIN") {
       return next();
     }
 
@@ -46,6 +46,9 @@ export function auditLogMiddleware() {
     const logCompletionEntry = async (outcome: "success" | "validation_error" | "cancelled" | "other", context?: unknown) => {
       if (completionLogged) return;
       completionLogged = true;
+
+      // Handlers that write their own audit entry opt out, because res.render ends in res.send and would otherwise add a generic duplicate
+      if (req.auditMetadata?.shouldLog === false) return;
 
       try {
         const action = generateActionName(req);

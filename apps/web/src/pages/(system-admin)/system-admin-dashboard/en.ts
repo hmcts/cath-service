@@ -50,6 +50,16 @@ export const en = {
       title: "Manage Jurisdiction Data",
       description: "View, create, update and remove jurisdictions and sub-jurisdictions",
       href: "/jurisdiction-data"
+    },
+    {
+      title: "Download MI Report",
+      description: "Download User accounts, Publication, Location subscriptions and All subscription data",
+      href: "/mi-report"
+    },
+    {
+      title: "Migration",
+      description: "Tools for the PIP to CaTH migration, including checking connections to PIP",
+      href: "/migration"
     }
   ]
 };

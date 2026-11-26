@@ -22,11 +22,12 @@ export interface RenderResult {
 export function createTestEnvironment(modulePaths: string[], options: nunjucks.ConfigureOptions = {}): nunjucks.Environment {
   // From libs/test-support/src, go up to project root then to govuk-frontend
   const govukPath = path.join(__dirname, "../../../node_modules/govuk-frontend/dist");
+  const mojPath = path.join(__dirname, "../../../node_modules/@ministryofjustice/frontend");
 
   // Build an isolated environment rather than nunjucks.configure(), which mutates
   // a shared global environment and lets concurrent test files clobber each
   // other's template search paths.
-  const loader = new nunjucks.FileSystemLoader([...modulePaths, govukPath], { noCache: true });
+  const loader = new nunjucks.FileSystemLoader([...modulePaths, govukPath, mojPath], { noCache: true });
   return new nunjucks.Environment(loader, { autoescape: true, ...options });
 }
 

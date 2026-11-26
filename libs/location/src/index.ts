@@ -8,6 +8,7 @@ export {
   type SubJurisdictionItem
 } from "./filtering/service.js";
 export { locationData } from "./location-data.js";
+export { deleteLocationMetadataRecord, findLocationMetadataByLocationId } from "./repository/location-metadata-queries.js";
 export {
   createLocationMetadata,
   deleteLocationMetadata,
@@ -31,6 +32,7 @@ export type {
   UpdateLocationMetadataInput
 } from "./repository/model.js";
 export {
+  deleteLocation,
   getAllJurisdictions,
   getAllLocations,
   getAllRegions,
@@ -40,8 +42,7 @@ export {
   getLocationWithDetails,
   getSubJurisdictionsByJurisdiction,
   hasActiveArtefacts,
-  hasActiveSubscriptions,
-  softDeleteLocation
+  hasActiveSubscriptions
 } from "./repository/queries.js";
 export { getLocationsGroupedByLetter, type Location, searchLocations } from "./repository/service.js";
 export { seedLocationData } from "./seed-data.js";

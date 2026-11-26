@@ -15,6 +15,12 @@
       }) }}
     {% endif %}
 
+    {% if deletionLink %}
+      <p class="govuk-body">
+        <a class="govuk-link" href="{{ deletionLink.href }}">{{ deletionLink.text }} {{ locationName }}</a>
+      </p>
+    {% endif %}
+
     <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
 
     {{ govukSummaryList({

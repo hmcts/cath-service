@@ -26,8 +26,31 @@ on:
       environment:
         required: false
         type: string
-        description: "Deployment environment (dev or stg)"
-        default: "dev"
+        description: "Deployment environment (preview, aat, demo, ithc or perftest)"
+        default: "preview"
+      image-tag:
+        required: false
+        type: string
+        default: ""
+        description: >-
+          Deploy an already-built image tag instead of deriving one from
+          change-id. Either a bare tag or a JSON object of app -> tag. Used by
+          the demo/ithc/perftest workflows, which do not build.
+      ref:
+        required: false
+        type: string
+        default: ""
+        description: >-
+          Commit to check out the Helm charts from. Empty checks out the ref
+          that triggered the run. The demo/perftest workflows set it because
+          under workflow_run that ref is master HEAD, not the promoted commit.
+      cluster-suffix:
+        required: false
+        type: string
+        default: "00"
+        description: >-
+          CNP cluster ordinal. CNP provides 00 and 01 for demo, ithc and
+          perftest; only ever target one, or two traefiks claim the same host.
     outputs:
       urls:
         description: "Base64-encoded JSON of deployment URLs"
@@ -38,22 +61,28 @@ on:
       namespace:
         description: "Kubernetes namespace"
         value: ${{ jobs.helm-deploy.outputs.namespace }}
+      ui-baseline-url:
+        description: "Where the hosted parity check is, when this deploy deployed it (empty otherwise)"
+        value: ${{ jobs.helm-deploy.outputs.ui-baseline-url }}
 
 env:
   CHANGE_ID: ${{ inputs.change-id }}
-  REGISTRY: hmctspublic.azurecr.io
+  REGISTRY: hmctsprod.azurecr.io
 
 jobs:
   helm-deploy:
     name: Deploy to ${{ inputs.environment }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    environment:
-      name: ${{ inputs.environment }}
+    # Must exceed the helm timeouts below (15m0s for cath-service, 10m0s for
+    # ui-baseline) plus the recovery-timeout that helm-deploy allows itself
+    # for each, or the job is killed mid-install and leaves the release pending,
+    # which is the state the recovery then has to clean up.
+    timeout-minutes: 45
     outputs:
       urls: ${{ steps.urls.outputs.urls }}
       release-name: ${{ env.RELEASE_NAME }}
       namespace: ${{ env.TEAM_NAME }}
+      ui-baseline-url: ${{ steps.ui-baseline-url.outputs.url }}
     permissions:
       contents: read
       id-token: write
@@ -62,6 +91,83 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      # Everything that varies per environment is derived here, once. Deliberately
+      # not five if:-guarded deploy steps: byte-identical steps that differ by
+      # three values drift, which is how preview ended up mounting the aat vault.
+      - name: Resolve environment configuration
+        env:
+          AZURE_CREDENTIALS: ${{ secrets[format('AZURE_CREDENTIALS_CFT_{0}', inputs.environment)] }}
+        run: |
+          ENVIRONMENT="${{ inputs.environment }}"
+          SECRET_NAME="AZURE_CREDENTIALS_CFT_$(echo "$ENVIRONMENT" | tr '[:lower:]' '[:upper:]')"
+
+          # An absent repository secret resolves to an empty string, and
+          # azure/login then fails with a generic JSON parse error rather than
+          # saying which secret is missing.
+          if [ -z "${AZURE_CREDENTIALS}" ]; then
+            echo "::error::${SECRET_NAME} is not set as a repository secret"
+            exit 1
+          fi
+
+          case "$ENVIRONMENT" in
+            preview)
+              # There is no cath-preview key vault, so preview mounts the aat one.
+              GLOBAL_ENVIRONMENT="aat"
+              VALUES_TEMPLATE="values.preview.template.yaml"
+              ENABLE_TEST_SUPPORT="true"
+              ;;
+            demo)
+              # demo is production-like: no test-support endpoints.
+              GLOBAL_ENVIRONMENT="demo"
+              VALUES_TEMPLATE="values.template.yaml"
+              ENABLE_TEST_SUPPORT="false"
+              ;;
+            aat|ithc|perftest)
+              GLOBAL_ENVIRONMENT="$ENVIRONMENT"
+              VALUES_TEMPLATE="values.template.yaml"
+              ENABLE_TEST_SUPPORT="true"
+              ;;
+            *)
+              echo "::error::Unsupported environment '${ENVIRONMENT}'"
+              exit 1
+              ;;
+          esac
+
+          # The hosted parity check (apps/ui-baseline) runs where testers check CaTH against pip
+          # (aat), and in preview, to check a pull request's CaTH; nowhere else.
+          UI_BASELINE_ENABLED="false"
+          UI_BASELINE_VALUES=""
+          case "$ENVIRONMENT" in
+            aat|preview)
+              UI_BASELINE_ENABLED="true"
+              UI_BASELINE_VALUES="values.${ENVIRONMENT}.template.yaml"
+              ;;
+          esac
+
+          # CNP cluster and resource group names are a pure function of the
+          # environment, so no lookup table is needed.
+          CLUSTER="cft-${ENVIRONMENT}-${{ inputs.cluster-suffix }}"
+
+          {
+            echo "ENVIRONMENT=${ENVIRONMENT}"
+            echo "CLUSTER=${CLUSTER}"
+            echo "GLOBAL_ENVIRONMENT=${GLOBAL_ENVIRONMENT}"
+            echo "VALUES_TEMPLATE=${VALUES_TEMPLATE}"
+            echo "ENABLE_TEST_SUPPORT=${ENABLE_TEST_SUPPORT}"
+            echo "UI_BASELINE_ENABLED=${UI_BASELINE_ENABLED}"
+            echo "UI_BASELINE_VALUES=${UI_BASELINE_VALUES}"
+            echo "DNS_ZONE=${ENVIRONMENT}.platform.hmcts.net"
+          } >> "$GITHUB_ENV"
+
+          echo "Environment:        ${ENVIRONMENT}"
+          echo "Cluster:            ${CLUSTER}"
+          echo "Global environment: ${GLOBAL_ENVIRONMENT}"
+          echo "Values template:    ${VALUES_TEMPLATE}"
+          echo "Test support:       ${ENABLE_TEST_SUPPORT}"
+          echo "UI baseline:        ${UI_BASELINE_ENABLED}"
 
       - name: Set environment variables
         run: |
@@ -74,110 +180,164 @@ jobs:
           echo "APPLICATION_NAME=${APPLICATION_NAME}" >> $GITHUB_ENV
           echo "TIMESTAMP=${{ inputs.timestamp }}" >> $GITHUB_ENV
           echo "SHORT_SHA=${{ inputs.short-sha }}" >> $GITHUB_ENV
-          echo "ENVIRONMENT=${{ inputs.environment }}" >> $GITHUB_ENV
 
-          # Set dynamic image variables and release name
+          # Set dynamic image variables and release name. change-id still drives
+          # the release name; image-tag, when supplied, drives the image tags
+          # only - see set-image-variables.sh for why the two are decoupled.
           .github/workflows/jobs/build-and-publish-images/set-image-variables.sh \
             '${{ inputs.affected-apps }}' \
             '${{ inputs.helm-apps }}' \
             '${{ env.CHANGE_ID }}' \
             '${{ inputs.short-sha }}' \
             '${{ inputs.timestamp }}' \
-            "${APPLICATION_NAME}"
+            "${APPLICATION_NAME}" \
+            '${{ inputs.image-tag }}'
 
-      - name: Set up Helm (cleanup)
-        if: inputs.environment == 'dev'
-        uses: azure/setup-helm@v4
+      - name: Azure login for ACR (OIDC)
+        uses: azure/login@v3
         with:
-          version: 'v3.14.0'
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
 
-      - name: Azure Login (cleanup)
-        if: inputs.environment == 'dev'
-        uses: azure/login@v2
+      - name: ACR login
+        run: az acr login --name "${REGISTRY%.azurecr.io}"
+
+      # helm-deploy clears a release left in pending-upgrade by an interrupted
+      # deploy before it upgrades, which is why there is no cleanup step here.
+      # recover-stuck-release defaults to true; set it to false to opt out.
+      - name: Deploy
+        id: deploy
+        uses: hmcts/cnp-githubactions-library/helm-deploy@main
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_DEV }}
+          environment: ${{ env.CLUSTER }}
+          team-name: ${{ env.TEAM_NAME }}
+          application-name: ${{ env.APPLICATION_NAME }}
+          azure-credentials: ${{ secrets[format('AZURE_CREDENTIALS_CFT_{0}', inputs.environment)] }}
+          release-name: ${{ env.RELEASE_NAME }}
+          namespace: ${{ env.TEAM_NAME }}
+          chart: helm/${{ env.APPLICATION_NAME }}
+          values-template: helm/${{ env.APPLICATION_NAME }}/${{ env.VALUES_TEMPLATE }}
+          subchart-paths: apps/*/helm
+          global-environment: ${{ env.GLOBAL_ENVIRONMENT }}
+          business-area: Cross-Cutting
+          timeout: 15m0s
 
-      - name: Get AKS credentials (cleanup)
-        if: inputs.environment == 'dev'
-        uses: azure/aks-set-context@v4
-        with:
-          resource-group: ss-dev-00-rg
-          cluster-name: ss-dev-00-aks
-          admin: 'true'
-
-      - name: Clear stuck Helm release
-        if: inputs.environment == 'dev'
+      # The hosted parity check (apps/ui-baseline) is a release of its own, deployed after
+      # cath-service's. helm-deploy is --atomic, so a ui-baseline pod that cannot start (a missing
+      # secret, an image that cannot be pulled, Chromium slow to be ready) rolls back only
+      # ui-baseline, to its last good release. Neither step fails the deploy: web and api are
+      # already out, and the warning below says ui-baseline was not.
+      #
+      # It is deployed by digest, not tag. A master merge that did not rebuild it deploys the
+      # floating aat tag, after one that did deployed aat-<sha>: the same image under another name,
+      # which would still replace the pod, and hand over the runs queued in it. A digest only
+      # changes when the image does.
+      - name: Pin the ui-baseline image
+        id: ui-baseline-image
+        if: env.UI_BASELINE_ENABLED == 'true'
+        continue-on-error: true
         run: |
-          STATUS=$(helm status "${{ env.RELEASE_NAME }}" -n "${{ env.TEAM_NAME }}" -o json 2>/dev/null | jq -r '.info.status // empty' || true)
-          if [[ "$STATUS" == "pending-install" || "$STATUS" == "pending-upgrade" || "$STATUS" == "pending-rollback" ]]; then
-            echo "Release ${{ env.RELEASE_NAME }} is stuck in status: $STATUS. Uninstalling..."
-            helm uninstall "${{ env.RELEASE_NAME }}" -n "${{ env.TEAM_NAME }}" --wait=false || true
-          else
-            echo "Release status: ${STATUS:-not found}. No cleanup needed."
+          IMAGE="${REGISTRY}/cath/cath-ui-baseline:${UI_BASELINE_IMAGE}"
+          if ! DIGEST=$(docker buildx imagetools inspect "$IMAGE" --format '{{.Manifest.Digest}}' 2>/tmp/inspect.err); then
+            # A pull request builds ui-baseline only when it could have changed its image
+            # (detect-affected-apps.sh), so one that never has has no image of it to deploy. Any other
+            # failure (an expired token, the registry down) is an error, not taken for that.
+            if [ "${{ inputs.environment }}" = "preview" ] && grep -q ': not found$' /tmp/inspect.err; then
+              echo "::notice::ui-baseline is not deployed to preview: this pull request has not built its image (${IMAGE})"
+              echo "UI_BASELINE_ENABLED=false" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            echo "::error::Could not look up ${IMAGE}: $(tail -1 /tmp/inspect.err)"
+            exit 1
           fi
+          if [ -z "$DIGEST" ]; then
+            echo "::error::Could not find the digest of ${IMAGE}"
+            exit 1
+          fi
+          echo "ui-baseline: ${IMAGE} is ${DIGEST}"
+          echo "UI_BASELINE_IMAGE_REF=@${DIGEST}" >> "$GITHUB_ENV"
 
-      - name: Deploy to DEV
-        if: inputs.environment == 'dev'
-        id: deploy-dev
+      - name: Deploy ui-baseline
+        id: ui-baseline
+        if: env.UI_BASELINE_ENABLED == 'true' && steps.ui-baseline-image.outcome == 'success'
+        continue-on-error: true
         uses: hmcts/cnp-githubactions-library/helm-deploy@main
         with:
-          environment: ss-dev-00
+          environment: ${{ env.CLUSTER }}
           team-name: ${{ env.TEAM_NAME }}
           application-name: ${{ env.APPLICATION_NAME }}
-          azure-credentials: ${{ secrets.AZURE_CREDENTIALS_SDS_DEV }}
-          release-name: ${{ env.RELEASE_NAME }}
+          azure-credentials: ${{ secrets[format('AZURE_CREDENTIALS_CFT_{0}', inputs.environment)] }}
+          # The resources keep the names, and the host, they had as part of cath-service's release
+          release-name: ${{ env.RELEASE_NAME }}-ui-baseline
           namespace: ${{ env.TEAM_NAME }}
-          chart: helm/${{ env.APPLICATION_NAME }}
-          values-template: helm/${{ env.APPLICATION_NAME }}/values.preview.template.yaml
-          subchart-paths: apps/*/helm
-          global-environment: stg
+          chart: apps/ui-baseline/helm
+          values-template: apps/ui-baseline/helm/${{ env.UI_BASELINE_VALUES }}
+          global-environment: ${{ env.GLOBAL_ENVIRONMENT }}
           business-area: Cross-Cutting
-          oci-registry: ${{ env.REGISTRY }}
-          oci-username: ${{ secrets.REGISTRY_USERNAME }}
-          oci-password: ${{ secrets.REGISTRY_PASSWORD }}
-          timeout: 15m0s
+          timeout: 10m0s
 
-      - name: Deploy to STG
-        if: inputs.environment == 'stg'
-        id: deploy-stg
-        uses: hmcts/cnp-githubactions-library/helm-deploy@main
-        with:
-          environment: ss-stg-00
-          team-name: ${{ env.TEAM_NAME }}
-          application-name: ${{ env.APPLICATION_NAME }}
-          azure-credentials: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
-          release-name: ${{ env.RELEASE_NAME }}
-          namespace: ${{ env.TEAM_NAME }}
-          chart: helm/${{ env.APPLICATION_NAME }}
-          values-template: helm/${{ env.APPLICATION_NAME }}/values.template.yaml
-          subchart-paths: apps/*/helm
-          global-environment: stg
-          business-area: Cross-Cutting
-          oci-registry: ${{ env.REGISTRY }}
-          oci-username: ${{ secrets.REGISTRY_USERNAME }}
-          oci-password: ${{ secrets.REGISTRY_PASSWORD }}
-          timeout: 15m0s
+      # Output on its own rather than in the deployment URLs (below), for the PR comment and its own
+      # health check (job.smoke-test.yml)
+      - name: Report where ui-baseline is
+        id: ui-baseline-url
+        if: env.UI_BASELINE_ENABLED == 'true' && steps.ui-baseline.outcome == 'success'
+        # Only reports: like every ui-baseline step, it never fails CaTH's deploy
+        continue-on-error: true
+        run: |
+          HOST=$(kubectl get ingress -n "${TEAM_NAME}" -l "app.kubernetes.io/instance=${RELEASE_NAME}-ui-baseline" -o jsonpath='{.items[*].spec.rules[0].host}' | awk '{print $1}')
+          if [ -z "${HOST}" ]; then
+            echo "::warning::ui-baseline was deployed, but no ingress was found for it, so its address is not reported"
+            exit 0
+          fi
+          echo "ui-baseline (VPN only): https://${HOST}"
+          echo "**ui-baseline** (VPN only): https://${HOST}" >> "$GITHUB_STEP_SUMMARY"
+          echo "url=https://${HOST}" >> "$GITHUB_OUTPUT"
 
-      - name: Register DNS for STG
-        if: inputs.environment == 'stg'
+      - name: Report a ui-baseline deploy that failed
+        if: env.UI_BASELINE_ENABLED == 'true' && (steps.ui-baseline-image.outcome == 'failure' || steps.ui-baseline.outcome == 'failure')
+        run: |
+          echo "::warning::The hosted parity check (ui-baseline) was not deployed; it keeps its last good release. CaTH itself was deployed. The steps above say why."
+
+      # Preview hosts are registered by the preview platform, not here. Without
+      # this step the release-scoped hosts have no A record and the smoke test
+      # fails with HTTP 000, which reads like an app failure but is DNS.
+      - name: Register DNS
+        if: inputs.environment != 'preview'
         run: |
           # Get Traefik ingress IP
           INGRESS_IP=$(kubectl get svc traefik -n admin -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-          # DNS config (matches Jenkins private-dns-config.yml)
+          # DNS config (matches Jenkins private-dns-config.yml). The resource
+          # group and subscription hold every CNP non-prod private zone; only the
+          # zone itself is per-environment.
           RESOURCE_GROUP="core-infra-intsvc-rg"
-          ZONE="staging.platform.hmcts.net"
+          ZONE="${DNS_ZONE}"
           SUBSCRIPTION="DTS-CFTPTL-INTSVC"
           TTL=300
 
-          # Get all ingress hostnames for this release
+          # Get all ingress hostnames for this release, and for ui-baseline's, a release
+          # of its own deployed beside this one
           HOSTNAMES=$(kubectl get ingress -n ${{ env.TEAM_NAME }} \
-            -l "app.kubernetes.io/instance=${{ env.RELEASE_NAME }}" \
+            -l "app.kubernetes.io/instance in (${{ env.RELEASE_NAME }},${{ env.RELEASE_NAME }}-ui-baseline)" \
             -o jsonpath='{.items[*].spec.rules[*].host}')
 
           for HOST in $HOSTNAMES; do
             # Extract record name (hostname without zone suffix)
             RECORD_NAME="${HOST%.${ZONE}}"
+
+            # Some ingress hosts are Front Door entry points that already exist as
+            # CNAMEs in this zone (see additionalIngressHosts in the values
+            # template). DNS forbids an A and a CNAME at the same name, so creating
+            # one fails the whole step with:
+            #   (Conflict) The record could not be created because a CNAME record
+            #   with the same name already exists in this zone.
+            if az network private-dns record-set cname show \
+              -g "$RESOURCE_GROUP" -z "$ZONE" -n "$RECORD_NAME" \
+              --subscription "$SUBSCRIPTION" &>/dev/null; then
+              echo "Skipping ${RECORD_NAME}: already a CNAME (Front Door entry point)"
+              continue
+            fi
 
             echo "Registering DNS: ${RECORD_NAME} -> ${INGRESS_IP}"
 

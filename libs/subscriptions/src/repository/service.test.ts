@@ -6,6 +6,8 @@ import {
   createMultipleSubscriptions,
   createSubscription,
   deleteSubscriptionsByIds,
+  deleteSubscriptionsByLocationId,
+  findSubscribersByLocationId,
   getAllSubscriptionsByUserId,
   getCaseSubscriptionsByUserId,
   getCourtSubscriptionsByUserId,
@@ -730,6 +732,47 @@ describe("Subscription Service", () => {
 
       expect(result).toBe(2);
       expect(listTypeService.pruneStaleListTypesForUser).toHaveBeenCalledWith(mockUserId, [100], []);
+    });
+  });
+
+  describe("deleteSubscriptionsByLocationId", () => {
+    it("should delete all subscriptions for a location regardless of owner", async () => {
+      vi.mocked(queries.findSubscriptionsByLocationId).mockResolvedValue([{ subscriptionId: "sub-1" }, { subscriptionId: "sub-2" }] as any);
+      vi.mocked(queries.deleteSubscriptionsByLocationIdRecord).mockResolvedValue(2);
+
+      const result = await deleteSubscriptionsByLocationId(123);
+
+      expect(queries.deleteSubscriptionsByLocationIdRecord).toHaveBeenCalledWith(123);
+      expect(result).toBe(2);
+    });
+
+    it("should be a no-op when the location has no subscriptions", async () => {
+      vi.mocked(queries.findSubscriptionsByLocationId).mockResolvedValue([] as any);
+
+      const result = await deleteSubscriptionsByLocationId(123);
+
+      expect(queries.deleteSubscriptionsByLocationIdRecord).not.toHaveBeenCalled();
+      expect(result).toBe(0);
+    });
+  });
+
+  describe("findSubscribersByLocationId", () => {
+    it("should return subscriber user details for a location", async () => {
+      const mockSubscribers = [{ userId: "user1", user: { email: "user1@example.com", firstName: "Jane", surname: "Doe" } }];
+      vi.mocked(queries.findSubscribersByLocationIdRecord).mockResolvedValue(mockSubscribers as any);
+
+      const result = await findSubscribersByLocationId(123);
+
+      expect(queries.findSubscribersByLocationIdRecord).toHaveBeenCalledWith(123);
+      expect(result).toEqual(mockSubscribers);
+    });
+
+    it("should return an empty array when the location has no subscribers", async () => {
+      vi.mocked(queries.findSubscribersByLocationIdRecord).mockResolvedValue([] as any);
+
+      const result = await findSubscribersByLocationId(123);
+
+      expect(result).toEqual([]);
     });
   });
 });

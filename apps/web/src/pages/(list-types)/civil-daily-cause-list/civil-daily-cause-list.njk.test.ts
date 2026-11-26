@@ -166,10 +166,43 @@ describe("civil-daily-cause-list template", () => {
       expect(factLink).toHaveLength(1);
       expect(factLink.text()).toContain(en.factLinkText);
     });
+
+    it("should render exactly the header address lines it is given", () => {
+      const { $ } = renderList([], { header: { ...baseData().header, addressLines: ["1 Venue Street", "VN1 1AA"] } });
+
+      const addressParagraph = $("p.govuk-body")
+        .filter((_, el) => $(el).text().includes("1 Venue Street"))
+        .first();
+      expect(
+        addressParagraph
+          .html()
+          ?.split("<br>")
+          .map((part) => part.trim())
+      ).toEqual(["1 Venue Street", "VN1 1AA"]);
+    });
+  });
+
+  describe("Important information", () => {
+    it("should name the open justice venue in the details block", () => {
+      const { $ } = renderList([], { openJustice: { venueName: "Barnet Civil and Family Courts Centre", email: "civil@example.com", phone: "0300 123 5577" } });
+
+      const details = $("details.govuk-details");
+      expect(details).toHaveLength(1);
+      expect(details.find(".govuk-details__summary-text").text()).toContain(en.importantInformation);
+      expect(details.text()).toContain(en.openJusticeContact("Barnet Civil and Family Courts Centre", "civil@example.com", "0300 123 5577"));
+    });
+
+    it("should name the open justice venue in the Welsh details block", () => {
+      const { $ } = renderList([], { openJustice: { venueName: "Llys Prawf", email: "civil@example.com", phone: "0300 123 5577" } }, cy);
+
+      const details = $("details.govuk-details");
+      expect(details.find(".govuk-details__summary-text").text()).toContain(cy.importantInformation);
+      expect(details.text()).toContain(cy.openJusticeContact("Llys Prawf", "civil@example.com", "0300 123 5577"));
+    });
   });
 
   describe("Court house details", () => {
-    it("should render the court house name and full address lines", () => {
+    it("should render the court house name, address lines, town and county", () => {
       const { $ } = renderList([
         buildCourtHouse({
           courtHouseName: "Main Court House",
@@ -188,7 +221,7 @@ describe("civil-daily-cause-list template", () => {
       ).toEqual(["1 Court Street", "Building B", "London", "Greater London", "SW1A 1AA"]);
     });
 
-    it("should omit the county paragraph when a partial address is provided", () => {
+    it("should render the address lines, town and postcode when no county is supplied", () => {
       const { $ } = renderList([
         buildCourtHouse({
           courtHouseName: "Branch Court",
@@ -202,6 +235,25 @@ describe("civil-daily-cause-list template", () => {
           .map((_, el) => $(el).text().trim())
           .get()
       ).toEqual(["2 Branch Road", "Manchester", "M1 1AA"]);
+    });
+
+    it("should render the town and county when no address lines or postcode are supplied", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtHouseName: "Town Only Court",
+          courtHouseAddress: { town: "Leeds", county: "West Yorkshire" },
+          courtRoom: []
+        })
+      ]);
+
+      const block = $("#court-lists-container .govuk-\\!-margin-bottom-6");
+      expect(block.find("h2.govuk-heading-l").text()).toContain("Town Only Court");
+      expect(
+        block
+          .find("p.govuk-body")
+          .map((_, el) => $(el).text().trim())
+          .get()
+      ).toEqual(["Leeds", "West Yorkshire"]);
     });
 
     it("should skip empty address lines", () => {

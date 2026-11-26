@@ -7,19 +7,27 @@ export enum AuditLogAction {
   BLOB_EXPLORER_RESUBMISSION = "Blob explorer resubmission",
   CREATE_THIRD_PARTY_USER = "Create third party user",
   DELETE_COURT = "Delete court",
+  DELETE_COURT_PUBLICATIONS = "Delete court publications",
+  DELETE_COURT_SUBSCRIPTIONS = "Delete court subscriptions",
   DELETE_JURISDICTION = "Delete jurisdiction",
   DELETE_LOCATION_JURISDICTION = "Delete location jurisdiction",
   DELETE_REGION = "Delete region",
   DELETE_SUB_JURISDICTION = "Delete sub-jurisdiction",
   DELETE_THIRD_PARTY_USER = "Delete third party user",
   DELETE_USER = "Delete user",
+  DOWNLOAD_MI_REPORT = "Download MI report",
+  HIDE_LIST_TYPE = "Hide list type",
   MANUAL_UPLOAD = "Manual upload",
   NON_STRATEGIC_UPLOAD = "Non strategic upload",
+  PIP_CONNECTION_CHECK = "PIP connection check",
   REFERENCE_DATA_UPLOAD = "Reference data upload",
   REMOVE_LIST = "Remove list",
+  SHOW_LIST_TYPE = "Show list type",
   UPDATE_LOCATION_JURISDICTION = "Update location jurisdiction",
   UPDATE_THIRD_PARTY_OAUTH_CONFIG = "Update third party OAuth config",
-  UPDATE_THIRD_PARTY_SUBSCRIPTIONS = "Update third party subscriptions"
+  UPDATE_THIRD_PARTY_SUBSCRIBER_STATUS = "Update third party subscriber status",
+  UPDATE_THIRD_PARTY_SUBSCRIPTIONS = "Update third party subscriptions",
+  VIEW_THIRD_PARTY_SUBSCRIBER_STATUS = "View third party subscriber status"
 }
 
 export interface AuditLogData {

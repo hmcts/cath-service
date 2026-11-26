@@ -277,8 +277,8 @@ describe("getGraphApiAccessToken", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.AZURE_B2C_TENANT_ID = "test-tenant-id";
-    process.env.AZURE_B2C_CLIENT_ID = "test-client-id";
-    process.env.AZURE_B2C_CLIENT_SECRET = "test-client-secret";
+    process.env.B2C_GRAPH_CLIENT_ID = "test-client-id";
+    process.env.B2C_GRAPH_CLIENT_SECRET = "test-client-secret";
   });
 
   it("should obtain token via client credentials flow", async () => {

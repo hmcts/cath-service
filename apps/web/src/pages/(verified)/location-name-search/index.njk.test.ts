@@ -81,6 +81,27 @@ describe("location-name-search template", () => {
 
       expect($('.govuk-back-link[href="/subscription-management"]')).toHaveLength(1);
     });
+
+    it("should render collapsible filter sections expanded by default with a +/- toggle", () => {
+      const data = buildData(en, "en");
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const toggles = $(".filter-section-toggle");
+      expect(toggles).toHaveLength(2);
+      toggles.each((_, el) => {
+        expect($(el).attr("aria-expanded")).toBe("true");
+        expect($(el).find(".filter-section-icon").text()).toBe("−");
+      });
+
+      const jurisdictionToggle = $('.filter-section-toggle[aria-controls="jurisdiction-section"]');
+      expect(jurisdictionToggle.find(".filter-section-heading").text()).toContain(en.jurisdictionHeading);
+      expect($("#jurisdiction-section.filter-section-content")).toHaveLength(1);
+
+      const regionToggle = $('.filter-section-toggle[aria-controls="region-section"]');
+      expect(regionToggle.find(".filter-section-heading").text()).toContain(en.regionHeading);
+      expect($("#region-section.filter-section-content")).toHaveLength(1);
+    });
   });
 
   describe("Welsh content", () => {

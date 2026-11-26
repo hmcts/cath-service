@@ -1,5 +1,7 @@
+import { PUBLISHER_PROVENANCES } from "@hmcts/list-types-common/list-type-provenance";
+
 const SENSITIVITY_OPTIONS = ["Public", "Private", "Classified"] as const;
-const PROVENANCE_OPTIONS = ["CFT_IDAM", "PI_AAD", "CRIME_IDAM"] as const;
+const VISIBILITY_CONFIRMATION_OPTIONS = ["yes", "no"] as const;
 
 function getFieldLabel(fieldName: string): string {
   const labels: Record<string, string> = {
@@ -73,7 +75,7 @@ function validateProvenance(provenanceList: string[]): ValidationError | null {
   }
 
   for (const provenance of provenanceList) {
-    if (!PROVENANCE_OPTIONS.includes(provenance as never)) {
+    if (!PUBLISHER_PROVENANCES.includes(provenance as never)) {
       return {
         field: "allowedProvenance",
         message: "Select valid provenance options",
@@ -156,6 +158,12 @@ export function validateSubJurisdictions(subJurisdictionIds: number[]) {
 
   return errors;
 }
+
+export function validateVisibilityConfirmation(value: unknown): value is VisibilityConfirmation {
+  return VISIBILITY_CONFIRMATION_OPTIONS.includes(value as never);
+}
+
+export type VisibilityConfirmation = (typeof VISIBILITY_CONFIRMATION_OPTIONS)[number];
 
 export interface ListTypeDetailsInput {
   name: string;

@@ -5,7 +5,7 @@ import { Sensitivity } from "../sensitivity.js";
 
 export interface ListType {
   id: number;
-  provenance: string;
+  provenance: string[];
   isNonStrategic: boolean;
 }
 
@@ -31,7 +31,7 @@ export function canAccessPublication(user: UserProfile | undefined, artefact: Ar
   if (sensitivity === Sensitivity.CLASSIFIED) {
     if (!isVerifiedUser(user)) return false;
     if (!listType) return false;
-    return !!user.provenance && listType.provenance.split(",").includes(user.provenance);
+    return !!user.provenance && listType.provenance.includes(user.provenance);
   }
 
   return false;

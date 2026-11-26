@@ -12,6 +12,15 @@ export const GET = async (req: Request, res: Response) => {
     return res.redirect(`/sign-in?error=no_code&lng=${lng}`);
   }
 
+  const state = req.query.state as string;
+  const expectedState = req.session.cftOauthState as string | undefined;
+  delete req.session.cftOauthState;
+
+  if (!state || state !== expectedState) {
+    console.error("CFT IDAM callback: OAuth state mismatch");
+    return res.redirect(`/sign-in?error=invalid_state&lng=${lng}`);
+  }
+
   try {
     const config = getCftIdamConfig();
 
@@ -48,7 +57,8 @@ export const GET = async (req: Request, res: Response) => {
       email: userInfo.email,
       displayName: userInfo.displayName,
       role: "VERIFIED",
-      provenance: "CFT_IDAM"
+      provenance: "CFT_IDAM",
+      idToken: tokenResponse.id_token
     };
 
     req.session.regenerate((err: Error | null) => {

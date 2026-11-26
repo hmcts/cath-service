@@ -190,4 +190,31 @@ describe("renderSiacPoacPaacData", () => {
     // Assert
     expect(result.header.listTitle).toBe("Special Immigration Appeals Commission Weekly Hearing List");
   });
+
+  it("should replace a dot in the time with a colon, as legacy does", () => {
+    // Arrange
+    const hearingList: SiacPoacPaacHearingList = [
+      {
+        date: "02/01/2025",
+        time: "10.30am",
+        appellant: "A Vs B",
+        caseReferenceNumber: "SC/00001/2025",
+        hearingType: "Substantive hearing",
+        courtroom: "Court 1",
+        additionalInformation: ""
+      }
+    ];
+
+    // Act
+    const result = renderSiacPoacPaacData(hearingList, {
+      locale: "en",
+      courtName: "Special Immigration Appeals Commission",
+      contentDate: new Date(2025, 0, 2),
+      lastReceivedDate: "2025-01-01T09:55:00Z",
+      listTitle: "Special Immigration Appeals Commission Weekly Hearing List"
+    });
+
+    // Assert
+    expect(result.hearings[0].time).toBe("10:30am");
+  });
 });

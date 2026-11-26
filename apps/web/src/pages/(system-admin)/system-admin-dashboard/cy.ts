@@ -50,6 +50,16 @@ export const cy = {
       title: "Rheoli Data Awdurdodaeth",
       description: "Gweld, creu, diweddaru a dileu awdurdodaethau ac is-awdurdodaethau",
       href: "/jurisdiction-data"
+    },
+    {
+      title: "Lawrlwytho Adroddiad MI",
+      description: "Lawrlwythwch ddata Cyfrifon defnyddwyr, Cyhoeddiad, Tanysgrifiadau lleoliad a Phob tanysgrifiad",
+      href: "/mi-report"
+    },
+    {
+      title: "[WELSH TRANSLATION REQUIRED: 'Migration']",
+      description: "[WELSH TRANSLATION REQUIRED: 'Tools for the PIP to CaTH migration, including checking connections to PIP']",
+      href: "/migration"
     }
   ]
 };

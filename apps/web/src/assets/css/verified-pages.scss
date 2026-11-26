@@ -41,3 +41,9 @@
   color: #0b0c0c;
   margin-bottom: 1em;
 }
+
+// Grey panel around the "n selected" running count on the location-name-search
+// results form. Replaces the previous inline background-color style.
+.selection-counter-box {
+  background-color: #f3f2f1;
+}

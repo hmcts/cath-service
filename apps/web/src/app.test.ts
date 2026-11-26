@@ -33,17 +33,20 @@ vi.mock("@hmcts/postgres-prisma", () => ({
   }
 }));
 
-vi.mock("redis", () => ({
-  createClient: vi.fn(() => ({
-    on: vi.fn(),
-    connect: vi.fn().mockResolvedValue(undefined)
-  }))
+const mockRedisClient = vi.hoisted(() => ({
+  on: vi.fn(),
+  connect: vi.fn().mockResolvedValue(undefined)
+}));
+
+vi.mock("@hmcts/redis", () => ({
+  createRedisClient: vi.fn(() => mockRedisClient)
 }));
 
 vi.mock("config", () => ({
   default: {
     get: vi.fn((key: string) => {
       if (key === "redis.url") return "redis://localhost:6379";
+      if (key === "redis.managedIdentity") return false;
       if (key === "gtm") return { id: "GTM-TEST" };
       if (key === "dynatrace") return { enabled: false };
       if (key === "applicationInsights") return { connectionString: "test" };
@@ -58,6 +61,7 @@ vi.mock("@hmcts/auth", () => ({
   b2cCallbackPostHandler: vi.fn(),
   b2cForgotPasswordHandler: vi.fn(),
   cftCallbackHandler: vi.fn(),
+  cftIdamHealthCheck: vi.fn(() => vi.fn()),
   configurePassport: vi.fn(),
   crimeCallbackHandler: vi.fn(),
   sessionTimeoutMiddleware: vi.fn((_req: any, _res: any, next: any) => next()),
@@ -169,6 +173,53 @@ vi.mock("@hmcts/web-core/config", () => ({
   moduleRoot: "/mock/web-core"
 }));
 
+vi.mock("@hmcts/test-support/config", () => ({
+  apiRoutes: { path: "/mock/test-support/routes" },
+  webRoutes: { path: "/mock/test-support/web-routes" }
+}));
+
+const KEY_VAULT_SECRETS = {
+  GOVUK_NOTIFY_API_KEY: "key-vault-notify-key",
+  SSO_CLIENT_ID: "key-vault-sso-client-id"
+};
+
+// app.ts resolves LOCAL_DEV at module load, so the module has to be
+// re-imported after LOCAL_DEV changes for the new value to take effect.
+async function createAppWithLocalDev(localDev: string | undefined) {
+  vi.stubEnv("LOCAL_DEV", localDev);
+  vi.resetModules();
+  const { createApp } = await import("./app.js");
+  return createApp();
+}
+
+async function createAppWithEnv(env: Record<string, string | undefined>) {
+  for (const [key, value] of Object.entries(env)) {
+    vi.stubEnv(key, value);
+  }
+  vi.resetModules();
+  const { createSimpleRouter } = await import("@hmcts-cft/simple-router");
+  vi.mocked(createSimpleRouter).mockClear();
+  const { createApp } = await import("./app.js");
+  await createApp();
+  return vi.mocked(createSimpleRouter).mock.calls.map(([routes]) => (routes as { path?: string } | undefined)?.path);
+}
+
+// Stubbing every Key Vault key first means vi.unstubAllEnvs() also undoes the fake's writes.
+async function fakeKeyVault(localEnv: Partial<Record<keyof typeof KEY_VAULT_SECRETS, string>>) {
+  for (const key of Object.keys(KEY_VAULT_SECRETS) as (keyof typeof KEY_VAULT_SECRETS)[]) {
+    vi.stubEnv(key, localEnv[key]);
+  }
+  const { getPropertiesVolumeSecrets } = await import("@hmcts-cft/cloud-native-platform");
+  vi.mocked(getPropertiesVolumeSecrets).mockClear();
+  vi.mocked(getPropertiesVolumeSecrets).mockImplementationOnce(async (options) => {
+    for (const [key, value] of Object.entries(KEY_VAULT_SECRETS)) {
+      if (!options?.omit?.includes(key)) process.env[key] = value;
+    }
+    return {};
+  });
+  return () => vi.mocked(getPropertiesVolumeSecrets).mock.calls.at(-1)?.[0]?.omit;
+}
+
 describe("Web Application", () => {
   let app: Express;
 
@@ -179,6 +230,7 @@ describe("Web Application", () => {
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.resetModules();
   });
 
@@ -202,6 +254,11 @@ describe("Web Application", () => {
     it("should configure healthcheck middleware", async () => {
       const { healthcheck } = await import("@hmcts-cft/cloud-native-platform");
       expect(healthcheck).toHaveBeenCalled();
+    });
+
+    it("should configure the CFT IDAM health check", async () => {
+      const { cftIdamHealthCheck } = await import("@hmcts/auth");
+      expect(cftIdamHealthCheck).toHaveBeenCalled();
     });
 
     it("should configure monitoring middleware", async () => {
@@ -267,16 +324,131 @@ describe("Web Application", () => {
       expect(errorHandler).toHaveBeenCalled();
     });
 
-    it("should connect to Redis", async () => {
-      const { createClient } = await import("redis");
-      expect(createClient).toHaveBeenCalledWith({
-        url: "redis://localhost:6379"
-      });
+    it("should create the session Redis client from config with the managed identity flag and connect it", async () => {
+      const { createRedisClient } = await import("@hmcts/redis");
+      const { expressSessionRedis } = await import("@hmcts/web-core");
+
+      expect(createRedisClient).toHaveBeenCalledWith("redis://localhost:6379", false);
+      expect(mockRedisClient.connect).toHaveBeenCalled();
+      expect(mockRedisClient.connect.mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(expressSessionRedis).mock.invocationCallOrder[0]);
+      expect(expressSessionRedis).toHaveBeenCalledWith({ redisConnection: mockRedisClient });
     });
 
     it("should configure file upload middleware with error handling", async () => {
       const { createFileUploadMiddleware } = await import("@hmcts/web-core");
       expect(createFileUploadMiddleware).toHaveBeenCalled();
+    });
+  });
+
+  describe("local .env precedence over Key Vault", () => {
+    it("should use the .env value when LOCAL_DEV is true and the variable is set", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ GOVUK_NOTIFY_API_KEY: "env-notify-key" });
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe("env-notify-key");
+      expect(getOmit()).toContain("GOVUK_NOTIFY_API_KEY");
+    });
+
+    it("should use the Key Vault value when LOCAL_DEV is true and the variable is empty", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ GOVUK_NOTIFY_API_KEY: "" });
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).not.toContain("GOVUK_NOTIFY_API_KEY");
+    });
+
+    it("should use the Key Vault value when LOCAL_DEV is true and the variable is absent", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({});
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).not.toContain("GOVUK_NOTIFY_API_KEY");
+    });
+
+    it("should use the Key Vault value when LOCAL_DEV is true and the variable is whitespace only", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ GOVUK_NOTIFY_API_KEY: "   " });
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).not.toContain("GOVUK_NOTIFY_API_KEY");
+    });
+
+    it("should use the .env value for any Key Vault secret when LOCAL_DEV is true", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ SSO_CLIENT_ID: "env-sso-client-id" });
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.SSO_CLIENT_ID).toBe("env-sso-client-id");
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).toContain("SSO_CLIENT_ID");
+    });
+
+    it("should let Key Vault win when LOCAL_DEV is not set", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ GOVUK_NOTIFY_API_KEY: "env-notify-key" });
+
+      // Act
+      await createAppWithLocalDev(undefined);
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).toEqual([]);
+    });
+  });
+
+  describe("test-support routes", () => {
+    it("should mount the test-support API and web routes outside production", async () => {
+      // Act
+      const mountedPaths = await createAppWithEnv({ NODE_ENV: "development", ENABLE_TEST_SUPPORT: undefined });
+
+      // Assert
+      expect(mountedPaths).toContain("/mock/test-support/routes");
+      expect(mountedPaths).toContain("/mock/test-support/web-routes");
+    });
+
+    it("should mount the test-support routes in production when ENABLE_TEST_SUPPORT is true", async () => {
+      // Act
+      const mountedPaths = await createAppWithEnv({ NODE_ENV: "production", ENABLE_TEST_SUPPORT: "true" });
+
+      // Assert
+      expect(mountedPaths).toContain("/mock/test-support/routes");
+      expect(mountedPaths).toContain("/mock/test-support/web-routes");
+    });
+
+    it("should not register the test-support login route in production without ENABLE_TEST_SUPPORT", async () => {
+      // Act
+      const mountedPaths = await createAppWithEnv({ NODE_ENV: "production", ENABLE_TEST_SUPPORT: undefined });
+
+      // Assert
+      expect(mountedPaths).not.toContain("/mock/test-support/web-routes");
+      expect(mountedPaths).not.toContain("/mock/test-support/routes");
+    });
+
+    it("should not register the test-support login route in production when ENABLE_TEST_SUPPORT is not exactly true", async () => {
+      // Act
+      const mountedPaths = await createAppWithEnv({ NODE_ENV: "production", ENABLE_TEST_SUPPORT: "yes" });
+
+      // Assert
+      expect(mountedPaths).not.toContain("/mock/test-support/web-routes");
     });
   });
 

@@ -2,9 +2,13 @@ import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./download.js";
 
-vi.mock("@hmcts/azure-blob", () => ({
-  downloadBlob: vi.fn()
-}));
+vi.mock("@hmcts/azure-blob", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/azure-blob")>();
+  return {
+    ...actual,
+    downloadBlob: vi.fn()
+  };
+});
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
@@ -20,11 +24,15 @@ vi.mock("@hmcts/publication", () => ({
     if (ext === ".pdf") return "application/pdf";
     if (ext === ".xlsx") return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     return "application/octet-stream";
-  })
+  }),
+  getArtefactById: vi.fn(),
+  resolveListType: vi.fn(),
+  canAccessPublicationData: vi.fn()
 }));
 
-import { downloadBlob } from "@hmcts/azure-blob";
+import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import { prisma } from "@hmcts/postgres-prisma";
+import { canAccessPublicationData, getArtefactById } from "@hmcts/publication";
 
 const middleware = GET[0] as RequestHandler;
 const handler = GET[GET.length - 1] as RequestHandler;
@@ -47,6 +55,12 @@ describe("Download Route", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getArtefactById).mockResolvedValue({
+      artefactId: "12345678-1234-1234-1234-123456789abc",
+      listTypeId: 999,
+      sensitivity: "CLASSIFIED"
+    } as never);
+    vi.mocked(canAccessPublicationData).mockReturnValue(true);
   });
 
   it("should return 400 when artefactId is missing", async () => {
@@ -57,6 +71,21 @@ describe("Download Route", () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: "Invalid request" });
+  });
+
+  it("should return 403 without streaming the blob when the user cannot access the artefact", async () => {
+    // Arrange
+    const req = mockRequest({ query: { artefactId: "12345678-1234-1234-1234-123456789abc", type: "pdf" } });
+    const res = mockResponse();
+    vi.mocked(canAccessPublicationData).mockReturnValue(false);
+
+    // Act
+    await handler(req, res, () => {});
+
+    // Assert
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ error: "Access denied" });
+    expect(downloadBlob).not.toHaveBeenCalled();
   });
 
   it("should return 400 when artefactId is not a valid UUID", async () => {
@@ -91,6 +120,7 @@ describe("Download Route", () => {
     expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "application/pdf");
     expect(res.setHeader).toHaveBeenCalledWith("Content-Disposition", 'attachment; filename="12345678-1234-1234-1234-123456789abc.pdf"');
     expect(res.send).toHaveBeenCalledWith(mockBuffer);
+    expect(downloadBlob).toHaveBeenCalledWith("12345678-1234-1234-1234-123456789abc.pdf", CONTAINER.PUBLICATIONS);
   });
 
   it("should return 404 when file does not exist", async () => {
@@ -216,7 +246,7 @@ describe("Download requireVerifiedWithProvenance middleware", () => {
     const res = mockResponse();
 
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ artefactId: "12345678-1234-1234-1234-123456789abc", listTypeId: 24 } as never);
-    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: "PI_AAD" } as never);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: ["PI_AAD"] } as never);
 
     await middleware(req, res, mockNext);
 
@@ -231,7 +261,7 @@ describe("Download requireVerifiedWithProvenance middleware", () => {
     const res = mockResponse();
 
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ artefactId: "12345678-1234-1234-1234-123456789abc", listTypeId: 24 } as never);
-    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: "PI_AAD" } as never);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: ["PI_AAD"] } as never);
 
     await middleware(req, res, mockNext);
 

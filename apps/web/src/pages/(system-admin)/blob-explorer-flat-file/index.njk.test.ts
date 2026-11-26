@@ -53,17 +53,17 @@ describe("blob-explorer-flat-file template", () => {
       expect($("form[method='post'] button").text()).toContain(en.flatFileResubmitButton);
     });
 
-    it("should render the metadata table values", () => {
+    it("should render the metadata summary list values", () => {
       const data = { ...en, metadata: mockMetadata, flatFileUrl: "https://example.com/file.pdf", formatDateTime };
 
       const { $ } = render(env, "(system-admin)/blob-explorer-flat-file/index.njk", data);
 
-      const tableText = $(".govuk-table").text();
-      expect(tableText).toContain(en.metadataArtefactId);
-      expect(tableText).toContain(mockMetadata.locationName);
-      expect(tableText).toContain(mockMetadata.listType);
-      expect(tableText).toContain(`formatted:${mockMetadata.contentDate}`);
-      expect(tableText).toContain(`formatted:${mockMetadata.displayTo}`);
+      const summaryListText = $(".govuk-summary-list").text();
+      expect(summaryListText).toContain(en.metadataArtefactId);
+      expect(summaryListText).toContain(mockMetadata.locationName);
+      expect(summaryListText).toContain(mockMetadata.listType);
+      expect(summaryListText).toContain(`formatted:${mockMetadata.contentDate}`);
+      expect(summaryListText).toContain(`formatted:${mockMetadata.displayTo}`);
     });
 
     it("should render the link to the flat file", () => {
@@ -85,13 +85,13 @@ describe("blob-explorer-flat-file template", () => {
       assertNoErrors($);
     });
 
-    it("should render an error summary and hide the table when error is set", () => {
+    it("should render an error summary and hide the summary list when error is set", () => {
       const data = { ...en, error: en.flatFileError };
 
       const { $ } = render(env, "(system-admin)/blob-explorer-flat-file/index.njk", data);
 
       assertErrorSummary($, [en.flatFileError]);
-      expect($(".govuk-table")).toHaveLength(0);
+      expect($(".govuk-summary-list")).toHaveLength(0);
     });
   });
 
