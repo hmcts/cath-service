@@ -5,6 +5,7 @@ import {
   configureNunjucks,
   createPdfErrorResult,
   extractPressCases,
+  formatAccusedDateOfBirth,
   formatLastUpdatedDateTime,
   loadTranslations,
   PDF_BASE_STYLES,
@@ -23,12 +24,6 @@ interface PdfGenerationOptions extends BasePdfGenerationOptions<SjpJson> {
   listTypeName: string;
 }
 
-function formatDateOfBirth(dob: Date | null, age: number | null): string {
-  if (!dob) return "";
-  const formatted = dob.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
-  return age !== null ? `${formatted} (${age})` : formatted;
-}
-
 export async function generateSjpPressListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
   try {
     const cases = extractPressCases(options.jsonData);
@@ -45,7 +40,7 @@ export async function generateSjpPressListPdf(options: PdfGenerationOptions): Pr
 
     const formattedCases = cases.map((c) => ({
       ...c,
-      formattedDob: formatDateOfBirth(c.dateOfBirth, c.age)
+      formattedDob: formatAccusedDateOfBirth(c.rawDateOfBirth, c.age)
     }));
 
     const env = configureNunjucks(__dirname);

@@ -1,6 +1,7 @@
 import { prisma } from "@hmcts/postgres-prisma";
 import {
   deleteAllSubscriptionListTypesByUserId,
+  findHiddenListTypeIds,
   findSubscriptionListTypeByUserId,
   getListTypeIdsForLocation,
   upsertSubscriptionListType
@@ -28,7 +29,11 @@ export async function createSubscriptionListTypes(userId: string, listTypeIds: n
 
 export async function replaceSubscriptionListTypes(userId: string, listTypeIds: number[], language: string) {
   const listLanguage = toListLanguage(language);
-  await upsertSubscriptionListType(userId, listTypeIds, listLanguage);
+  // Hidden list types are not offered on the form, so keep the user's existing ones rather than dropping them.
+  const existing = await findSubscriptionListTypeByUserId(userId);
+  const retainedHiddenIds = await findHiddenListTypeIds(existing?.listTypeIds ?? []);
+  const mergedListTypeIds = [...new Set([...listTypeIds, ...retainedHiddenIds])];
+  await upsertSubscriptionListType(userId, mergedListTypeIds, listLanguage);
 }
 
 export async function getAllowedListTypeIdsForLocations(locationIds: number[]): Promise<number[]> {

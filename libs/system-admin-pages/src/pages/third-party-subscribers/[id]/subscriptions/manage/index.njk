@@ -86,11 +86,12 @@
         </table>
       {% endif %}
 
-      {% if isLastPage %}
-        {{ govukButton({ text: saveButton }) }}
-      {% else %}
-        {{ govukButton({ text: nextButton }) }}
-      {% endif %}
+      <div class="govuk-button-group">
+        {{ govukButton({ text: saveButton, name: "action", value: "save" }) }}
+        {% if not isLastPage %}
+          {{ govukButton({ text: nextButton, name: "action", value: "next", classes: "govuk-button--secondary" }) }}
+        {% endif %}
+      </div>
 
     </form>
 

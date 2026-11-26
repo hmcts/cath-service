@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type ListTypeDetailsInput, validateListTypeDetails, validateSubJurisdictions } from "./validation.js";
+import { type ListTypeDetailsInput, validateListTypeDetails, validateSubJurisdictions, validateVisibilityConfirmation } from "./validation.js";
 
 describe("validateListTypeDetails", () => {
   it("should return no errors for valid input", () => {
@@ -318,5 +318,23 @@ describe("validateSubJurisdictions", () => {
     expect(errors).toHaveLength(1);
     expect(errors[0].field).toBe("subJurisdictions");
     expect(errors[0].message).toBe("Select at least one sub-jurisdiction");
+  });
+});
+
+describe("validateVisibilityConfirmation", () => {
+  it.each(["yes", "no"])("should accept %s", (value) => {
+    // Act
+    const result = validateVisibilityConfirmation(value);
+
+    // Assert
+    expect(result).toBe(true);
+  });
+
+  it.each([undefined, "", "maybe", ["yes"]])("should reject %s", (value) => {
+    // Act
+    const result = validateVisibilityConfirmation(value);
+
+    // Assert
+    expect(result).toBe(false);
   });
 });

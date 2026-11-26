@@ -3,6 +3,7 @@ import { prisma } from "@hmcts/postgres-prisma";
 export async function getListTypeIdsForLocation(locationId: number): Promise<number[]> {
   const records = await prisma.listTypeSubJurisdiction.findMany({
     where: {
+      listType: { isHidden: false, deletedAt: null },
       subJurisdiction: {
         locationSubJurisdictions: {
           some: { locationId }
@@ -12,6 +13,35 @@ export async function getListTypeIdsForLocation(locationId: number): Promise<num
     select: { listTypeId: true }
   });
   return [...new Set(records.map((r) => r.listTypeId))];
+}
+
+export async function findSubscribableListTypesBySubJurisdictionIds(subJurisdictionIds: number[]) {
+  return prisma.listType.findMany({
+    where: {
+      deletedAt: null,
+      isHidden: false,
+      subJurisdictions: {
+        some: { subJurisdictionId: { in: subJurisdictionIds } }
+      }
+    },
+    orderBy: { friendlyName: "asc" },
+    select: {
+      id: true,
+      name: true,
+      friendlyName: true,
+      welshFriendlyName: true
+    }
+  });
+}
+
+export async function findHiddenListTypeIds(listTypeIds: number[]): Promise<number[]> {
+  if (listTypeIds.length === 0) return [];
+
+  const records = await prisma.listType.findMany({
+    where: { id: { in: listTypeIds }, isHidden: true },
+    select: { id: true }
+  });
+  return records.map((r) => r.id);
 }
 
 export async function findSubscriptionListTypeByUserId(userId: string) {

@@ -46,7 +46,7 @@
     "@hmcts/test-support": "workspace:*",
     "@types/express": "5.0.6",
     "@types/express-session": "1.19.0",
-    "@types/multer": "^2.1.0",
+    "@types/multer": "2.3.0",
     "@types/papaparse": "5.5.2",
     "typescript": "6.0.3"
   }
