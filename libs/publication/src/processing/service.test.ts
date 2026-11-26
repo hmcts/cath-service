@@ -214,7 +214,9 @@ vi.mock("@hmcts/third-party-subscription-fulfilment", () => ({
   sendPublicationToThirdParties: mockSendPublicationToThirdParties
 }));
 
-vi.mock("../repository/queries.js", () => ({}));
+vi.mock("../repository/queries.js", () => ({
+  isListTypeHidden: vi.fn()
+}));
 
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
@@ -302,11 +304,13 @@ describe("publication-processor", async () => {
   const { prisma } = await import("@hmcts/postgres-prisma");
   const { extractAndStoreArtefactSearch } = await import("../artefact-search-extractor.js");
   const { getFileBuffer } = await import("../file-storage/file-retrieval.js");
+  const { isListTypeHidden } = await import("../repository/queries.js");
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockSendThirdPartyPublications.mockResolvedValue(undefined);
     mockSendPublicationToThirdParties.mockResolvedValue(undefined);
+    vi.mocked(isListTypeHidden).mockResolvedValue(false);
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: false } as any);
     vi.mocked(prisma.listType.findUnique).mockResolvedValue({
       name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
@@ -1742,6 +1746,45 @@ describe("publication-processor", async () => {
       await processPublication({ ...baseParams, skipNotifications: true, isUpdate: true });
 
       expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ isUpdate: true }));
+    });
+
+    it("skips notifications and third-party push but still generates the PDF when the list type is hidden", async () => {
+      // Arrange
+      const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      vi.mocked(isListTypeHidden).mockResolvedValue(true);
+      vi.mocked(generateCauseListPdf).mockResolvedValue({ success: true, pdfPath: "/hidden/publication.pdf", sizeBytes: 512 });
+
+      // Act
+      const result = await processPublication(baseParams);
+
+      // Assert
+      expect(isListTypeHidden).toHaveBeenCalledWith(8);
+      expect(generateCauseListPdf).toHaveBeenCalled();
+      expect(result.pdfPath).toBe("/hidden/publication.pdf");
+      expect(sendLocationAndCaseSubscriptionNotifications).not.toHaveBeenCalled();
+      expect(sendListTypePublicationNotifications).not.toHaveBeenCalled();
+      expect(mockSendThirdPartyPublications).not.toHaveBeenCalled();
+      expect(mockSendPublicationToThirdParties).not.toHaveBeenCalled();
+      expect(result.notificationsSent).toBeUndefined();
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        "[Publication] List type hidden; notifications and third-party push skipped",
+        expect.objectContaining({ artefactId: "test-artefact-id", listTypeId: 8 })
+      );
+      consoleLogSpy.mockRestore();
+    });
+
+    it("sends notifications and third-party push when the list type is visible", async () => {
+      // Arrange
+      vi.mocked(isListTypeHidden).mockResolvedValue(false);
+      vi.mocked(generateCauseListPdf).mockResolvedValue({ success: true, pdfPath: "/visible/publication.pdf", sizeBytes: 512 });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+
+      // Act
+      await processPublication(baseParams);
+
+      // Assert
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalled();
+      expect(mockSendThirdPartyPublications).toHaveBeenCalled();
     });
 
     it("does not call sendThirdPartyPublications when skipThirdPartyPush is true", async () => {

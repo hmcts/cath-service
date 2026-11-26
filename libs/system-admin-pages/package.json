@@ -13,7 +13,8 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && yarn build:nunjucks",
+    "build:nunjucks": "cd src && find pages -name '*.njk' | tar -cf - -T - | tar -xf - -C ../dist",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -42,9 +43,10 @@
     "papaparse": "5.5.4"
   },
   "devDependencies": {
+    "@hmcts/test-support": "workspace:*",
     "@types/express": "5.0.6",
     "@types/express-session": "1.19.0",
-    "@types/multer": "^2.1.0",
+    "@types/multer": "2.3.0",
     "@types/papaparse": "5.5.2",
     "typescript": "6.0.3"
   }

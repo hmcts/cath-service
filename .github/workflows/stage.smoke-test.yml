@@ -11,6 +11,12 @@ on:
         required: true
         type: string
         description: "Base64-encoded JSON of deployment URLs"
+      # The hosted parity check, a release of its own: linked from the PR comment, and health checked
+      ui-baseline-url:
+        required: false
+        type: string
+        default: ""
+        description: "Where the hosted parity check is, when the deploy deployed it"
       is-pr:
         required: false
         type: boolean
@@ -35,6 +41,7 @@ jobs:
     with:
       change-id: ${{ inputs.change-id }}
       urls: ${{ inputs.urls }}
+      ui-baseline-url: ${{ inputs.ui-baseline-url }}
 
   smoke-test:
     name: Smoke Test
@@ -43,4 +50,5 @@ jobs:
       urls: ${{ inputs.urls }}
       runner-group: ${{ inputs.runner-group }}
       run-publication-smoke: ${{ inputs.run-publication-smoke }}
+      ui-baseline-url: ${{ inputs.ui-baseline-url }}
     secrets: inherit

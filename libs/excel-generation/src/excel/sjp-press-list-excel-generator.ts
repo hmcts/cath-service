@@ -1,4 +1,4 @@
-import { extractPressCases, type SjpJson } from "@hmcts/list-types-common";
+import { extractPressCases, formatAccusedDateOfBirth, type SjpJson, sanitiseCellValue } from "@hmcts/list-types-common";
 import ExcelJS from "exceljs";
 import { getSjpPressListHeaders } from "./excel-headers.js";
 import { CELL_BORDER, DATA_ALIGNMENT, DATA_FONT, HEADER_ALIGNMENT, HEADER_FILL, HEADER_FONT } from "./excel-styles.js";
@@ -43,7 +43,7 @@ export async function generateSjpPressListExcel(json: SjpJson, locale: "en" | "c
     const rowData: Record<string, string> = {
       address: sjpCase.address ?? "",
       caseUrn: sjpCase.reference ?? "",
-      dateOfBirth: formatDateOfBirth(sjpCase.dateOfBirth, sjpCase.age),
+      dateOfBirth: sanitiseCellValue(formatAccusedDateOfBirth(sjpCase.rawDateOfBirth, sjpCase.age)),
       defendantName: sjpCase.name,
       prosecutorName: sjpCase.prosecutor ?? ""
     };
@@ -66,19 +66,4 @@ export async function generateSjpPressListExcel(json: SjpJson, locale: "en" | "c
 
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);
-}
-
-function formatDateOfBirth(dob: Date | null, age: number | null): string {
-  if (!dob) return "";
-
-  const day = String(dob.getDate()).padStart(2, "0");
-  const month = String(dob.getMonth() + 1).padStart(2, "0");
-  const year = dob.getFullYear();
-  const formatted = `${day}/${month}/${year}`;
-
-  if (age !== null) {
-    return `${formatted} (${age})`;
-  }
-
-  return formatted;
 }
