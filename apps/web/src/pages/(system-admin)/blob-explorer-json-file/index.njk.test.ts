@@ -11,6 +11,17 @@ const __dirname = path.dirname(__filename);
 
 const TEMPLATE = "(system-admin)/blob-explorer-json-file/index.njk";
 
+const ACTIONS = ["resubmit", "courtel", "third-party", "email"] as const;
+
+function buildResendButtons(locale: typeof en | typeof cy, lng = "") {
+  const labels = [locale.resubmitButton, locale.sendToCourtelButton, locale.sendToThirdPartyButton, locale.sendSubscriptionEmailButton];
+  return ACTIONS.map((action, index) => ({
+    text: labels[index],
+    href: `/blob-explorer-confirm-resubmission?artefactId=abc-123&action=${action}${lng}`,
+    classes: index === 0 ? "govuk-button" : "govuk-button govuk-button--secondary"
+  }));
+}
+
 const formatDateTime = (value: string) => `formatted:${value}`;
 
 const mockMetadata = {
@@ -39,6 +50,7 @@ describe("blob-explorer-json-file template", () => {
       const data = {
         ...en,
         metadata: mockMetadata,
+        resendButtons: buildResendButtons(en),
         jsonContent: "{\n  &quot;case&quot;: &quot;1&quot;\n}",
         renderedTemplateUrl: "https://example.com/rendered.html",
         formatDateTime,
@@ -49,7 +61,7 @@ describe("blob-explorer-json-file template", () => {
 
       expect($("h1").text()).toContain(en.header);
       expect($("h2").text()).toContain(en.jsonFileMetadataHeading);
-      expect($("button").text()).toContain(en.jsonFileResubmitButton);
+      expect($(".govuk-button-group .govuk-button")).toHaveLength(4);
 
       const summaryListText = $(".govuk-summary-list").text();
       expect(summaryListText).toContain(en.metadataArtefactId);
@@ -68,6 +80,7 @@ describe("blob-explorer-json-file template", () => {
       const data = {
         ...en,
         metadata: mockMetadata,
+        resendButtons: buildResendButtons(en),
         jsonContent: null,
         renderedTemplateUrl: null,
         formatDateTime,
@@ -88,7 +101,7 @@ describe("blob-explorer-json-file template", () => {
 
       assertErrorSummary($, [en.jsonFileError]);
       expect($(".govuk-summary-list")).toHaveLength(0);
-      expect($("button")).toHaveLength(0);
+      expect($(".govuk-button-group")).toHaveLength(0);
     });
   });
 
@@ -97,6 +110,7 @@ describe("blob-explorer-json-file template", () => {
       const data = {
         ...cy,
         metadata: mockMetadata,
+        resendButtons: buildResendButtons(cy, "&lng=cy"),
         jsonContent: null,
         renderedTemplateUrl: null,
         formatDateTime,
@@ -109,6 +123,52 @@ describe("blob-explorer-json-file template", () => {
       expect($("h2").text()).toContain(cy.jsonFileMetadataHeading);
       expect($(".govuk-summary-list").text()).toContain(cy.metadataArtefactId);
       assertNoErrors($);
+    });
+  });
+
+  describe("resend buttons", () => {
+    it("should render the four buttons in order, primary first then secondary, as links to their confirmation pages", () => {
+      const { $ } = render(env, TEMPLATE, { ...en, metadata: mockMetadata, resendButtons: buildResendButtons(en), formatDateTime, locale: "en" });
+
+      const buttons = $(".govuk-button-group a.govuk-button");
+      expect(buttons).toHaveLength(4);
+      expect(buttons.map((_, el) => $(el).text().trim()).get()).toEqual([
+        en.resubmitButton,
+        en.sendToCourtelButton,
+        en.sendToThirdPartyButton,
+        en.sendSubscriptionEmailButton
+      ]);
+      expect(buttons.map((_, el) => $(el).attr("href")).get()).toEqual([
+        "/blob-explorer-confirm-resubmission?artefactId=abc-123&action=resubmit",
+        "/blob-explorer-confirm-resubmission?artefactId=abc-123&action=courtel",
+        "/blob-explorer-confirm-resubmission?artefactId=abc-123&action=third-party",
+        "/blob-explorer-confirm-resubmission?artefactId=abc-123&action=email"
+      ]);
+      expect(buttons.eq(0).hasClass("govuk-button--secondary")).toBe(false);
+      for (const index of [1, 2, 3]) {
+        expect(buttons.eq(index).hasClass("govuk-button--secondary")).toBe(true);
+      }
+      expect(buttons.eq(0).attr("role")).toBe("button");
+      expect($("form")).toHaveLength(0);
+    });
+
+    it("should render the Welsh button labels with lng=cy hrefs", () => {
+      const { $ } = render(env, TEMPLATE, { ...cy, metadata: mockMetadata, resendButtons: buildResendButtons(cy, "&lng=cy"), formatDateTime, locale: "cy" });
+
+      const buttons = $(".govuk-button-group a.govuk-button");
+      expect(buttons.map((_, el) => $(el).text().trim()).get()).toEqual([
+        cy.resubmitButton,
+        cy.sendToCourtelButton,
+        cy.sendToThirdPartyButton,
+        cy.sendSubscriptionEmailButton
+      ]);
+      expect(buttons.eq(1).attr("href")).toBe("/blob-explorer-confirm-resubmission?artefactId=abc-123&action=courtel&lng=cy");
+    });
+  });
+
+  describe("locale files", () => {
+    it("should have the same keys in en and cy", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
     });
   });
 });

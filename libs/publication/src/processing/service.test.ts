@@ -1206,6 +1206,54 @@ describe("publication-processor", async () => {
       );
     });
 
+    it("should include list type results in the returned totals", async () => {
+      // Arrange
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 2,
+        sent: 1,
+        failed: 1,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: ["user-1"]
+      });
+      vi.mocked(sendListTypePublicationNotifications).mockResolvedValue({
+        totalSubscriptions: 3,
+        sent: 2,
+        failed: 0,
+        skipped: 1,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      // Act
+      const result = await sendPublicationNotificationsForArtefact({ ...baseParams, locale: "en" });
+
+      // Assert
+      expect(result).toEqual({ success: true, totalSubscriptions: 5, sent: 3, failed: 1, skipped: 1 });
+    });
+
+    it("should return only location and case totals when list type notifications throw", async () => {
+      // Arrange
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 2,
+        sent: 2,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+      vi.mocked(sendListTypePublicationNotifications).mockRejectedValue(new Error("down"));
+
+      // Act
+      const result = await sendPublicationNotificationsForArtefact({ ...baseParams, locale: "en" });
+
+      // Assert
+      expect(result).toEqual({ success: true, totalSubscriptions: 2, sent: 2, failed: 0, skipped: 0 });
+    });
+
     it("should map cy locale to WELSH for list type query", async () => {
       vi.mocked(getLocationById).mockResolvedValue({
         id: 123,

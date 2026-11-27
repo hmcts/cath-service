@@ -1,7 +1,10 @@
 export const en = {
   title: "Blob Explorer – JSON file",
   header: "Blob Explorer – JSON file",
-  jsonFileResubmitButton: "Re-submit subscription",
+  resubmitButton: "Re-submit subscription",
+  sendToCourtelButton: "Send to Courtel",
+  sendToThirdPartyButton: "Send to third party subscribers",
+  sendSubscriptionEmailButton: "Send subscription email",
   jsonFileMetadataHeading: "Metadata",
   jsonFileAccordionTitle: "View Raw JSON Content",
   jsonFileLinkToTemplate: "Link to rendered template",

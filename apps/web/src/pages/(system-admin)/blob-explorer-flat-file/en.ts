@@ -1,7 +1,10 @@
 export const en = {
   title: "Blob Explorer – Flat file",
   header: "Blob Explorer – Flat file",
-  flatFileResubmitButton: "Re-submit subscription",
+  resubmitButton: "Re-submit subscription",
+  sendToCourtelButton: "Send to Courtel",
+  sendToThirdPartyButton: "Send to third party subscribers",
+  sendSubscriptionEmailButton: "Send subscription email",
   flatFileMetadataHeading: "Metadata",
   flatFileLinkToFile: "Link to file",
   flatFileError: "We could not load the file publication.",

@@ -22,9 +22,12 @@ export interface ThirdPartyPushParams {
   pdfPath?: string;
   flatFilePath?: string;
   logPrefix?: string;
+  maxAttempts?: number;
 }
 
-export type ThirdPartyDeletionParams = Omit<ThirdPartyPushParams, "jsonData" | "pdfPath" | "flatFilePath" | "isUpdate">;
+export type ThirdPartyDeletionParams = Omit<ThirdPartyPushParams, "jsonData" | "pdfPath" | "flatFilePath" | "isUpdate" | "maxAttempts">;
+
+export type ThirdPartyPushOutcome = "sent" | "no-recipients" | "failed";
 
 function resolveCourtelSecrets(logPrefix: string): { url: string; certPem: string } | null {
   const url = process.env[COURTEL_API_URL_ENV];
@@ -44,7 +47,7 @@ function resolveCourtelSecrets(logPrefix: string): { url: string; certPem: strin
   return { url, certPem };
 }
 
-export async function sendThirdPartyPublications(params: ThirdPartyPushParams): Promise<void> {
+export async function sendThirdPartyPublications(params: ThirdPartyPushParams): Promise<ThirdPartyPushOutcome> {
   const {
     artefactId,
     locationId,
@@ -59,27 +62,30 @@ export async function sendThirdPartyPublications(params: ThirdPartyPushParams): 
     jsonData,
     pdfPath,
     flatFilePath,
-    logPrefix = "[ThirdParty]"
+    logPrefix = "[ThirdParty]",
+    maxAttempts
   } = params;
 
-  const secrets = resolveCourtelSecrets(logPrefix);
-  if (!secrets) return;
-
+  // Subscription first, so an unsubscribed list type reports no-recipients even where the Courtel secrets are not set
   const subscribers = await findSubscribersByListType(listTypeId);
   if (subscribers.length === 0) {
     console.info(`${logPrefix} Third-party push skipped: no subscribers for listTypeId ${listTypeId}`);
-    return;
+    return "no-recipients";
   }
+
+  const secrets = resolveCourtelSecrets(logPrefix);
+  if (!secrets) return "failed";
 
   const location = await getLocationWithDetails(Number.parseInt(locationId, 10));
   const headers = await buildPushHeaders({ artefactId, listTypeId, contentDate, sensitivity, language, displayFrom, displayTo, provenance, location });
   const body = jsonData != null ? JSON.stringify(jsonData) : null;
 
   console.info(`${logPrefix} Sending third-party push for artefactId ${artefactId} to ${secrets.url}`);
-  const result = await pushWithRetry(secrets.url, secrets.certPem, headers, body, logPrefix, pdfPath, flatFilePath);
+  const result = await pushWithRetry(secrets.url, secrets.certPem, headers, body, logPrefix, pdfPath, flatFilePath, maxAttempts);
   writePushLog(artefactId, listTypeId, isUpdate ? "UPDATE" : "CREATE", result).catch((err) => {
     console.warn(`${logPrefix} Failed to write push log:`, err instanceof Error ? err.message : String(err));
   });
+  return result.success ? "sent" : "failed";
 }
 
 export async function sendThirdPartyDeletion(params: ThirdPartyDeletionParams): Promise<void> {

@@ -310,7 +310,7 @@ describe("third-party fulfilment service", () => {
       const act = sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: false, jsonData: JSON_DATA });
 
       // Assert
-      await expect(act).resolves.toBeUndefined();
+      await expect(act).resolves.toBe("sent");
       expect(console.error).toHaveBeenCalledWith(expect.stringContaining("failed after retries"), { userId: "user-1", publicationId: ARTEFACT_ID });
       expect(console.info).toHaveBeenCalledWith(expect.stringContaining("POST sent"), { userId: "user-2", publicationId: ARTEFACT_ID });
     });
@@ -387,6 +387,111 @@ describe("third-party fulfilment service", () => {
     });
   });
 
+  describe("sendPublicationToThirdParties outcome", () => {
+    it.each([
+      ["displayFrom is tomorrow", { displayFrom: new Date("2026-06-16T00:00:00Z") }],
+      ["displayTo was yesterday", { displayTo: new Date("2026-06-14T12:00:00Z") }]
+    ])("should send outside the display window when ignoreDisplayWindow is set and %s", async (_label, overrides) => {
+      // Arrange
+      vi.mocked(findArtefactForFulfilment).mockResolvedValue(buildArtefact(overrides));
+
+      // Act
+      const outcome = await sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: true, jsonData: JSON_DATA, ignoreDisplayWindow: true });
+
+      // Assert
+      expect(outcome).toBe("sent");
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("should still skip a publication outside its display window by default", async () => {
+      // Arrange
+      vi.mocked(findArtefactForFulfilment).mockResolvedValue(buildArtefact({ displayTo: new Date("2026-06-14T12:00:00Z") }));
+
+      // Act
+      const outcome = await sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: false, jsonData: JSON_DATA });
+
+      // Assert
+      expect(outcome).toBe("no-recipients");
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("should return no-recipients when no subscribers match", async () => {
+      // Arrange
+      vi.mocked(findMatchingSubscriptions).mockResolvedValue([]);
+
+      // Act
+      const outcome = await sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: false, jsonData: JSON_DATA });
+
+      // Assert
+      expect(outcome).toBe("no-recipients");
+    });
+
+    it("should return failed when every delivery fails", async () => {
+      // Arrange
+      vi.mocked(findMatchingSubscriptions).mockResolvedValue([SUBSCRIBER_1, SUBSCRIBER_2]);
+      mockFetch.mockImplementation(async () => new Response(null, { status: 500 }));
+
+      // Act
+      const outcome = await sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: false, jsonData: JSON_DATA });
+
+      // Assert
+      expect(outcome).toBe("failed");
+    });
+
+    it("should return failed when a subscriber has no destination URL and is the only subscriber", async () => {
+      // Arrange
+      vi.mocked(getDestinationUrl).mockResolvedValue(null as never);
+
+      // Act
+      const outcome = await sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: false, jsonData: JSON_DATA });
+
+      // Assert
+      expect(outcome).toBe("failed");
+    });
+
+    it("should return failed when the only subscriber throws unexpectedly", async () => {
+      // Arrange
+      vi.mocked(getAccessToken).mockRejectedValue(new Error("Redis down"));
+
+      // Act
+      const outcome = await sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: false, jsonData: JSON_DATA });
+
+      // Assert
+      expect(outcome).toBe("failed");
+    });
+
+    it("should return sent when some deliveries succeed", async () => {
+      // Arrange
+      vi.mocked(findMatchingSubscriptions).mockResolvedValue([SUBSCRIBER_1, SUBSCRIBER_2]);
+      mockFetch.mockImplementation(async (url: string) => new Response(null, { status: url.includes("user-1") ? 500 : 200 }));
+
+      // Act
+      const outcome = await sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: false, jsonData: JSON_DATA });
+
+      // Assert
+      expect(outcome).toBe("sent");
+    });
+
+    it("should return failed when the artefact is not found", async () => {
+      // Arrange
+      vi.mocked(findArtefactForFulfilment).mockResolvedValue(null);
+
+      // Act
+      const outcome = await sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: false, jsonData: JSON_DATA });
+
+      // Assert
+      expect(outcome).toBe("failed");
+    });
+
+    it("should return failed when the content part cannot be built", async () => {
+      // Act
+      const outcome = await sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: false });
+
+      // Assert
+      expect(outcome).toBe("failed");
+    });
+  });
+
   describe("sendPublicationDeletionToThirdParties", () => {
     it("should DELETE {destinationUrl}/{publicationId} with the bearer token and no body", async () => {
       // Act
@@ -438,9 +543,14 @@ describe("third-party fulfilment service", () => {
 
   describe("subscriber status", () => {
     const DELIVERIES = [
-      ["a new publication", "POST", () => sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: false, jsonData: JSON_DATA })],
-      ["an updated publication", "PUT", () => sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: true, jsonData: JSON_DATA })],
-      ["a deleted publication", "DELETE", () => sendPublicationDeletionToThirdParties({ artefactId: ARTEFACT_ID, listTypeId: 999, sensitivity: "PUBLIC" })]
+      ["a new publication", "POST", () => sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: false, jsonData: JSON_DATA }), "no-recipients"],
+      ["an updated publication", "PUT", () => sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: true, jsonData: JSON_DATA }), "no-recipients"],
+      [
+        "a deleted publication",
+        "DELETE",
+        () => sendPublicationDeletionToThirdParties({ artefactId: ARTEFACT_ID, listTypeId: 999, sensitivity: "PUBLIC" }),
+        undefined
+      ]
     ] as const;
 
     it.each(DELIVERIES)("should deliver %s only to ACTIVE subscribers and log each skipped subscriber", async (_label, method, deliver) => {
@@ -481,12 +591,12 @@ describe("third-party fulfilment service", () => {
       expect(console.info).not.toHaveBeenCalledWith(expect.stringContaining("status is not ACTIVE"), expect.anything());
     });
 
-    it.each(DELIVERIES)("should send nothing for %s without throwing when no subscriber is ACTIVE", async (_label, _method, deliver) => {
+    it.each(DELIVERIES)("should send nothing for %s without throwing when no subscriber is ACTIVE", async (_label, _method, deliver, expectedOutcome) => {
       // Arrange
       vi.mocked(findMatchingSubscriptions).mockResolvedValue([PENDING_SUBSCRIBER, SUSPENDED_SUBSCRIBER]);
 
       // Act
-      await expect(deliver()).resolves.toBeUndefined();
+      await expect(deliver()).resolves.toBe(expectedOutcome);
 
       // Assert
       expect(mockFetch).not.toHaveBeenCalled();

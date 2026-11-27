@@ -44,6 +44,8 @@ export {
   updateSourceArtefactId
 } from "./repository/queries.js";
 export { getFlatFileUrl, getJsonContent, getRenderedTemplateUrl } from "./repository/service.js";
+export { parseResendAction, RESEND_ACTIONS, type ResendAction } from "./resend/resend-action.js";
+export { type ChannelOutcome, type ResendChannel, type ResendResult, resendPublication } from "./resend/service.js";
 export { Sensitivity } from "./sensitivity.js";
 export {
   type ValidationResult,

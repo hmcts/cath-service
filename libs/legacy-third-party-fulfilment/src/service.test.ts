@@ -127,6 +127,54 @@ describe("sendThirdPartyPublications", () => {
     expect(forwardedFlatFilePath).toBeUndefined();
   });
 
+  it("returns failed when COURTEL_API_URL is not set", async () => {
+    delete process.env.COURTEL_API_URL;
+    const outcome = await sendThirdPartyPublications(BASE_PARAMS);
+    expect(outcome).toBe("failed");
+  });
+
+  it("returns failed when COURTEL_CERTIFICATE is not set", async () => {
+    delete process.env.COURTEL_CERTIFICATE;
+    const outcome = await sendThirdPartyPublications(BASE_PARAMS);
+    expect(outcome).toBe("failed");
+  });
+
+  it("returns no-recipients when there is no subscription for the list type", async () => {
+    vi.mocked(findSubscribersByListType).mockResolvedValue([]);
+    const outcome = await sendThirdPartyPublications(BASE_PARAMS);
+    expect(outcome).toBe("no-recipients");
+  });
+
+  it("returns no-recipients when there is no subscription even if the Courtel secrets are not set", async () => {
+    vi.mocked(findSubscribersByListType).mockResolvedValue([]);
+    delete process.env.COURTEL_API_URL;
+    const outcome = await sendThirdPartyPublications(BASE_PARAMS);
+    expect(outcome).toBe("no-recipients");
+  });
+
+  it("returns sent when the push succeeds", async () => {
+    const outcome = await sendThirdPartyPublications(BASE_PARAMS);
+    expect(outcome).toBe("sent");
+  });
+
+  it("returns failed when the push fails", async () => {
+    vi.mocked(pushWithRetry).mockResolvedValue({ statusCode: 500, success: false });
+    const outcome = await sendThirdPartyPublications(BASE_PARAMS);
+    expect(outcome).toBe("failed");
+  });
+
+  it("forwards maxAttempts to pushWithRetry when provided", async () => {
+    await sendThirdPartyPublications({ ...BASE_PARAMS, maxAttempts: 1 });
+    const call = vi.mocked(pushWithRetry).mock.calls[0];
+    expect(call[7]).toBe(1);
+  });
+
+  it("forwards undefined maxAttempts to pushWithRetry by default", async () => {
+    await sendThirdPartyPublications(BASE_PARAMS);
+    const call = vi.mocked(pushWithRetry).mock.calls[0];
+    expect(call[7]).toBeUndefined();
+  });
+
   it("logs warning when writePushLog fails", async () => {
     const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     mockPushLogCreate.mockRejectedValue(new Error("DB write failed"));

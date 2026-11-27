@@ -11,6 +11,14 @@ const __dirname = path.dirname(__filename);
 
 const TEMPLATE = "(system-admin)/blob-explorer-resubmission-success/index.njk";
 
+type Locale = typeof en | typeof cy;
+type Action = keyof typeof en.actions;
+
+function buildData(locale: Locale, action: Action) {
+  const { actions, ...content } = locale;
+  return { ...content, ...actions[action], locale: locale === cy ? "cy" : "en" };
+}
+
 describe("blob-explorer-resubmission-success template", () => {
   let env: nunjucks.Environment;
 
@@ -19,21 +27,23 @@ describe("blob-explorer-resubmission-success template", () => {
   });
 
   describe("English content", () => {
-    it("should render the success panel with title and banner", () => {
-      const data = { ...en, locale: "en" };
-
-      const { $ } = render(env, TEMPLATE, data);
+    it.each([
+      ["resubmit", "Submission re-submitted"],
+      ["courtel", "Publication sent to Courtel"],
+      ["third-party", "Publication sent to third party subscribers"],
+      ["email", "Subscription email sent"]
+    ] as const)("should render the %s panel heading with no body text", (action, heading) => {
+      const { $ } = render(env, TEMPLATE, buildData(en, action));
 
       const panel = $(".govuk-panel--confirmation");
       expect(panel).toHaveLength(1);
-      expect(panel.find(".govuk-panel__title").text()).toContain(en.header);
-      expect(panel.find(".govuk-panel__body").text()).toContain(en.successBanner);
+      expect(panel.find(".govuk-panel__title").text().trim()).toBe(heading);
+      expect(panel.find(".govuk-panel__body")).toHaveLength(0);
+      expect($("title").text()).toContain(heading);
     });
 
     it("should render the next steps text and link to locations", () => {
-      const data = { ...en, locale: "en" };
-
-      const { $ } = render(env, TEMPLATE, data);
+      const { $ } = render(env, TEMPLATE, buildData(en, "courtel"));
 
       expect($("body").text()).toContain(en.successNextSteps);
       const link = $('a[href="/blob-explorer-locations"]');
@@ -42,35 +52,31 @@ describe("blob-explorer-resubmission-success template", () => {
     });
 
     it("should not render an error summary", () => {
-      const data = { ...en, locale: "en" };
-
-      const { $ } = render(env, TEMPLATE, data);
+      const { $ } = render(env, TEMPLATE, buildData(en, "email"));
 
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
-    it("should render the success panel with Welsh title and banner", () => {
-      const data = { ...cy, locale: "cy" };
+    it("should render the Welsh panel heading", () => {
+      const { $ } = render(env, TEMPLATE, buildData(cy, "third-party"));
 
-      const { $ } = render(env, TEMPLATE, data);
-
-      const panel = $(".govuk-panel--confirmation");
-      expect(panel).toHaveLength(1);
-      expect(panel.find(".govuk-panel__title").text()).toContain(cy.header);
-      expect(panel.find(".govuk-panel__body").text()).toContain(cy.successBanner);
+      expect($(".govuk-panel__title").text().trim()).toBe(cy.actions["third-party"].header);
     });
 
     it("should render the Welsh next steps text and link to locations", () => {
-      const data = { ...cy, locale: "cy" };
-
-      const { $ } = render(env, TEMPLATE, data);
+      const { $ } = render(env, TEMPLATE, buildData(cy, "resubmit"));
 
       expect($("body").text()).toContain(cy.successNextSteps);
-      const link = $('a[href="/blob-explorer-locations"]');
-      expect(link).toHaveLength(1);
-      expect(link.text()).toContain(cy.successLinkToLocations);
+      expect($('a[href="/blob-explorer-locations"]').text()).toContain(cy.successLinkToLocations);
+    });
+  });
+
+  describe("locale files", () => {
+    it("should have the same keys in en and cy", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+      expect(Object.keys(en.actions).sort()).toEqual(Object.keys(cy.actions).sort());
     });
   });
 });

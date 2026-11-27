@@ -5,10 +5,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@hmcts/publication", () => ({
   getArtefactMetadata: vi.fn(),
   getJsonContent: vi.fn(),
-  getRenderedTemplateUrl: vi.fn()
+  getRenderedTemplateUrl: vi.fn(),
+  RESEND_ACTIONS: ["resubmit", "courtel", "third-party", "email"]
 }));
 
-const { GET, POST } = await import("./index.js");
+const { GET } = await import("./index.js");
 
 describe("blob-explorer-json-file page", () => {
   let mockRequest: Partial<Request>;
@@ -231,21 +232,59 @@ describe("blob-explorer-json-file page", () => {
   });
 
   describe("POST", () => {
-    it("should redirect to blob-explorer-locations when artefactId is missing", async () => {
-      mockRequest.query = {};
+    it("should not export a POST handler", async () => {
+      const module = await import("./index.js");
 
-      const handler = POST[1];
-      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+      expect("POST" in module).toBe(false);
+    });
+  });
 
-      expect(mockResponse.redirect).toHaveBeenCalledWith("/blob-explorer-locations");
+  describe("resend buttons", () => {
+    it("should pass the four action buttons in order to the template", async () => {
+      // Arrange
+      vi.mocked(publication.getArtefactMetadata).mockResolvedValue({ locationName: "Test Court" } as any);
+
+      // Act
+      await GET[1](mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      const renderCall = vi.mocked(mockResponse.render).mock.calls[0];
+      expect(renderCall[1].resendButtons).toEqual([
+        { text: "Re-submit subscription", href: "/blob-explorer-confirm-resubmission?artefactId=abc-123&action=resubmit", classes: "govuk-button" },
+        {
+          text: "Send to Courtel",
+          href: "/blob-explorer-confirm-resubmission?artefactId=abc-123&action=courtel",
+          classes: "govuk-button govuk-button--secondary"
+        },
+        {
+          text: "Send to third party subscribers",
+          href: "/blob-explorer-confirm-resubmission?artefactId=abc-123&action=third-party",
+          classes: "govuk-button govuk-button--secondary"
+        },
+        {
+          text: "Send subscription email",
+          href: "/blob-explorer-confirm-resubmission?artefactId=abc-123&action=email",
+          classes: "govuk-button govuk-button--secondary"
+        }
+      ]);
     });
 
-    it("should store artefactId in session and redirect to confirmation page", async () => {
-      const handler = POST[1];
-      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+    it("should keep lng=cy on the button hrefs when Welsh is selected", async () => {
+      // Arrange
+      mockRequest.query = { artefactId: "abc-123", lng: "cy" };
+      vi.mocked(publication.getArtefactMetadata).mockResolvedValue({ locationName: "Test Court" } as any);
 
-      expect(mockRequest.session.resubmissionArtefactId).toBe("abc-123");
-      expect(mockResponse.redirect).toHaveBeenCalledWith("/blob-explorer-confirm-resubmission?artefactId=abc-123");
+      // Act
+      await GET[1](mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      const renderCall = vi.mocked(mockResponse.render).mock.calls[0];
+      expect(renderCall[1].resendButtons.map((button: { href: string }) => button.href)).toEqual([
+        "/blob-explorer-confirm-resubmission?artefactId=abc-123&action=resubmit&lng=cy",
+        "/blob-explorer-confirm-resubmission?artefactId=abc-123&action=courtel&lng=cy",
+        "/blob-explorer-confirm-resubmission?artefactId=abc-123&action=third-party&lng=cy",
+        "/blob-explorer-confirm-resubmission?artefactId=abc-123&action=email&lng=cy"
+      ]);
     });
   });
 });

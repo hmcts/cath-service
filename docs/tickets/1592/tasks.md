@@ -1,0 +1,79 @@
+# #1592 Tasks
+
+## Implementation Tasks
+
+- [x] Branch from an up-to-date `master`. Rebase onto `feature/1499-blob-explorer-downloads` (PR #1590) once it merges, because both change the JSON file page, `logger.ts`, the `system-admin-pages` index and `blob-explorer.spec.ts` (branched as worktree `vibe-1592` from master `fcd11e15`; REBASE PENDING — PR #1590 still open)
+- [ ] After PR #1306 merges: rebase, resolve the `legacy-third-party-fulfilment` conflicts (keep `no-recipients` separate from `failed`, and keep `maxAttempts`), and pass `loadFiles` from `resendPublication` so Courtel resends carry the PDF or flat file (Clarification 5)
+- [x] `libs/legacy-third-party-fulfilment/src/service.ts`: change `sendThirdPartyPublications` to return `"sent" | "no-recipients" | "failed"`. Missing env gives failed, no subscription gives no-recipients, and anything else follows the `pushWithRetry` result. Export the type from `index.ts`
+  - [x] Add an optional `maxAttempts` param to `sendThirdPartyPublications`, passed to `pushWithRetry` (default 3). Unit test that `maxAttempts: 1` makes a single attempt (Clarification 4)
+- [x] `libs/third-party-subscription-fulfilment/src/fulfilment/service.ts`:
+  - [x] Add the `ignoreDisplayWindow?: boolean` option. The default stays `false`, so automatic behaviour does not change
+  - [x] Have `deliverToSubscriber` return a boolean
+  - [x] Have `sendPublicationToThirdParties` return `"sent" | "no-recipients" | "failed"`
+  - [x] Export the type
+- [x] `libs/publication/src/processing/service.ts`: include the list-type email results in the totals returned by `sendPublicationNotificationsForArtefact`
+- [x] `libs/publication/src/resend/resend-action.ts`: add `RESEND_ACTIONS`, the `ResendAction` type and `parseResendAction`
+- [x] `libs/publication/src/resend/service.ts`: add `resendPublication(artefactId, action)`
+  - [x] Load the artefact with `getArtefactById` and the JSON with `getPublicationJson`
+  - [x] Call only the channels for the action. Courtel uses `isUpdate: false`, `maxAttempts: 1` and no attachments. Third party uses `isUpdate: true` (PUT) and `ignoreDisplayWindow: true`. Email uses `pdfFilePath: <id>.pdf`, with the locale taken from the language
+  - [x] Re-submit runs the channels with `Promise.allSettled`
+  - [x] Return `not-found`, `sent`, `no-recipients` or `failed`, with the per-channel outcomes
+- [x] Export `RESEND_ACTIONS`, `parseResendAction`, `resendPublication` and their types from `libs/publication/src/index.ts`
+- [x] `libs/system-admin-pages/src/audit-log/logger.ts`: add `BLOB_EXPLORER_SEND_TO_COURTEL`, `BLOB_EXPLORER_SEND_TO_THIRD_PARTY` and `BLOB_EXPLORER_SEND_SUBSCRIPTION_EMAIL`
+- [x] `libs/system-admin-pages/src/audit-log/blob-explorer-resend.ts`: add `recordBlobExplorerResend(user, artefactId, action, status)`. Write it with the normalised action name, the artefact and the status, plus per-channel outcomes for re-submit. Export it from `index.ts`
+- [x] Delete the stub `libs/system-admin-pages/src/services/service.ts` (`sendPublicationNotifications`) and its test, and remove its export from `index.ts`
+- [x] Remove `resubmissionArtefactId` from `libs/system-admin-pages/src/types/session.ts`
+- [x] `blob-explorer-json-file` and `blob-explorer-flat-file`:
+  - [x] Replace the single button with a `govuk-button-group` of four `govukButton({ href })` in `RESEND_ACTIONS` order. The first is primary and the rest are secondary
+  - [x] Each href carries `artefactId`, `action` and `lng`
+  - [x] Remove the POST handlers
+  - [x] In `en.ts`/`cy.ts`, replace the `*ResubmitButton` keys with the four button keys
+- [x] `blob-explorer-confirm-resubmission`:
+  - [x] `en.ts`/`cy.ts`: add the per-action `title`, `header`, `error` and `noRecipientsError` (§5.2 copy verbatim), and `errorTitlePrefix`
+  - [x] `index.ts`: validate `artefactId` and `action`
+  - [x] `index.ts`: work out `cancelHref`, either the json or flat-file page, and keep `lng`
+  - [x] `index.ts`: on POST, call `resendPublication`, then `recordBlobExplorerResend`, with `auditMetadata.shouldLog = false`
+  - [x] `index.ts`: redirect to success with `action` and `lng`, or re-render with the right message and the metadata
+  - [x] `index.njk`: show the error summary above the table and keep the table and Confirm when metadata exists
+  - [x] `index.njk`: Cancel goes to `cancelHref`
+  - [x] `index.njk`: prefix the title with "Error:"/"Gwall:" when an error is shown
+- [x] `blob-explorer-resubmission-success`:
+  - [x] Validate `action` and render that action's panel heading (§5.3 copy)
+  - [x] Drop the duplicated `successBanner` body
+  - [x] Add the per-action keys to `en.ts`/`cy.ts`
+- [x] Welsh: add every new string to the `cy.ts` files. Use `[WELSH TRANSLATION REQUIRED: '...']` placeholders until the translations arrive (Clarification 7)
+- [ ] (NOT DONE — not posted to GitHub from this session; note text drafted in the implementation report) Add a note to #1494 that the flag checks belong in `processPublication`, or in the senders with a bypass option that `resendPublication` passes (Clarification 6)
+- [x] Run `yarn lint:fix` and `yarn test` from the repository root (Biome clean on all changed paths; full `turbo test --continue -- --coverage` run: all changed workspaces pass; `@hmcts/web` has 28 failures in untouched `app.test.ts`/`session-timeout.test.ts`, and `@hmcts/ui-baseline` has 1, all environmental)
+
+## Testing Tasks
+
+- [x] Scenario 1, `libs/publication/src/resend/service.test.ts`:
+  - [x] Each action calls only its own channels. Courtel gets `isUpdate: false`. Third party gets `isUpdate: true` and `ignoreDisplayWindow: true`
+  - [x] When one re-submit channel rejects, the other two are still called and the result is `failed`
+  - [x] A missing artefact gives `not-found`
+  - [x] When every channel has no recipients, the result is `no-recipients`
+  - [x] An expired publication still sends
+- [x] Scenario 2, channel outcomes:
+  - [x] `libs/legacy-third-party-fulfilment/src/service.test.ts`: env not set, no subscription, push succeeds, push fails
+  - [x] `libs/third-party-subscription-fulfilment/src/fulfilment/service.test.ts`: with `ignoreDisplayWindow` the publication sends outside its window, and by default it is still skipped. Also cover no subscribers, all deliveries failing, and some delivered
+  - [x] `libs/publication/src/processing/service.test.ts`: the totals include the list-type results
+- [x] Scenario 3, `blob-explorer-confirm-resubmission/index.test.ts`:
+  - [x] GET renders the action's heading and Cancel href, and an unknown action redirects to Locations
+  - [x] POST `sent` redirects to success with `action` and `lng`
+  - [x] POST `no-recipients` and `failed` re-render with the right message and the metadata
+  - [x] POST `not-found` shows the Validation message
+  - [x] Each POST writes one audit entry and sets `shouldLog: false`
+  - [x] Update the existing json-file, flat-file and success `index.test.ts` files for the removed POST handlers and the `action` query
+- [x] Scenario 4, templates (`index.njk.test.ts` for json-file, flat-file, confirm and success):
+  - [x] The four buttons appear in order with the right classes and hrefs
+  - [x] The error summary sits above the table and Confirm is still present
+  - [x] The panel heading is right for each action
+  - [x] The pages render in Welsh, and the `en`/`cy` keys match
+- [x] Scenario 5, `libs/system-admin-pages/src/audit-log/blob-explorer-resend.test.ts`: action name, details for each status, and a write failure is logged
+- [x] Scenario 6, E2E: extend the existing journey in `e2e-tests/tests/system-admin/blob-explorer.spec.ts`
+  - [x] Assert the four buttons in order
+  - [x] Open "Send to Courtel", then Cancel, and assert the publication page
+  - [x] Open "Send subscription email", Confirm, and assert the no-recipients message on the test's own court
+  - [x] Switch to Welsh and assert the buttons and the heading
+  - [x] Run axe on the publication page and on the confirmation page with the error shown
+  - [ ] Confirm the e2e list type has no list-type email subscribers in the test environment (NOT DONE: e2e has no DB access and the deployed env could not be queried from here; `subscription_list_type` is not location-scoped, so a lingering CIVIL_AND_FAMILY_DAILY_CAUSE_LIST row would break the no-recipients step)
