@@ -15,10 +15,14 @@ name: Prod
 #   - https://cath.platform.hmcts.net/health/deployment, until web and the API both
 #     run the promoted commit. cath-api.platform.hmcts.net is not reachable from the
 #     runners (#1448, DTSPO-36470), so web reports the API, which it calls at that
-#     host from inside AKS (CATH_API_URL, libs/web-core/src/health/deployment-health-check.ts)
+#     host from inside AKS (CATH_API_URL, libs/web-core/src/health/deployment-health-check.ts).
+#     That host is also APIM's backend, so this covers the supplier route up to APIM
 #   - /test-support returns 404, as ENABLE_TEST_SUPPORT is false in PROD
-#   - the web root, and the API through APIM's anonymous healthCheck operation, which
-#     is the route suppliers use (infrastructure/resources/operation-policies/healthCheck.xml)
+#   - the web root
+#
+# APIM itself is not called: from the runners cft-api-mgmt.platform.hmcts.net resolves
+# to the public Front Door, which does not serve cath's API (404). Only the internal
+# gateway does, and the runners can't reach it.
 #
 # Rollback: in hmcts/cnp-flux-config, the image tag lives in the shared
 # apps/cath/cath-<app>/cath-<app>.yaml, next to an {"$imagepolicy": ...} marker
@@ -45,7 +49,6 @@ permissions:
 
 env:
   WEB_URL: https://cath.platform.hmcts.net
-  APIM_URL: https://cft-api-mgmt.platform.hmcts.net/cath/
 
 jobs:
   check-promoted:
@@ -84,7 +87,9 @@ jobs:
           JOBS=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/jobs?per_page=100" \
             --jq '.jobs[] | select(.conclusion == "success") | .name')
           for app in web api; do
-            if echo "${JOBS}" | grep -qx "Promote / Promote ${app} to prod"; then
+            # Nested reusable workflows prefix the name once per level
+            # ("Promote / Promote / Promote web to prod"), so match the suffix.
+            if echo "${JOBS}" | grep -qE "(^| / )Promote ${app} to prod$"; then
               echo "${app}=true" >> "$GITHUB_OUTPUT"
               echo "${app} was promoted in Main run ${RUN_ID}"
             else
@@ -145,7 +150,7 @@ jobs:
       - name: Encode smoke test URLs
         id: urls
         run: |
-          echo "urls=$(jq -cn --arg web "${WEB_URL}" --arg api "${APIM_URL}" '{web: $web, api: $api}' | base64 -w0)" >> "$GITHUB_OUTPUT"
+          echo "urls=$(jq -cn --arg web "${WEB_URL}" '{web: $web}' | base64 -w0)" >> "$GITHUB_OUTPUT"
 
     outputs:
       urls: ${{ steps.urls.outputs.urls }}
