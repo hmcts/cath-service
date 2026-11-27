@@ -14,8 +14,8 @@ name: Prod
 # What it checks, all from the azure-prod runners:
 #   - https://cath.platform.hmcts.net/health/deployment, until web and the API both
 #     run the promoted commit. cath-api.platform.hmcts.net is not reachable from the
-#     runners (#1448, DTSPO-36470), so web reports the API, which it calls in-cluster
-#     (libs/web-core/src/health/deployment-health-check.ts)
+#     runners (#1448, DTSPO-36470), so web reports the API, which it calls at that
+#     host from inside AKS (CATH_API_URL, libs/web-core/src/health/deployment-health-check.ts)
 #   - /test-support returns 404, as ENABLE_TEST_SUPPORT is false in PROD
 #   - the web root, and the API through APIM's anonymous healthCheck operation, which
 #     is the route suppliers use (infrastructure/resources/operation-policies/healthCheck.xml)

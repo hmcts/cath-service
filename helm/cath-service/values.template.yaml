@@ -47,8 +47,8 @@ cath-web:
     additionalIngressHosts: []
     environment:
       BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.{{ .Values.global.environment }}.platform.hmcts.net"
-      # This release's own API service, not Flux's cath-api (apps/api/helm/values.yaml).
-      CATH_API_URL: "http://{{ .Release.Name }}-api"
+      # This release's own API ingress (cath-api below), not Flux's cath-api.
+      CATH_API_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-api.{{ .Values.global.environment }}.platform.hmcts.net"
       # false on demo (production-like), true elsewhere. Resolved by
       # job.helm-deploy.yml. Do not add shell-style ":-" defaults to any variable in
       # this file: helm-deploy renders it with envsubst, which leaves them verbatim.

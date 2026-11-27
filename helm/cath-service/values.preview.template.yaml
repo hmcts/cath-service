@@ -33,7 +33,7 @@ cath-web:
     ingressHost: "{{ .Release.Name }}-web.preview.platform.hmcts.net"
     environment:
       BASE_URL: "https://{{ .Release.Name }}-web.preview.platform.hmcts.net"
-      CATH_API_URL: "http://{{ .Release.Name }}-api"
+      CATH_API_URL: "https://{{ .Release.Name }}-api.preview.platform.hmcts.net"
       ENABLE_TEST_SUPPORT: "true"
       CFT_IDAM_URL: "https://hmcts-access.aat.platform.hmcts.net"
       SSO_ALLOW_HTTP_REDIRECT: 'true'
