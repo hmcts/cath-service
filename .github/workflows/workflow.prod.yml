@@ -153,6 +153,15 @@ jobs:
   smoke-test-stage:
     name: Smoke Test
     needs: [rollout]
+    # A called workflow can't have more than its caller grants, and GitHub checks every
+    # job in it at startup, skipped or not: job.smoke-test.yml asks for id-token: write
+    # (Azure login) and job.pr-comment.yml (skipped here) for pull-requests: write.
+    # Without this the run fails to start (startup_failure) under the top-level
+    # contents: read.
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
     uses: ./.github/workflows/stage.smoke-test.yml
     with:
       change-id: prod
