@@ -3,7 +3,9 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@hmcts/publication", () => ({
+  formatFileSize: (bytes: number) => `${bytes} bytes`,
   getArtefactMetadata: vi.fn(),
+  getGeneratedFileAvailability: vi.fn(),
   getJsonContent: vi.fn(),
   getRenderedTemplateUrl: vi.fn()
 }));
@@ -16,6 +18,7 @@ describe("blob-explorer-json-file page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(publication.getGeneratedFileAvailability).mockResolvedValue({ pdf: null, xlsx: null });
 
     mockRequest = {
       query: { artefactId: "abc-123" },
@@ -227,6 +230,104 @@ describe("blob-explorer-json-file page", () => {
       // Verify quotes are escaped
       expect(jsonContent).toContain("&quot;");
       expect(jsonContent).toContain("&#39;");
+    });
+  });
+
+  describe("GET generated files", () => {
+    const ARTEFACT_ID = "3f2504e0-4f89-11d3-9a0c-0305e82c3301";
+    const mockMetadata = {
+      locationName: "Test Court",
+      listType: "Civil Daily Cause List",
+      displayFrom: "2024-01-01T00:00:00Z",
+      displayTo: "2024-01-02T00:00:00Z"
+    };
+
+    beforeEach(() => {
+      mockRequest.query = { artefactId: ARTEFACT_ID };
+      vi.mocked(publication.getArtefactMetadata).mockResolvedValue(mockMetadata);
+      vi.mocked(publication.getJsonContent).mockResolvedValue(null);
+      vi.mocked(publication.getRenderedTemplateUrl).mockResolvedValue(null);
+    });
+
+    it("should pass download URLs and formatted sizes when both files are available", async () => {
+      // Arrange
+      vi.mocked(publication.getGeneratedFileAvailability).mockResolvedValue({ pdf: 2048, xlsx: 4096 });
+
+      // Act
+      await GET[1](mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(publication.getGeneratedFileAvailability).toHaveBeenCalledWith(ARTEFACT_ID);
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "blob-explorer-json-file/index",
+        expect.objectContaining({
+          pdfDownloadUrl: `/blob-explorer-json-file/download?artefactId=${ARTEFACT_ID}&type=pdf`,
+          pdfFileSize: "2048 bytes",
+          excelDownloadUrl: `/blob-explorer-json-file/download?artefactId=${ARTEFACT_ID}&type=xlsx`,
+          excelFileSize: "4096 bytes"
+        })
+      );
+    });
+
+    it("should pass null URLs and sizes when the files are not available", async () => {
+      // Arrange
+      vi.mocked(publication.getGeneratedFileAvailability).mockResolvedValue({ pdf: null, xlsx: null });
+
+      // Act
+      await GET[1](mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "blob-explorer-json-file/index",
+        expect.objectContaining({ pdfDownloadUrl: null, pdfFileSize: null, excelDownloadUrl: null, excelFileSize: null })
+      );
+    });
+
+    it("should pass only the PDF link when only the PDF is available", async () => {
+      // Arrange
+      vi.mocked(publication.getGeneratedFileAvailability).mockResolvedValue({ pdf: 0, xlsx: null });
+
+      // Act
+      await GET[1](mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "blob-explorer-json-file/index",
+        expect.objectContaining({
+          pdfDownloadUrl: `/blob-explorer-json-file/download?artefactId=${ARTEFACT_ID}&type=pdf`,
+          pdfFileSize: "0 bytes",
+          excelDownloadUrl: null
+        })
+      );
+    });
+
+    it("should add lng=cy to the download URLs when the page is in Welsh", async () => {
+      // Arrange
+      mockRequest.query = { artefactId: ARTEFACT_ID, lng: "cy" };
+      vi.mocked(publication.getGeneratedFileAvailability).mockResolvedValue({ pdf: 2048, xlsx: 4096 });
+
+      // Act
+      await GET[1](mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "blob-explorer-json-file/index",
+        expect.objectContaining({
+          pdfDownloadUrl: `/blob-explorer-json-file/download?artefactId=${ARTEFACT_ID}&type=pdf&lng=cy`,
+          excelDownloadUrl: `/blob-explorer-json-file/download?artefactId=${ARTEFACT_ID}&type=xlsx&lng=cy`
+        })
+      );
+    });
+
+    it("should not check for generated files when the artefact is not found", async () => {
+      // Arrange
+      vi.mocked(publication.getArtefactMetadata).mockResolvedValue(null);
+
+      // Act
+      await GET[1](mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(publication.getGeneratedFileAvailability).not.toHaveBeenCalled();
     });
   });
 

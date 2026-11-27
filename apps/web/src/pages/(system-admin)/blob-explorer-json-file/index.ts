@@ -1,5 +1,12 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { getArtefactMetadata, getJsonContent, getRenderedTemplateUrl } from "@hmcts/publication";
+import {
+  formatFileSize,
+  type GeneratedFileType,
+  getArtefactMetadata,
+  getGeneratedFileAvailability,
+  getJsonContent,
+  getRenderedTemplateUrl
+} from "@hmcts/publication";
 import "@hmcts/web-core";
 import { escapeHtml, formatDateTime } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
@@ -30,11 +37,17 @@ const getHandler = async (req: Request, res: Response) => {
       });
     }
 
+    const generatedFiles = await getGeneratedFileAvailability(artefactId);
+
     res.render("blob-explorer-json-file/index", {
       ...t,
       metadata,
       jsonContent: jsonContent ? escapeHtml(JSON.stringify(jsonContent, null, 2)) : null,
       renderedTemplateUrl,
+      pdfDownloadUrl: generatedFiles.pdf === null ? null : buildDownloadUrl(artefactId, "pdf", locale),
+      pdfFileSize: generatedFiles.pdf === null ? null : formatFileSize(generatedFiles.pdf),
+      excelDownloadUrl: generatedFiles.xlsx === null ? null : buildDownloadUrl(artefactId, "xlsx", locale),
+      excelFileSize: generatedFiles.xlsx === null ? null : formatFileSize(generatedFiles.xlsx),
       formatDateTime,
       locale
     });
@@ -60,6 +73,11 @@ const postHandler = async (req: Request, res: Response) => {
 
   return res.redirect(`/blob-explorer-confirm-resubmission?artefactId=${encodeURIComponent(artefactId)}`);
 };
+
+function buildDownloadUrl(artefactId: string, type: GeneratedFileType, locale: "en" | "cy"): string {
+  const lng = locale === "cy" ? "&lng=cy" : "";
+  return `/blob-explorer-json-file/download?artefactId=${encodeURIComponent(artefactId)}&type=${type}${lng}`;
+}
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];
 export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), postHandler];
