@@ -105,24 +105,24 @@ export const listTypeData: ListTypeData[] = [
   },
   {
     name: "ET_DAILY_LIST",
-    englishFriendlyName: "Employment Tribunals Daily List",
-    welshFriendlyName: "Rhestr Ddyddiol y Tribiwnlysoedd Cyflogaeth",
+    englishFriendlyName: "Employment Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol y Tribiwnlys Cyflogaeth",
     provenance: ["CFT_IDAM"],
     urlPath: "et-daily-list",
     isNonStrategic: false,
     defaultSensitivity: "Public",
-    shortenedFriendlyName: "ET Daily List",
+    shortenedFriendlyName: "ET Daily Hearing List",
     subJurisdictionIds: [3]
   },
   {
     name: "ET_FORTNIGHTLY_PRESS_LIST",
-    englishFriendlyName: "Employment Tribunals Fortnightly Press List",
-    welshFriendlyName: "Rhestr y Wasg Pob Pythefnos y Tribiwnlysoedd Cyflogaeth",
+    englishFriendlyName: "Employment Tribunal Advance Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Ymlaen llaw y Tribiwnlys Cyflogaeth",
     provenance: ["CFT_IDAM"],
     urlPath: "et-fortnightly-list",
     isNonStrategic: false,
     defaultSensitivity: "Public",
-    shortenedFriendlyName: "ET Fortnightly List",
+    shortenedFriendlyName: "ET Advance Hearing List",
     subJurisdictionIds: [3]
   },
   {

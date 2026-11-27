@@ -64,7 +64,7 @@ describe("generateEtFortnightlyPressListPdf", () => {
     vi.clearAllMocks();
     vi.mocked(renderEtFortnightlyList).mockResolvedValue(mockRenderedData as any);
     mockConfigureNunjucks.mockReturnValue(mockNunjucksEnv);
-    mockLoadTranslations.mockResolvedValue({ title: "Employment Tribunals Fortnightly List" });
+    mockLoadTranslations.mockResolvedValue({ title: "Employment Tribunal Advance Hearing List" });
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "et-fortnightly-123.pdf",

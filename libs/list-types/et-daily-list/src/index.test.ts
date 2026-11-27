@@ -18,7 +18,7 @@ describe("index exports", () => {
   });
 
   it("should export the English and Welsh locale content", () => {
-    expect(exports.etDailyListEn.title).toBe("Employment Tribunals Daily List");
-    expect(exports.etDailyListCy.title).toBe("Rhestr Ddyddiol y Tribiwnlysoedd Cyflogaeth");
+    expect(exports.etDailyListEn.title).toBe("Employment Tribunal Daily Hearing List");
+    expect(exports.etDailyListCy.title).toBe("Rhestr Gwrandawiadau Dyddiol y Tribiwnlys Cyflogaeth");
   });
 });

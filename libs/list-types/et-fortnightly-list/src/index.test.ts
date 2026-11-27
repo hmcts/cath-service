@@ -18,9 +18,9 @@ describe("index exports", () => {
   });
 
   it("should export the English and Welsh locale content including rep keys", () => {
-    expect(exports.etFortnightlyListEn.title).toBe("Employment Tribunals Fortnightly List");
+    expect(exports.etFortnightlyListEn.title).toBe("Employment Tribunal Advance Hearing List");
     expect(exports.etFortnightlyListEn.rep).toBe("Rep");
-    expect(exports.etFortnightlyListCy.title).toBe("Rhestr Pob Pythefnos y Tribiwnlysoedd Cyflogaeth");
+    expect(exports.etFortnightlyListCy.title).toBe("Rhestr Gwrandawiadau Ymlaen llaw y Tribiwnlys Cyflogaeth");
     expect(exports.etFortnightlyListCy.noRep).toBe("Dim Cynrychiolydd");
   });
 });
