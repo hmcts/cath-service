@@ -1,14 +1,6 @@
 <policies>
-  <!--
-    Anonymous on purpose: no <base /> in inbound, so the API policy's token validation
-    and token swap do not run. The backend's GET / returns only static service
-    information and the commit it runs, and needs no token. This lets the PROD smoke
-    test (#1099) check the supplier route without holding an api.publisher.user
-    credential, which could create publications. Skipping <base /> also skips the
-    product's rate limit, so the operation sets its own.
-  -->
   <inbound>
-    <rate-limit-by-key calls="60" renewal-period="60" counter-key="@(context.Request.IpAddress)" />
+    <base />
   </inbound>
   <backend>
     <base />
