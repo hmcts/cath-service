@@ -164,9 +164,13 @@ jobs:
         run: yarn db:migrate
 
       # Deployed databases get every list type and location from the postgres pod's seed. E2E global
-      # setup only adds its own fixtures, so without this the SJP lists and location 9 don't exist
+      # setup only adds its own fixtures, so without this the SJP lists and location 9 don't exist.
+      # Same commands as apps/postgres/start.sh: `yarn db:seed` skips itself when CI=true
       - name: Seed reference data
-        run: yarn db:seed
+        working-directory: apps/postgres
+        run: |
+          ../../node_modules/.bin/tsx prisma/generate-seed-sql.ts > "$RUNNER_TEMP/seed.sql"
+          ../../node_modules/.bin/prisma db execute --file "$RUNNER_TEMP/seed.sql" --config=./prisma.config.ts
 
       - name: Build packages
         run: yarn build
