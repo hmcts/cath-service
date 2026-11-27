@@ -462,6 +462,14 @@ yarn test:e2e               # E2E tests
 yarn test:coverage          # Coverage report
 ```
 
+### Nightly E2E tests
+
+Tests tagged `@nightly` don't run on PRs or on master. PR and master E2E use `--grep-invert "@nightly"`, so they only run in the **Nightly Tests** workflow (`.github/workflows/nightly.yml`). That workflow runs every night at 02:00 UTC against a local stack started in CI. `yarn test:e2e:all` runs the same suite locally.
+
+- **Before merging:** add the `run-nightly` label to your PR. The nightly runs on that PR, and runs again on every push while the label is on.
+- **Manual runs:** `workflow_dispatch` only works from master. The Azure federated credential trusts master and `pull_request` subjects, not other branches, so a dispatch from a branch fails at Azure login with `AADSTS700213`.
+- **Failures:** a failed run on master posts to the team's Slack channel through the webhook the watchdog uses (`slack-webhook-url` in `cath-aat`).
+
 ## Security
 
 The GitHub Action pipelines contain a number of security checks, including:

@@ -1,9 +1,17 @@
 name: Nightly Tests
 
+# To run this on a branch before merging, add the `run-nightly` label to its PR. The run
+# repeats on every push while the label is on. workflow_dispatch only works from master:
+# the Azure federated credential trusts `repo:hmcts/cath-service:ref:refs/heads/master` and
+# `repo:hmcts/cath-service:pull_request`, so a dispatch from any other branch fails at
+# Azure login with AADSTS700213. A pull_request run also uses this file from the PR, so
+# changes to the workflow itself can be tested the same way.
 on:
   schedule:
     - cron: '0 2 * * *'  # Run at 2:00 AM UTC daily
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:  # Manual trigger, master only (see above)
+  pull_request:
+    types: [labeled, synchronize]
 
 permissions:
   contents: read
@@ -11,9 +19,18 @@ permissions:
   actions: read
   id-token: write
 
+concurrency:
+  # A newer push to a labelled PR supersedes its running nightly. Scheduled runs share the master group
+  group: nightly-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   e2e:
     name: E2E Tests (Including Nightly)
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.action == 'labeled' && github.event.label.name == 'run-nightly') ||
+      (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'run-nightly'))
     runs-on: ubuntu-latest
     timeout-minutes: 120
 
@@ -205,3 +222,34 @@ jobs:
           name: application-logs-${{ github.run_id }}
           path: e2e-server-logs.txt
           retention-days: 7
+
+      # The nightly went unnoticed for months while it failed, so a failure on master posts to the
+      # team's Slack channel. PR runs don't post: the author is already watching the check.
+      # Log in again because the first session's token can expire during a two-hour run.
+      - name: Azure login for failure alert
+        if: failure() && github.ref == 'refs/heads/master'
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Alert Slack on failure
+        if: failure() && github.ref == 'refs/heads/master'
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          FAILED_TESTS: ${{ steps.test-report.outputs.failed }}
+        run: |
+          set -euo pipefail
+          # Same webhook and vault as the watchdog (watchdog.yml), read through the OIDC session
+          webhook=$(az keyvault secret show --vault-name cath-aat --name slack-webhook-url --query value -o tsv)
+          echo "::add-mask::$webhook"
+
+          if [ -n "${FAILED_TESTS:-}" ] && [ "$FAILED_TESTS" != "0" ]; then
+            detail="${FAILED_TESTS} test(s) failed"
+          else
+            detail="the run failed before or outside the tests"
+          fi
+          text=$(printf ':red_circle: *CaTH nightly E2E failed on master*: %s.\n<%s|View the run>' "$detail" "$RUN_URL")
+
+          jq -n --arg text "$text" '{text: $text}' | curl -fsS -X POST -H 'Content-Type: application/json' --data @- "$webhook"
