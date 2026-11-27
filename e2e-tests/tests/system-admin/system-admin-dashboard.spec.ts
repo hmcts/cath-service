@@ -68,7 +68,7 @@ test.describe("System Admin Dashboard", () => {
   test("dashboard is keyboard accessible @nightly", async ({ page }) => {
     // Verify tiles are focusable
     const tileLinks = page.locator("a.admin-tile");
-    await expect(tileLinks).toHaveCount(11);
+    await expect(tileLinks).toHaveCount(12);
 
     // Verify first tile is visible and focusable
     const firstTile = tileLinks.first();
