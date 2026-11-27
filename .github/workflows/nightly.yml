@@ -163,6 +163,11 @@ jobs:
       - name: Run database migrations
         run: yarn db:migrate
 
+      # Deployed databases get every list type and location from the postgres pod's seed. E2E global
+      # setup only adds its own fixtures, so without this the SJP lists and location 9 don't exist
+      - name: Seed reference data
+        run: yarn db:seed
+
       - name: Build packages
         run: yarn build
 
