@@ -27,12 +27,15 @@ describe("add-email-subscription template", () => {
       expect($("h1").text().trim()).toBe(en.heading);
     });
 
-    it("should render the inset text", () => {
+    it("should render the radio hint styled as inset text", () => {
       const data = { ...en };
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($(".govuk-inset-text").text()).toContain(en.insetText);
+      const hint = $("fieldset.govuk-fieldset .govuk-hint");
+      expect(hint.hasClass("govuk-inset-text")).toBe(true);
+      expect(hint.text().trim()).toBe(en.insetText);
+      expect($("fieldset.govuk-fieldset").attr("aria-describedby")).toContain(hint.attr("id"));
     });
 
     it("should render the three radio options", () => {
@@ -95,5 +98,50 @@ describe("add-email-subscription template", () => {
 
       assertErrorSummary($, [en.errorSelectOption]);
     });
+  });
+
+  describe("fieldset and legend", () => {
+    it("should render the question as the only h1, inside the fieldset legend", () => {
+      const { $ } = render(env, TEMPLATE, { ...en });
+
+      expect($("h1")).toHaveLength(1);
+      const legendHeading = $("fieldset.govuk-fieldset > legend.govuk-fieldset__legend--l h1.govuk-fieldset__heading");
+      expect(legendHeading.text().trim()).toBe(en.heading);
+    });
+
+    it("should not render a visually hidden legend", () => {
+      const { $ } = render(env, TEMPLATE, { ...en });
+
+      expect($("legend.govuk-visually-hidden")).toHaveLength(0);
+    });
+
+    it("should wrap all three radio options inside the fieldset", () => {
+      const { $ } = render(env, TEMPLATE, { ...en });
+
+      expect($("fieldset.govuk-fieldset input[name='subscriptionMethod']")).toHaveLength(3);
+    });
+
+    it("should render the Welsh question in the legend and the Welsh hint", () => {
+      const { $ } = render(env, TEMPLATE, { ...cy });
+
+      expect($("legend h1.govuk-fieldset__heading").text().trim()).toBe(cy.heading);
+      expect($("fieldset.govuk-fieldset .govuk-hint").text().trim()).toBe(cy.insetText);
+    });
+
+    it("should link the error summary to the first radio option", () => {
+      const data = {
+        ...en,
+        errors: { titleText: en.errorSummaryTitle, errorList: [{ text: en.errorSelectOption, href: "#subscriptionMethod" }] }
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const firstRadioId = $("input.govuk-radios__input").first().attr("id");
+      expect($(".govuk-error-summary__list a").attr("href")).toBe(`#${firstRadioId}`);
+    });
+  });
+
+  it("should have matching English and Welsh content keys", () => {
+    expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
   });
 });

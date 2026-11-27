@@ -6,7 +6,6 @@ export const cy = {
   actionsColumnHeader: "Camau gweithredu",
   languageHeading: "Fersiwn iaith",
   versionColumnHeader: "Fersiwn",
-  versionTooltip: "Bydd y newid fersiwn hwn yn effeithio ar yr iaith a ddewiswyd yn flaenorol ar gyfer yr holl danysgrifiadau presennol.",
   removeLink: "Dileu",
   changeLanguageLink: "Newid",
   confirmButton: "Cadarnhau tanysgrifiadau",

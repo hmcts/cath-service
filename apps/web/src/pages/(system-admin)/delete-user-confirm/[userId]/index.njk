@@ -3,6 +3,10 @@
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
+{% block pageTitle %}
+  {{ pageTitle(user.email) }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
 {% block page_content %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
@@ -14,16 +18,14 @@
       }) }}
     {% endif %}
 
-    <h1 class="govuk-heading-xl">{{ pageTitle(user.email) }}</h1>
-
     <form method="post" novalidate>
       {{ govukRadios({
         name: "confirmation",
         fieldset: {
           legend: {
             text: pageTitle(user.email),
-            isPageHeading: false,
-            classes: "govuk-visually-hidden"
+            isPageHeading: true,
+            classes: "govuk-fieldset__legend--xl"
           }
         },
         items: [

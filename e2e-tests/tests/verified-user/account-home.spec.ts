@@ -52,6 +52,22 @@ test.describe("Account Home", () => {
     await expect(sectionBoxes.nth(0).locator("p.verified-tile-description")).toHaveText("Gweld amser, lleoliad, math o wrandawiadau a mwy.");
     await expect(sectionBoxes.nth(2).locator("p.verified-tile-description")).toContainText("Cael e-byst am wrandawiadau");
 
+    // STEP 8b: Reflow - at 320px wide the tiles stack with no horizontal scrolling (WCAG 1.4.10), in Welsh and English
+    await page.setViewportSize({ width: 320, height: 800 });
+    for (const lng of ["cy", "en"]) {
+      await page.goto(`/account-home?lng=${lng}`);
+      const hasHorizontalScroll = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+      expect(hasHorizontalScroll).toBe(false);
+      for (let i = 0; i < 3; i++) {
+        await expect(sectionBoxes.nth(i)).toBeVisible();
+      }
+      const narrowAccessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
+      expect(narrowAccessibilityScanResults.violations).toEqual([]);
+    }
+    await sectionBoxes.nth(2).click();
+    await expect(page).toHaveURL("/subscription-management");
+    await page.setViewportSize({ width: 1280, height: 720 });
+
     // STEP 9: Test navigation to Court and Tribunal Hearings
     await page.goto("/account-home");
     await courtSection.click();

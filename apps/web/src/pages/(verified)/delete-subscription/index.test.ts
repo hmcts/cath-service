@@ -1,6 +1,8 @@
 import * as subscriptionService from "@hmcts/subscriptions";
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 import { GET, POST } from "./index.js";
 
 vi.mock("@hmcts/auth", () => ({
@@ -95,7 +97,7 @@ describe("delete-subscription", () => {
   });
 
   describe("POST", () => {
-    it("should redirect to GET page when no confirmation choice provided", async () => {
+    it("should redirect to GET page when posted from subscription-management with subscriptionId only", async () => {
       const validSubscriptionId = "550e8400-e29b-41d4-a716-446655440000";
       mockReq.body = { subscriptionId: validSubscriptionId };
       vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue({
@@ -150,6 +152,124 @@ describe("delete-subscription", () => {
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
+    });
+    it("should render the error summary when the confirmation form is submitted without a choice", async () => {
+      // Arrange
+      const validSubscriptionId = "550e8400-e29b-41d4-a716-446655440000";
+      mockReq.body = { subscription: validSubscriptionId };
+      vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue({
+        subscriptionId: validSubscriptionId,
+        userId: "user123",
+        locationId: 456,
+        dateAdded: new Date()
+      });
+
+      // Act
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      expect(mockRes.redirect).not.toHaveBeenCalled();
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "delete-subscription/index",
+        expect.objectContaining({
+          subscriptionId: validSubscriptionId,
+          header: en.header,
+          errors: {
+            titleText: en.errorSummaryTitle,
+            errorList: [{ text: en.errorNoSelection, href: "#unsubscribe-confirm" }]
+          }
+        })
+      );
+    });
+
+    it("should render the error summary when the choice is not yes or no", async () => {
+      // Arrange
+      const validSubscriptionId = "550e8400-e29b-41d4-a716-446655440000";
+      mockReq.body = { subscription: validSubscriptionId, "unsubscribe-confirm": "maybe" };
+      vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue({
+        subscriptionId: validSubscriptionId,
+        userId: "user123",
+        locationId: 456,
+        dateAdded: new Date()
+      });
+
+      // Act
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      expect(mockRes.redirect).not.toHaveBeenCalled();
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "delete-subscription/index",
+        expect.objectContaining({ errors: expect.objectContaining({ errorList: [{ text: en.errorNoSelection, href: "#unsubscribe-confirm" }] }) })
+      );
+    });
+
+    it("should render the Welsh error when the locale is cy", async () => {
+      // Arrange
+      const validSubscriptionId = "550e8400-e29b-41d4-a716-446655440000";
+      mockReq.body = { subscription: validSubscriptionId };
+      mockRes.locals = { locale: "cy" };
+      vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue({
+        subscriptionId: validSubscriptionId,
+        userId: "user123",
+        locationId: 456,
+        dateAdded: new Date()
+      });
+
+      // Act
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "delete-subscription/index",
+        expect.objectContaining({
+          header: cy.header,
+          errors: {
+            titleText: cy.errorSummaryTitle,
+            errorList: [{ text: cy.errorNoSelection, href: "#unsubscribe-confirm" }]
+          }
+        })
+      );
+    });
+
+    it("should redirect without rendering errors when the user does not own the subscription", async () => {
+      // Arrange
+      const validSubscriptionId = "550e8400-e29b-41d4-a716-446655440000";
+      mockReq.body = { subscription: validSubscriptionId };
+      vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue(null);
+
+      // Act
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      expect(mockRes.render).not.toHaveBeenCalled();
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
+    });
+
+    it("should redirect when the confirmation form posts an invalid subscription id", async () => {
+      // Arrange
+      mockReq.body = { subscription: "not-a-uuid" };
+
+      // Act
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      expect(subscriptionService.getSubscriptionById).not.toHaveBeenCalled();
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
+    });
+
+    it("should redirect when the ownership check throws", async () => {
+      // Arrange
+      const validSubscriptionId = "550e8400-e29b-41d4-a716-446655440000";
+      mockReq.body = { subscription: validSubscriptionId };
+      vi.mocked(subscriptionService.getSubscriptionById).mockRejectedValue(new Error("db down"));
+
+      // Act
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      expect(mockRes.render).not.toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
     });
   });

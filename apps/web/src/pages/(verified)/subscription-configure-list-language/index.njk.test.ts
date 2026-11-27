@@ -112,4 +112,45 @@ describe("subscription-configure-list-language template", () => {
       assertErrorSummary($, [cy.errorSelectVersion]);
     });
   });
+
+  describe("version hint", () => {
+    it("should render the version hint linked to the fieldset in English", () => {
+      const { $ } = render(env, TEMPLATE, { ...en });
+
+      const hint = $("fieldset.govuk-fieldset .govuk-hint");
+      expect(hint).toHaveLength(1);
+      expect(hint.text().trim()).toBe(en.versionHint);
+      expect($("fieldset.govuk-fieldset").attr("aria-describedby")).toContain(hint.attr("id"));
+    });
+
+    it("should render the version hint before the radio options", () => {
+      const { $ } = render(env, TEMPLATE, { ...en });
+
+      expect($(".govuk-hint").nextAll(".govuk-radios")).toHaveLength(1);
+    });
+
+    it("should render the Welsh version hint", () => {
+      const { $ } = render(env, TEMPLATE, { ...cy });
+
+      expect($("fieldset.govuk-fieldset .govuk-hint").text().trim()).toBe(cy.versionHint);
+    });
+
+    it("should still render the hint when validation fails", () => {
+      const data = {
+        ...en,
+        errors: {
+          titleText: en.errorSummaryTitle,
+          errorList: [{ text: en.errorSelectVersion, href: "#language" }]
+        }
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("fieldset.govuk-fieldset .govuk-hint").text().trim()).toBe(en.versionHint);
+    });
+  });
+
+  it("should have matching English and Welsh content keys", () => {
+    expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+  });
 });

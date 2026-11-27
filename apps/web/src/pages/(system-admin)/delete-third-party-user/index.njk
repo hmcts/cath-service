@@ -22,13 +22,19 @@
       }) }}
     {% endif %}
 
-    <h1 class="govuk-heading-xl">{{ pageTitle }} {{ userName }}?</h1>
-
     <form method="post" novalidate>
 
       {% set confirmDeleteErrorText = getError(errors, "#confirm-delete") %}
       {{ govukRadios({
+        idPrefix: "confirm-delete",
         name: "confirmDelete",
+        fieldset: {
+          legend: {
+            text: pageTitle ~ " " ~ userName ~ "?",
+            isPageHeading: true,
+            classes: "govuk-fieldset__legend--xl"
+          }
+        },
         errorMessage: { text: confirmDeleteErrorText } if confirmDeleteErrorText and confirmDeleteErrorText | length > 0 else undefined,
         items: [
           {

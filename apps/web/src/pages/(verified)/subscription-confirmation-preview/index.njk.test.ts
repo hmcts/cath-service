@@ -157,4 +157,44 @@ describe("subscription-confirmation-preview template", () => {
       assertErrorSummary($, [cy.errorNoSubscription]);
     });
   });
+
+  describe("version column header", () => {
+    it("should render the version header as plain text with no tooltip", () => {
+      const data = {
+        ...en,
+        confirmedCaseSubscriptions: [],
+        locationRows: [{ locationId: "1", name: "Blackburn Crown Court" }],
+        listTypes: [],
+        languageDisplay: "English"
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const versionHeader = $("th.govuk-table__header").filter((_, el) => $(el).text().trim() === en.tableHeaderVersion);
+      expect(versionHeader).toHaveLength(1);
+      expect(versionHeader.find("svg")).toHaveLength(0);
+      expect($(".app-version-header")).toHaveLength(0);
+      expect($("table svg")).toHaveLength(0);
+      expect($('[role="region"][aria-label="information"]')).toHaveLength(0);
+    });
+
+    it("should render the Welsh version header with no tooltip", () => {
+      const data = {
+        ...cy,
+        confirmedCaseSubscriptions: [],
+        locationRows: [{ locationId: "1", name: "Llys y Goron Blackburn" }],
+        listTypes: [],
+        languageDisplay: "Saesneg"
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("th.govuk-table__header").filter((_, el) => $(el).text().trim() === cy.tableHeaderVersion)).toHaveLength(1);
+      expect($("table svg")).toHaveLength(0);
+    });
+  });
+
+  it("should have matching English and Welsh content keys", () => {
+    expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+  });
 });

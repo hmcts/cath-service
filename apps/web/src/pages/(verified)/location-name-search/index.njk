@@ -118,33 +118,19 @@
 
     <form method="post" novalidate>
       <input type="hidden" name="_csrf" value="{{ csrfToken }}">
-      <table class="govuk-table court-table">
-        <tbody class="govuk-table__body">
-        {% for row in tableRows %}
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell court-table-letter">
-              {% if row.letter %}
-                <span class="court-letter">{{ row.letter }}</span>
-              {% endif %}
-            </td>
-            <td class="govuk-table__cell">
-              <div class="govuk-checkboxes govuk-checkboxes--small">
-                <div class="govuk-checkboxes__item">
-                  <input class="govuk-checkboxes__input" id="location-{{ row.location.locationId }}" name="locationIds" type="checkbox" value="{{ row.location.locationId }}">
-                  <label class="govuk-label govuk-checkboxes__label" for="location-{{ row.location.locationId }}">
-                    {% if locale == "cy" %}
-                      {{ row.location.welshName }}
-                    {% else %}
-                      {{ row.location.name }}
-                    {% endif %}
-                  </label>
-                </div>
-              </div>
-            </td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
+      {% for group in locationGroups %}
+        <h2 class="govuk-heading-m" id="letter-{{ group.letter }}">{{ group.letter }}</h2>
+        <div class="govuk-checkboxes govuk-checkboxes--small govuk-!-margin-bottom-6" role="group" aria-labelledby="letter-{{ group.letter }}">
+          {% for location in group.locations %}
+            <div class="govuk-checkboxes__item">
+              <input class="govuk-checkboxes__input" id="location-{{ location.locationId }}" name="locationIds" type="checkbox" value="{{ location.locationId }}">
+              <label class="govuk-label govuk-checkboxes__label" for="location-{{ location.locationId }}">
+                {{ location.welshName if locale == "cy" else location.name }}
+              </label>
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
 
       <h2 class="govuk-heading-m">{{ totalSelected }}</h2>
       <div class="selection-counter-box govuk-!-padding-top-3 govuk-!-padding-bottom-1 govuk-!-padding-left-2 govuk-!-padding-right-2 govuk-!-margin-bottom-4">

@@ -88,13 +88,13 @@ const postHandler = async (req: Request, res: Response) => {
     return res.redirect("/subscription-management");
   }
 
-  // If this is a direct POST from subscription-management (no confirmation yet)
-  if (!unsubscribeConfirm) {
-    // Redirect to GET to show confirmation page
+  // The subscription-management Remove button posts `subscriptionId`; the
+  // confirmation form posts `subscription`. Only the latter is validated.
+  const isConfirmationSubmission = Boolean(subscription);
+  if (!isConfirmationSubmission) {
     return res.redirect(`/delete-subscription?subscriptionId=${subscriptionId}`);
   }
 
-  // Handle confirmation page submission
   if (unsubscribeConfirm === "no") {
     return res.redirect("/subscription-management");
   }
@@ -105,7 +105,6 @@ const postHandler = async (req: Request, res: Response) => {
     return res.redirect("/unsubscribe-confirmation");
   }
 
-  // If we get here with an invalid choice, show error
   if (!res.locals.navigation) {
     res.locals.navigation = {};
   }

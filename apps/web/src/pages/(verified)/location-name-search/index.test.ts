@@ -1,3 +1,4 @@
+import { getLocationsGroupedByLetter, type Location } from "@hmcts/location";
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
@@ -72,6 +73,48 @@ describe("location-name-search", () => {
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalled();
+    });
+
+    it("should pass locations grouped by letter in order and no table rows", async () => {
+      // Arrange
+      const abbey: Location = { locationId: 1, name: "Abbey Court", welshName: "Llys Abbey", regions: [], subJurisdictions: [] };
+      const ashford: Location = { locationId: 2, name: "Ashford Court", welshName: "Llys Ashford", regions: [], subJurisdictions: [] };
+      const bristol: Location = { locationId: 3, name: "Bristol Court", welshName: "Llys Bryste", regions: [], subJurisdictions: [] };
+      vi.mocked(getLocationsGroupedByLetter).mockResolvedValueOnce({ A: [abbey, ashford], B: [bristol] });
+
+      // Act
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      const renderData = vi.mocked(mockRes.render!).mock.calls[0][1] as Record<string, unknown>;
+      expect(renderData.locationGroups).toEqual([
+        { letter: "A", locations: [abbey, ashford] },
+        { letter: "B", locations: [bristol] }
+      ]);
+      expect(renderData).not.toHaveProperty("tableRows");
+    });
+
+    it("should pass an empty locationGroups array when no locations match", async () => {
+      // Arrange
+      vi.mocked(getLocationsGroupedByLetter).mockResolvedValueOnce({});
+
+      // Act
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      const renderData = vi.mocked(mockRes.render!).mock.calls[0][1] as Record<string, unknown>;
+      expect(renderData.locationGroups).toEqual([]);
+    });
+
+    it("should request Welsh grouping when the locale is cy", async () => {
+      // Arrange
+      mockRes.locals = { locale: "cy" };
+
+      // Act
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      expect(getLocationsGroupedByLetter).toHaveBeenCalledWith("cy", expect.any(Object));
     });
   });
 

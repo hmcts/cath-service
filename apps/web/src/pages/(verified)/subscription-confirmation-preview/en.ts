@@ -16,7 +16,6 @@ export const en = {
   addSubscriptionsButton: "Add subscriptions",
   back: "Back",
   noLanguageSelected: "Not selected",
-  versionTooltip: "This version change will affect the previously selected language for all existing subscriptions.",
   errorSummaryTitle: "There is a problem",
   errorNoData: "No subscription data found. Please start again.",
   errorNoSubscription: "At least one subscription is needed.",
