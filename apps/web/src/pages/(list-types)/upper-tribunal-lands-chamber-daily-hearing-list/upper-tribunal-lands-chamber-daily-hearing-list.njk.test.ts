@@ -297,18 +297,12 @@ describe("upper-tribunal-lands-chamber-daily-hearing-list template", () => {
       expect(footer.text()).toContain("Manual Upload");
     });
 
-    it("should render a back-to-top link anchored to the top", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderList();
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.backToTop);
-    });
-
-    it("should include the back-to-top custom style in the head", () => {
-      const { $ } = renderList();
-
-      expect($("head style").text()).toContain(".back-to-top");
     });
   });
 
@@ -365,7 +359,7 @@ describe("upper-tribunal-lands-chamber-daily-hearing-list template", () => {
       ]);
 
       expect($("p.govuk-body-s").text()).toContain(cy.dataSource);
-      expect($(".back-to-top a[href='#top']").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link[href='#main-content']").text()).toContain(cy.backToTop);
     });
 
     it("should render the Welsh opening statement", () => {

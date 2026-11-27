@@ -94,7 +94,7 @@ describe("publishing-policy template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("p.back-to-top-link a").text()).toContain(en.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(en.backToTop);
     });
 
     it("should render Welsh heading and content", () => {
@@ -103,7 +103,7 @@ describe("publishing-policy template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("h1").text()).toContain(cy.title);
-      expect($("p.back-to-top-link a").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
       const bodyText = $("body").text();
       expect(bodyText).toContain(cy.section1.text2);
       expect(bodyText).toContain(cy.section4.section43.quote);

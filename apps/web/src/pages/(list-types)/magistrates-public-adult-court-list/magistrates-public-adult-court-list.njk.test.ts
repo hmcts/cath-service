@@ -274,7 +274,7 @@ describe("magistrates-public-adult-court-list template", () => {
     it("should render a back-to-top link", () => {
       const { $ } = renderList([]);
 
-      const backToTop = $("a.back-to-top-link");
+      const backToTop = $("a.app-back-to-top__link");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.backToTop);
     });
@@ -289,7 +289,7 @@ describe("magistrates-public-adult-court-list template", () => {
       const sectionText = $(".restriction-list-section").text();
       expect(sectionText).toContain(cy.restrictionInformationHeading);
       expect(sectionText).toContain(cy.restrictionInformationBoldText);
-      expect($("a.back-to-top-link").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
     });
 
     it("should render Welsh table headers in order", () => {

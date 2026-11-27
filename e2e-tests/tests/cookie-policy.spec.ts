@@ -81,10 +81,15 @@ test.describe("Cookie Policy Page", () => {
     let scrollY = await page.evaluate(() => window.scrollY);
     expect(scrollY).toBeGreaterThan(500);
 
-    await page.locator('a:has-text("Back to top")').click();
-    await page.waitForFunction(() => window.scrollY < 100, { timeout: 5000 });
+    // Back to top scrolls to and focuses the main content rather than leaving focus on the link
+    const backToTop = page.getByRole("link", { name: "Back to top", exact: true });
+    await expect(backToTop).toHaveAttribute("href", "#main-content");
+    await expect(backToTop).not.toHaveAttribute("aria-label");
+    await backToTop.click();
+    await expect(page.locator("#main-content")).toBeFocused();
+    await expect(page.getByRole("heading", { level: 1 })).toBeInViewport();
     scrollY = await page.evaluate(() => window.scrollY);
-    expect(scrollY).toBeLessThan(100);
+    expect(scrollY).toBeLessThan(500);
 
     // Check change settings section
     await expect(page.locator("h2:has-text('Change your cookie settings')")).toBeVisible();

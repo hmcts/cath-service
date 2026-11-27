@@ -1,183 +1,100 @@
 /**
  * @vitest-environment happy-dom
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { focusTemporarily, initBackToTop } from "./back-to-top.js";
+
+const PAGE = `
+  <main id="main-content">
+    <h1>Heading</h1>
+    <a href="/first" id="first-link">First link</a>
+    <p class="govuk-body app-back-to-top">
+      <a href="#main-content" class="govuk-link app-back-to-top__link"><span aria-hidden="true">▴ </span>Back to top</a>
+    </p>
+  </main>
+`;
+
+function clickBackToTop(index = 0) {
+  const link = document.querySelectorAll<HTMLAnchorElement>(".app-back-to-top__link")[index];
+  const event = new MouseEvent("click", { bubbles: true, cancelable: true });
+  link.dispatchEvent(event);
+  return event;
+}
 
 describe("back-to-top", () => {
-  beforeEach(() => {
-    document.body.innerHTML = "";
-    // Mock window.scrollTo
-    vi.spyOn(window, "scrollTo").mockImplementation(() => {});
-  });
-
   afterEach(() => {
     document.body.innerHTML = "";
-    vi.restoreAllMocks();
   });
 
   describe("initBackToTop", () => {
-    it("should scroll to top when back-to-top link is clicked", async () => {
-      document.body.innerHTML = `
-        <p class="back-to-top-link">
-          <a href="#">Back to top</a>
-        </p>
-      `;
-
-      const { initBackToTop } = await import("./back-to-top.js");
+    it("should move focus to the main content when the link is activated", () => {
+      document.body.innerHTML = PAGE;
       initBackToTop();
 
-      const backToTopLink = document.querySelector(".back-to-top-link a") as HTMLAnchorElement;
-      backToTopLink.click();
+      clickBackToTop();
 
-      expect(window.scrollTo).toHaveBeenCalledWith({
-        top: 0,
-        behavior: "smooth"
-      });
+      expect(document.activeElement?.id).toBe("main-content");
     });
 
-    it("should prevent default link behavior when back-to-top link is clicked", async () => {
-      document.body.innerHTML = `
-        <p class="back-to-top-link">
-          <a href="#">Back to top</a>
-        </p>
-      `;
-
-      const { initBackToTop } = await import("./back-to-top.js");
+    it("should not prevent the native fragment navigation", () => {
+      document.body.innerHTML = PAGE;
       initBackToTop();
 
-      const backToTopLink = document.querySelector(".back-to-top-link a") as HTMLAnchorElement;
-      const event = new MouseEvent("click", {
-        bubbles: true,
-        cancelable: true
-      });
+      const event = clickBackToTop();
 
-      const preventDefaultSpy = vi.spyOn(event, "preventDefault");
-
-      backToTopLink.dispatchEvent(event);
-
-      expect(preventDefaultSpy).toHaveBeenCalled();
+      expect(event.defaultPrevented).toBe(false);
     });
 
-    it("should not throw error if no back-to-top link exists", async () => {
+    it("should give main a temporary tabindex and focused class that are removed on blur", () => {
+      document.body.innerHTML = PAGE;
+      initBackToTop();
+      const main = document.getElementById("main-content") as HTMLElement;
+
+      clickBackToTop();
+
+      expect(main.getAttribute("tabindex")).toBe("-1");
+      expect(main.classList.contains("app-back-to-top-focused")).toBe(true);
+
+      (document.getElementById("first-link") as HTMLAnchorElement).focus();
+
+      expect(main.hasAttribute("tabindex")).toBe(false);
+      expect(main.classList.contains("app-back-to-top-focused")).toBe(false);
+    });
+
+    it("should attach a handler to every back to top link on the page", () => {
+      document.body.innerHTML = `${PAGE}<a href="#main-content" class="app-back-to-top__link">Again</a>`;
+      initBackToTop();
+
+      clickBackToTop(1);
+
+      expect(document.activeElement?.id).toBe("main-content");
+    });
+
+    it("should do nothing when the target does not exist", () => {
+      document.body.innerHTML = '<a href="#missing" class="app-back-to-top__link">Back to top</a>';
+      initBackToTop();
+
+      expect(() => clickBackToTop()).not.toThrow();
+      expect(document.activeElement).toBe(document.body);
+    });
+
+    it("should not throw when there are no back to top links", () => {
       document.body.innerHTML = "<div></div>";
 
-      const { initBackToTop } = await import("./back-to-top.js");
-
       expect(() => initBackToTop()).not.toThrow();
     });
+  });
 
-    it("should not throw error on empty DOM", async () => {
-      document.body.innerHTML = "";
+  describe("focusTemporarily", () => {
+    it("should keep an existing tabindex on the element", () => {
+      document.body.innerHTML = '<div id="target" tabindex="0"></div><button id="other">Other</button>';
+      const target = document.getElementById("target") as HTMLElement;
 
-      const { initBackToTop } = await import("./back-to-top.js");
+      focusTemporarily(target);
+      (document.getElementById("other") as HTMLButtonElement).focus();
 
-      expect(() => initBackToTop()).not.toThrow();
-    });
-
-    it("should handle back-to-top link with nested span element", async () => {
-      document.body.innerHTML = `
-        <p class="back-to-top-link">
-          <a href="#">
-            <span aria-hidden="true">▴ </span>Back to top
-          </a>
-        </p>
-      `;
-
-      const { initBackToTop } = await import("./back-to-top.js");
-      initBackToTop();
-
-      const backToTopLink = document.querySelector(".back-to-top-link a") as HTMLAnchorElement;
-      backToTopLink.click();
-
-      expect(window.scrollTo).toHaveBeenCalledWith({
-        top: 0,
-        behavior: "smooth"
-      });
-    });
-
-    it("should only attach handler to first back-to-top link if multiple exist", async () => {
-      document.body.innerHTML = `
-        <p class="back-to-top-link">
-          <a href="#">Back to top 1</a>
-        </p>
-        <p class="back-to-top-link">
-          <a href="#">Back to top 2</a>
-        </p>
-      `;
-
-      const { initBackToTop } = await import("./back-to-top.js");
-      initBackToTop();
-
-      const backToTopLinks = document.querySelectorAll(".back-to-top-link a") as NodeListOf<HTMLAnchorElement>;
-
-      // Click first link
-      backToTopLinks[0].click();
-      expect(window.scrollTo).toHaveBeenCalledTimes(1);
-
-      vi.clearAllMocks();
-
-      // Click second link - should not call scrollTo because handler only attached to first
-      backToTopLinks[1].click();
-      expect(window.scrollTo).not.toHaveBeenCalled();
-    });
-
-    it("should handle back-to-top link without text content", async () => {
-      document.body.innerHTML = `
-        <p class="back-to-top-link">
-          <a href="#"></a>
-        </p>
-      `;
-
-      const { initBackToTop } = await import("./back-to-top.js");
-      initBackToTop();
-
-      const backToTopLink = document.querySelector(".back-to-top-link a") as HTMLAnchorElement;
-      backToTopLink.click();
-
-      expect(window.scrollTo).toHaveBeenCalledWith({
-        top: 0,
-        behavior: "smooth"
-      });
-    });
-
-    it("should call scrollTo with smooth behavior", async () => {
-      document.body.innerHTML = `
-        <p class="back-to-top-link">
-          <a href="#">Back to top</a>
-        </p>
-      `;
-
-      const { initBackToTop } = await import("./back-to-top.js");
-      initBackToTop();
-
-      const backToTopLink = document.querySelector(".back-to-top-link a") as HTMLAnchorElement;
-      backToTopLink.click();
-
-      expect(window.scrollTo).toHaveBeenCalledWith(
-        expect.objectContaining({
-          behavior: "smooth"
-        })
-      );
-    });
-
-    it("should scroll to top position 0", async () => {
-      document.body.innerHTML = `
-        <p class="back-to-top-link">
-          <a href="#">Back to top</a>
-        </p>
-      `;
-
-      const { initBackToTop } = await import("./back-to-top.js");
-      initBackToTop();
-
-      const backToTopLink = document.querySelector(".back-to-top-link a") as HTMLAnchorElement;
-      backToTopLink.click();
-
-      expect(window.scrollTo).toHaveBeenCalledWith(
-        expect.objectContaining({
-          top: 0
-        })
-      );
+      expect(target.getAttribute("tabindex")).toBe("0");
+      expect(target.classList.contains("app-back-to-top-focused")).toBe(false);
     });
   });
 });

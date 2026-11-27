@@ -5,7 +5,7 @@
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "govuk/components/pagination/macro.njk" import govukPagination %}
-{% from "moj/components/filter/macro.njk" import mojFilter %}
+{% from "components/filter-panel.njk" import appFilter %}
 
 {% block backLink %}
 <a href="/system-admin-dashboard{% if lng %}?lng={{ lng }}{% endif %}" class="govuk-back-link">{{ backLink }}</a>
@@ -111,8 +111,9 @@
 <div class="moj-filter-layout app-filter-layout--sidebar">
   <div class="moj-filter-layout__filter">
     <form method="post" novalidate>
-      {{ mojFilter({
+      {{ appFilter({
         heading: { text: filterHeading },
+        hint: { text: filterPanel.hint },
         submit: { text: applyFiltersButton },
         selectedFilters: {
           heading: { text: selectedFiltersHeading },

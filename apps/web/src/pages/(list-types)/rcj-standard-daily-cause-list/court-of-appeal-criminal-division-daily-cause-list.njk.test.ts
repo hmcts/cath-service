@@ -291,7 +291,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
     it("should render a back-to-top link", () => {
       const { $ } = renderList([]);
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.common.backToTop);
     });
@@ -316,7 +316,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
         cy.common.tableHeaders.hearingType,
         cy.common.tableHeaders.additionalInformation
       ]);
-      expect($(".back-to-top a").text()).toContain(cy.common.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.common.backToTop);
     });
   });
 });

@@ -37,8 +37,21 @@ test.describe("Audit Log Viewer", () => {
     await expect(emailInput).toBeVisible();
     await emailInput.fill(process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!);
 
-    const applyButton = page.locator('button:has-text("Apply filters")');
-    await applyButton.click();
+    // Apply is after the last filter option and described by the hint at the top of the panel,
+    // so keyboard users reach it by tabbing forwards from the filters
+    const hint = "Select one or more filters and then select the apply filters button";
+    await expect(page.locator(".moj-filter__options #filter-hint")).toHaveText(hint);
+    const applyButton = page.getByRole("button", { name: "Apply filters", exact: true });
+    await expect(applyButton).toHaveAccessibleDescription(hint);
+    await expect(page.locator(".moj-filter__options > button.govuk-button").last()).toHaveText("Apply filters");
+    await emailInput.focus();
+    let isApplyFocused = false;
+    for (let i = 0; i < 40 && !isApplyFocused; i++) {
+      await page.keyboard.press("Tab");
+      isApplyFocused = await applyButton.evaluate((el) => el === document.activeElement);
+    }
+    expect(isApplyFocused).toBe(true);
+    await page.keyboard.press("Enter");
     await page.waitForURL(/.*email=.*/);
 
     const emailParam = new URL(page.url()).searchParams.get("email");
@@ -75,6 +88,8 @@ test.describe("Audit Log Viewer", () => {
     // Verify Welsh filter labels
     await expect(page.getByRole("heading", { level: 2, name: "Hidlo", exact: true })).toBeVisible();
     await expect(page.locator('button:has-text("Cymhwyso hidlyddion")')).toBeVisible();
+    await expect(page.locator(".moj-filter__options").locator("#filter-hint")).toBeVisible();
+    await expect(page.locator(".moj-filter__options > button.govuk-button").last()).toHaveText("Cymhwyso hidlyddion");
 
     // Accessibility check in Welsh
     const accessibilityScanResults = await axeCheck(page).analyze();

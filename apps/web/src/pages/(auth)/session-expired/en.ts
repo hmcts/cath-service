@@ -1,6 +1,6 @@
 export const en = {
-  pageTitle: "Session expired - You have been signed out due to inactivity",
-  header: "You have been signed out due to inactivity",
+  pageTitle: "Session expired - You have been signed out, due to inactivity",
+  header: "You have been signed out, due to inactivity.",
   detail: "This has been for your security and for the security of the individuals included within our service.",
   signInMessage: "Please click here to sign in or close this session.",
   signIn: "Sign in"

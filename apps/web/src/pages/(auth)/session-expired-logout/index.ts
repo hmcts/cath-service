@@ -3,7 +3,7 @@ import { errorViewsCy, errorViewsEn } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 
 /**
- * Reached from /session-expiring when the client-side warning lapses. Signs the user out with the
+ * Reached when the client-side timeout warning dialog counts down to zero. Signs the user out with the
  * provenance-specific logout. If the session has already gone (another tab), uses the allow-listed redirectType.
  */
 export const GET = async (req: Request, res: Response) => {

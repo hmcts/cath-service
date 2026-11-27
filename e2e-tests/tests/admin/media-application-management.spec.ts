@@ -36,7 +36,7 @@ test.describe("Media Application Management", () => {
     await page.waitForURL("/admin-dashboard");
 
     // STEP 1: Verify media applications tile on admin dashboard
-    const mediaApplicationsTile = page.locator('a.admin-tile[href="/media-applications"]');
+    const mediaApplicationsTile = page.locator(".admin-tile").getByRole("link", { name: "Manage Media Account Requests", exact: true });
     await expect(mediaApplicationsTile).toBeVisible();
     await expect(mediaApplicationsTile).toContainText("Manage Media Account Requests");
 
@@ -237,7 +237,7 @@ test.describe("Media Application Management", () => {
     await page.waitForURL("/admin-dashboard");
 
     // Verify media applications tile is not visible
-    const mediaApplicationsTile = page.locator('a.admin-tile[href="/media-applications"]');
+    const mediaApplicationsTile = page.locator(".admin-tile").getByRole("link", { name: "Manage Media Account Requests", exact: true });
     await expect(mediaApplicationsTile).not.toBeVisible();
 
     // Attempt to access media applications list directly

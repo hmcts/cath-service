@@ -36,15 +36,28 @@ describe("system-admin-dashboard template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("h1").text()).toContain(en.title);
-      const tiles = $("a.admin-tile");
+      const tiles = $("div.admin-tile");
       expect(tiles).toHaveLength(12);
       expect(tiles).toHaveLength(en.tiles.length);
       en.tiles.forEach((tile) => {
-        const link = $(`a.admin-tile[href="${tile.href}"]`);
+        const link = $(`a.admin-tile__link[href="${tile.href}"]`);
         expect(link).toHaveLength(1);
-        expect(link.find(".admin-tile__heading").text()).toBe(tile.title);
-        expect(link.find(".admin-tile__description").text()).toBe(tile.description);
+        expect(link.text()).toBe(tile.title);
+        expect(link.parent().is("h2.admin-tile__heading")).toBe(true);
+        expect(link.closest(".admin-tile").find(".admin-tile__description").text()).toBe(tile.description);
       });
+    });
+
+    it("should render exactly one link per tile with the description outside the link", () => {
+      const data = { ...en, user: { id: "admin-1" } };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      $("div.admin-tile").each((_, tile) => {
+        expect($(tile).find("a")).toHaveLength(1);
+        expect($(tile).find(".admin-tile__description").closest("a")).toHaveLength(0);
+      });
+      expect($("a.admin-tile")).toHaveLength(0);
     });
 
     it("should render the Download MI Report tile linking to /mi-report", () => {
@@ -52,9 +65,9 @@ describe("system-admin-dashboard template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      const link = $('a.admin-tile[href="/mi-report"]');
+      const link = $('a.admin-tile__link[href="/mi-report"]');
       expect(link).toHaveLength(1);
-      expect(link.find(".admin-tile__heading").text()).toBe("Download MI Report");
+      expect(link.text()).toBe("Download MI Report");
     });
 
     it("should render the Welsh heading and tiles", () => {
@@ -63,8 +76,8 @@ describe("system-admin-dashboard template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("h1").text()).toContain(cy.title);
-      expect($("a.admin-tile")).toHaveLength(cy.tiles.length);
-      expect($(`a.admin-tile[href="${cy.tiles[0].href}"] .admin-tile__heading`).text()).toBe(cy.tiles[0].title);
+      expect($("div.admin-tile")).toHaveLength(cy.tiles.length);
+      expect($(`a.admin-tile__link[href="${cy.tiles[0].href}"]`).text()).toBe(cy.tiles[0].title);
     });
   });
 

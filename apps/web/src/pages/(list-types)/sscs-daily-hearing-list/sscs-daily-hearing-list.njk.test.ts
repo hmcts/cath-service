@@ -326,7 +326,7 @@ describe("sscs-daily-hearing-list template", () => {
     it("should render a back-to-top link", () => {
       const { $ } = renderList([]);
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.backToTop);
     });
@@ -359,7 +359,7 @@ describe("sscs-daily-hearing-list template", () => {
       expect($(`a[href="${cy.factLinkUrl}"]`).text()).toContain(cy.factLinkText);
       const footer = $("p.govuk-body-s");
       expect(footer.text()).toContain(cy.dataSource);
-      expect($(".back-to-top a").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
     });
   });
 });

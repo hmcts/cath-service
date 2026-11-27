@@ -201,7 +201,7 @@ describe("cop-daily-cause-list template", () => {
     it("should render the data source", () => {
       const { $ } = renderList([], { dataSource: "Court of Protection Data" });
 
-      const footer = $("p.govuk-body").last().text();
+      const footer = $("p.govuk-body:not(.app-back-to-top)").last().text();
       expect(footer).toContain(en.dataSource);
       expect(footer).toContain("Court of Protection Data");
     });
@@ -209,9 +209,9 @@ describe("cop-daily-cause-list template", () => {
     it("should render a back to top link", () => {
       const { $ } = renderList([]);
 
-      const backToTop = $('.back-to-top a[href="#top"]');
+      const backToTop = $('a.app-back-to-top__link[href="#main-content"]');
       expect(backToTop).toHaveLength(1);
-      expect(backToTop.text().trim()).toBe(en.backToTop);
+      expect(backToTop.text()).toContain(en.backToTop);
     });
   });
 

@@ -20,6 +20,8 @@ vi.mock("../config/sso-config.js", () => ({
 }));
 
 const MINUTE = 60 * 1000;
+const IDLE_MS = 40 * MINUTE - 10 * 1000;
+const ADMIN_IDLE_MS = 220 * MINUTE - 10 * 1000;
 const NOW = new Date("2026-11-02T12:00:00Z").getTime();
 
 describe("Session Timeout Middleware", () => {
@@ -70,7 +72,7 @@ describe("Session Timeout Middleware", () => {
     it.each(["/", "/sign-in", "/session-expired", "/logout"])("should renew the session on %s", (path) => {
       // Arrange
       req.path = path;
-      idleFor(30);
+      idleFor(10);
 
       // Act
       sessionTimeoutMiddleware(req as Request, res as Response, next);
@@ -78,7 +80,7 @@ describe("Session Timeout Middleware", () => {
       // Assert
       expect(next).toHaveBeenCalled();
       expect(req.session?.lastActivity).toBe(NOW);
-      expect(res.locals?.sessionIdleMs).toBe(40 * MINUTE);
+      expect(res.locals?.sessionIdleMs).toBe(IDLE_MS);
     });
 
     it("should sign an expired session out on the home page", () => {
@@ -92,7 +94,7 @@ describe("Session Timeout Middleware", () => {
 
       // Assert
       expect(req.session?.destroy).toHaveBeenCalled();
-      expect(res.redirect).toHaveBeenCalledWith("/session-logged-out?lng=en");
+      expect(res.redirect).toHaveBeenCalledWith("/session-expired?lng=en&reSignInUrl=CRIME");
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -122,7 +124,7 @@ describe("Session Timeout Middleware", () => {
       expect(res.redirect).not.toHaveBeenCalled();
     });
 
-    it("should expire a verified user at 60 minutes", () => {
+    it("should expire a verified user at 1 hour", () => {
       // Arrange
       idleFor(60);
 
@@ -137,7 +139,7 @@ describe("Session Timeout Middleware", () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    it.each(["SYSTEM_ADMIN", "INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL"])("should not expire %s at 239 minutes", (role) => {
+    it.each(["SYSTEM_ADMIN", "INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL"])("should not expire %s at 3 hours 59 minutes", (role) => {
       // Arrange
       signInAs(role, "SSO");
       idleFor(239);
@@ -150,7 +152,7 @@ describe("Session Timeout Middleware", () => {
       expect(res.redirect).not.toHaveBeenCalled();
     });
 
-    it.each(["SYSTEM_ADMIN", "INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL"])("should expire %s at 240 minutes", (role) => {
+    it.each(["SYSTEM_ADMIN", "INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL"])("should expire %s at 4 hours", (role) => {
       // Arrange
       signInAs(role, "SSO");
       idleFor(240);
@@ -163,7 +165,7 @@ describe("Session Timeout Middleware", () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    it.each(["CFT_IDAM", "CRIME_IDAM", "PI_AAD"])("should give a verified %s user the same 60 minute timeout", (provenance) => {
+    it.each(["CFT_IDAM", "CRIME_IDAM", "PI_AAD"])("should give a verified %s user the same 1 hour timeout", (provenance) => {
       // Arrange
       signInAs("VERIFIED", provenance);
       idleFor(59);
@@ -179,8 +181,8 @@ describe("Session Timeout Middleware", () => {
     });
   });
 
-  describe("expiry redirect, as legacy logOut", () => {
-    it("should end the CFT IDAM session and land on /session-logged-out in Welsh", () => {
+  describe("expiry redirect, with the inactivity message", () => {
+    it("should end the CFT IDAM session and land on /session-expired in Welsh", () => {
       // Arrange
       idleFor(60);
       res.locals = { locale: "cy" };
@@ -191,7 +193,7 @@ describe("Session Timeout Middleware", () => {
 
       // Assert
       expect(res.redirect).toHaveBeenCalledWith(
-        "https://hmcts-access.aat.platform.hmcts.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-logged-out%3Flng%3Dcy&id_token_hint=cft-id-token"
+        "https://hmcts-access.aat.platform.hmcts.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-expired%3Flng%3Dcy%26reSignInUrl%3DCFT&id_token_hint=cft-id-token"
       );
     });
 
@@ -204,7 +206,7 @@ describe("Session Timeout Middleware", () => {
       sessionTimeoutMiddleware(req as Request, res as Response, next);
 
       // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/session-logged-out?lng=en");
+      expect(res.redirect).toHaveBeenCalledWith("/session-expired?lng=en&reSignInUrl=CRIME");
     });
 
     it("should end the B2C session for a PI_AAD user", () => {
@@ -218,7 +220,7 @@ describe("Session Timeout Middleware", () => {
       // Assert
       const redirectUrl = new URL(vi.mocked(res.redirect as (url: string) => void).mock.calls[0][0]);
       expect(`${redirectUrl.origin}${redirectUrl.pathname}`).toBe("https://b2c.example.net/tenant/oauth2/v2.0/logout");
-      expect(redirectUrl.searchParams.get("post_logout_redirect_uri")).toBe("https://localhost:8080/session-logged-out?lng=en");
+      expect(redirectUrl.searchParams.get("post_logout_redirect_uri")).toBe("https://localhost:8080/session-expired?lng=en&reSignInUrl=AAD");
     });
 
     it("should end the Microsoft session for an SSO admin", () => {
@@ -231,7 +233,7 @@ describe("Session Timeout Middleware", () => {
 
       // Assert
       expect(res.redirect).toHaveBeenCalledWith(
-        "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/oauth2/v2.0/logout?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-logged-out%3Flng%3Den"
+        "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/oauth2/v2.0/logout?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-expired%3Flng%3Den%26reSignInUrl%3DSSO"
       );
     });
 
@@ -250,14 +252,14 @@ describe("Session Timeout Middleware", () => {
       // Assert
       expect(consoleSpy).toHaveBeenCalledWith("Session destruction error:", expect.any(Error));
       expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
-      expect(res.redirect).toHaveBeenCalledWith("/session-logged-out?lng=en");
+      expect(res.redirect).toHaveBeenCalledWith("/session-expired?lng=en&reSignInUrl=CRIME");
     });
   });
 
   describe("active sessions", () => {
     it("should refresh lastActivity", () => {
       // Arrange
-      idleFor(30);
+      idleFor(10);
 
       // Act
       sessionTimeoutMiddleware(req as Request, res as Response, next);
@@ -267,19 +269,43 @@ describe("Session Timeout Middleware", () => {
       expect(next).toHaveBeenCalled();
     });
 
-    it("should set sessionIdleMs to the verified timeout minus the 20 minute warning lead", () => {
+    it("should set sessionIdleMs to the verified timeout minus the 20 minute countdown and clock margin", () => {
       // Arrange
-      idleFor(30);
+      idleFor(5);
 
       // Act
       sessionTimeoutMiddleware(req as Request, res as Response, next);
 
       // Assert
-      expect(res.locals?.sessionIdleMs).toBe(40 * MINUTE);
+      expect(res.locals?.sessionIdleMs).toBe(IDLE_MS);
       expect(res.locals?.sessionTimeoutMs).toBeUndefined();
     });
 
-    it("should set sessionIdleMs to the admin timeout minus the 20 minute warning lead", () => {
+    it("should expose the 20 minute countdown for the warning dialog", () => {
+      // Act
+      sessionTimeoutMiddleware(req as Request, res as Response, next);
+
+      // Assert
+      expect(res.locals?.sessionWarningMs).toBe(20 * MINUTE);
+    });
+
+    it.each([
+      ["CFT_IDAM", "CFT"],
+      ["CRIME_IDAM", "CRIME"],
+      ["PI_AAD", "AAD"],
+      ["SSO", "SSO"]
+    ])("should expose the %s sign-in redirect type for the warning dialog", (provenance, redirectType) => {
+      // Arrange
+      signInAs("VERIFIED", provenance);
+
+      // Act
+      sessionTimeoutMiddleware(req as Request, res as Response, next);
+
+      // Assert
+      expect(res.locals?.sessionRedirectType).toBe(redirectType);
+    });
+
+    it("should set sessionIdleMs to the admin timeout minus the 20 minute countdown and clock margin", () => {
       // Arrange
       signInAs("INTERNAL_ADMIN_CTSC", "SSO");
 
@@ -287,7 +313,7 @@ describe("Session Timeout Middleware", () => {
       sessionTimeoutMiddleware(req as Request, res as Response, next);
 
       // Assert
-      expect(res.locals?.sessionIdleMs).toBe(220 * MINUTE);
+      expect(res.locals?.sessionIdleMs).toBe(ADMIN_IDLE_MS);
     });
 
     it("should start tracking a session that has no lastActivity yet", () => {
@@ -299,13 +325,13 @@ describe("Session Timeout Middleware", () => {
 
       // Assert
       expect(req.session?.lastActivity).toBe(NOW);
-      expect(res.locals?.sessionIdleMs).toBe(40 * MINUTE);
+      expect(res.locals?.sessionIdleMs).toBe(IDLE_MS);
     });
 
-    it("should track and renew /session-expiring", () => {
+    it("should renew the session on the /session-keep-alive request sent by the warning dialog", () => {
       // Arrange
-      req.path = "/session-expiring";
-      idleFor(45);
+      req.path = "/session-keep-alive";
+      idleFor(12);
 
       // Act
       sessionTimeoutMiddleware(req as Request, res as Response, next);
@@ -315,7 +341,7 @@ describe("Session Timeout Middleware", () => {
       expect(next).toHaveBeenCalled();
     });
 
-    it("should sign a late /session-expired-logout request out to /session-logged-out, as legacy globalAuthGiver", () => {
+    it("should sign a late /session-expired-logout request out to /session-expired", () => {
       // Arrange
       req.path = "/session-expired-logout";
       signInAs("VERIFIED", "CRIME_IDAM");
@@ -325,7 +351,7 @@ describe("Session Timeout Middleware", () => {
       sessionTimeoutMiddleware(req as Request, res as Response, next);
 
       // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/session-logged-out?lng=en");
+      expect(res.redirect).toHaveBeenCalledWith("/session-expired?lng=en&reSignInUrl=CRIME");
     });
   });
 });

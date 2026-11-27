@@ -27,29 +27,37 @@
 
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-one-half">
-    <a href="/manual-upload" class="admin-tile">
-      <h2 class="admin-tile__heading">{{ tiles[0].heading }}</h2>
+    <div class="admin-tile">
+      <h2 class="admin-tile__heading">
+        <a href="/manual-upload" class="govuk-link govuk-link--no-visited-state admin-tile__link">{{ tiles[0].heading }}</a>
+      </h2>
       <p class="admin-tile__description">{{ tiles[0].description }}</p>
-    </a>
+    </div>
   </div>
   <div class="govuk-grid-column-one-half">
-    <a href="/non-strategic-upload" class="admin-tile">
-      <h2 class="admin-tile__heading">{{ tiles[1].heading }}</h2>
+    <div class="admin-tile">
+      <h2 class="admin-tile__heading">
+        <a href="/non-strategic-upload" class="govuk-link govuk-link--no-visited-state admin-tile__link">{{ tiles[1].heading }}</a>
+      </h2>
       <p class="admin-tile__description">{{ tiles[1].description }}</p>
-    </a>
+    </div>
   </div>
   <div class="govuk-grid-column-one-half">
-    <a href="/remove-list-search" class="admin-tile">
-      <h2 class="admin-tile__heading">{{ tiles[2].heading }}</h2>
+    <div class="admin-tile">
+      <h2 class="admin-tile__heading">
+        <a href="/remove-list-search" class="govuk-link govuk-link--no-visited-state admin-tile__link">{{ tiles[2].heading }}</a>
+      </h2>
       <p class="admin-tile__description">{{ tiles[2].description }}</p>
-    </a>
+    </div>
   </div>
   {% if tiles[3] %}
   <div class="govuk-grid-column-one-half">
-    <a href="/media-applications" class="admin-tile">
-      <h2 class="admin-tile__heading">{{ tiles[3].heading }}</h2>
+    <div class="admin-tile">
+      <h2 class="admin-tile__heading">
+        <a href="/media-applications" class="govuk-link govuk-link--no-visited-state admin-tile__link">{{ tiles[3].heading }}</a>
+      </h2>
       <p class="admin-tile__description">{{ tiles[3].description }}</p>
-    </a>
+    </div>
   </div>
   {% endif %}
 </div>

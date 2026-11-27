@@ -73,11 +73,8 @@ test.describe("Remove Publication Flow", () => {
 
   test("complete remove publication journey with validation, Welsh, and accessibility", async ({ page }) => {
     // STEP 1: Verify remove tab on dashboard
-    const removeLink = page.locator('a[href="/remove-list-search"]');
-    await expect(removeLink).toBeVisible();
-
-    const removeHeading = removeLink.locator('h2:has-text("Remove")');
-    await expect(removeHeading).toBeVisible();
+    const removeLink = page.getByRole("heading", { level: 2, name: "Remove", exact: true }).getByRole("link");
+    await expect(removeLink).toHaveAttribute("href", "/remove-list-search");
 
     // STEP 2: Navigate to find content page
     await page.goto("/remove-list-search");
@@ -92,10 +89,10 @@ test.describe("Remove Publication Flow", () => {
     const autocompleteInput = page.getByRole("combobox", { name: /search by court or tribunal name/i });
     await autocompleteInput.waitFor({ state: "visible", timeout: 10000 });
     await expect(autocompleteInput).toBeVisible();
-    await expect(page.locator('button:has-text("Continue")')).toBeVisible();
+    await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
 
     // STEP 3: Test validation - empty submission
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.locator(".govuk-error-summary")).toBeVisible();
     await expect(page.locator(".govuk-error-summary")).toContainText("Court or tribunal name must be 3 characters or more");
 
@@ -107,7 +104,7 @@ test.describe("Remove Publication Flow", () => {
     await page.goto("/remove-list-search?lng=cy");
     await page.waitForLoadState("networkidle");
     await expect(page.locator("h1")).toContainText("Canfod cynnwys i'w dynnu");
-    await expect(page.locator('button:has-text("Parhau")')).toBeVisible();
+    await expect(page.getByRole("button", { name: "Parhau" })).toBeVisible();
 
     // STEP 6: Navigate back to English and select location
     await page.goto("/remove-list-search");
@@ -126,7 +123,7 @@ test.describe("Remove Publication Flow", () => {
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
 
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
 
     // STEP 7: Should redirect to search results page
     await expect(page).toHaveURL(/\/remove-list-search-results/);

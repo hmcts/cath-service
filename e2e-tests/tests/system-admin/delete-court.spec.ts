@@ -69,9 +69,9 @@ test.describe("Delete Court Journey", () => {
     await expect(heading).toHaveText("Find the court to remove");
 
     // Step 2: Test validation - empty court name
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.locator(".govuk-error-summary")).toBeVisible();
-    await expect(page.locator(".govuk-error-message")).toContainText("Enter a court or tribunal name");
+    await expect(page.locator("#main-content .govuk-error-message")).toContainText("Enter a court or tribunal name");
 
     // Step 3: Search for a valid test court (refresh page to clear validation state)
     await page.reload();
@@ -80,7 +80,7 @@ test.describe("Delete Court Journey", () => {
     await courtInput.waitFor({ state: "visible", timeout: 10000 });
     await selectAutocompleteOption(page, courtInput, prefixName("Delete Test Court A"));
 
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.waitForURL("**/delete-court-confirm");
 
     // Step 4: Verify confirmation page displays court details
@@ -100,13 +100,13 @@ test.describe("Delete Court Journey", () => {
     await expect(radios).toHaveClass(/govuk-radios--inline/);
 
     // Step 6: Test validation - no radio selected
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.locator(".govuk-error-summary")).toBeVisible();
-    await expect(page.locator(".govuk-error-message")).toContainText("Select yes or no to continue");
+    await expect(page.locator("#main-content .govuk-error-message")).toContainText("Select yes or no to continue");
 
     // Step 7: Test "No" option redirects back to the delete-court page
     await page.click('input[value="no"]');
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.waitForURL("**/delete-court");
     await expect(page.locator("h1")).toHaveText("Find the court to remove");
 
@@ -114,7 +114,7 @@ test.describe("Delete Court Journey", () => {
     const courtInput2 = page.getByRole("combobox", { name: /court or tribunal name/i });
     await selectAutocompleteOption(page, courtInput2, prefixName("Delete Test Court B"));
 
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.waitForURL("**/delete-court-confirm");
 
     // Step 9: Test Welsh translation
@@ -132,7 +132,7 @@ test.describe("Delete Court Journey", () => {
 
     // Step 11: Confirm deletion
     await page.click('input[value="yes"]');
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.waitForURL("**/delete-court-success");
 
     // Step 12: Verify success page
@@ -205,10 +205,10 @@ test.describe("Delete Court Journey", () => {
       const courtInput = page.getByRole("combobox", { name: /court or tribunal name/i });
       await courtInput.waitFor({ state: "visible", timeout: 10000 });
       await selectAutocompleteOption(page, courtInput, prefixedCourtName);
-      await page.click('button:has-text("Continue")');
+      await page.getByRole("button", { name: "Continue" }).click();
       await page.waitForURL("**/delete-court-confirm");
       await page.click('input[value="yes"]');
-      await page.click('button:has-text("Continue")');
+      await page.getByRole("button", { name: "Continue" }).click();
     };
 
     // Step 1: Publications block first (artefacts checked before subscriptions)
@@ -223,7 +223,7 @@ test.describe("Delete Court Journey", () => {
     await page.click('a:has-text("Delete all the publications for")');
     await page.waitForURL("**/delete-court-publications");
     await page.click('input[value="yes"]');
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
 
     // Lands on the publications success page with a confirmation panel
     await page.waitForURL("**/delete-court-publications-success");
@@ -235,7 +235,7 @@ test.describe("Delete Court Journey", () => {
 
     // Step 3: Now subscriptions block
     await page.click('input[value="yes"]');
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.locator(".govuk-error-summary__body")).toContainText("There are active subscriptions for the given location");
 
     // Step 4: Follow the delete-subscriptions link and confirm deletion
@@ -248,7 +248,7 @@ test.describe("Delete Court Journey", () => {
     await switchLanguage(page, "en");
 
     await page.click('input[value="yes"]');
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
 
     // Lands on the subscriptions success page with a confirmation panel
     await page.waitForURL("**/delete-court-subscriptions-success");
@@ -260,7 +260,7 @@ test.describe("Delete Court Journey", () => {
 
     // Step 5: With blockers cleared the court can now be deleted
     await page.click('input[value="yes"]');
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.waitForURL("**/delete-court-success");
     await expect(page.locator("h1")).toHaveText("Delete successful");
   });
@@ -283,7 +283,7 @@ test.describe("Delete Court Journey", () => {
     await selectAutocompleteOption(page, courtInput, prefixName("Delete Test Court C"));
 
     // Submit form
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.waitForURL("**/delete-court-confirm");
 
     // Focus on first radio button and select using keyboard
@@ -293,7 +293,7 @@ test.describe("Delete Court Journey", () => {
     await page.keyboard.press("Space");
 
     // Submit form
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.waitForURL("**/delete-court-success");
     await expect(page.locator("h1")).toHaveText("Delete successful");
   });

@@ -229,13 +229,16 @@ describe("filter-toggle", () => {
     expect(toggle.textContent).toBe("Hide filters");
   });
 
-  it("should render the hide button after the apply button as a plain (non-cross) secondary button", async () => {
+  it("should render the hide button after the bottom apply button as a plain (non-cross) secondary button", async () => {
     // Arrange
     document.body.innerHTML = `
       <div class="moj-filter" data-module="moj-filter" data-hide-text="Hide filters">
         <div class="moj-filter__options">
-          <button class="govuk-button" type="submit">Apply filters</button>
-          <div class="govuk-form-group"></div>
+          <p class="govuk-hint" id="filter-hint">Select one or more filters and then select the apply filters button</p>
+          <div class="govuk-form-group">
+            <button class="govuk-button govuk-button--secondary" type="button">Option button</button>
+          </div>
+          <button class="govuk-button app-filter__apply" type="submit" aria-describedby="filter-hint">Apply filters</button>
         </div>
       </div>
     `;
@@ -247,12 +250,35 @@ describe("filter-toggle", () => {
     // Assert — a container is inserted right after the apply button for MOJ to fill.
     const options = document.querySelector(".moj-filter__options") as HTMLElement;
     const children = Array.from(options.children);
-    const applyIndex = children.findIndex((el) => el.classList.contains("govuk-button"));
+    const applyIndex = children.findIndex((el) => el.classList.contains("app-filter__apply"));
     const hideIndex = children.findIndex((el) => el.classList.contains("app-filter__hide"));
     expect(hideIndex).toBe(applyIndex + 1);
+    expect(hideIndex).toBe(children.length - 1);
     // MOJ is told to render into that container, styled as a plain secondary button.
     const [, config] = filterToggleButtonSpy.mock.calls[0] as [HTMLElement, { closeButton: { classes: string }; closeButtonContainer: { selector: string } }];
     expect(config.closeButtonContainer.selector).toBe(".app-filter__hide");
     expect(config.closeButton.classes).not.toContain("moj-filter__close");
+  });
+
+  it("should fall back to the header action container when the options have no apply button", async () => {
+    // Arrange
+    document.body.innerHTML = `
+      <div class="moj-filter" data-module="moj-filter">
+        <div class="moj-filter__options">
+          <div class="govuk-form-group">
+            <button class="govuk-button" type="button">Option button</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const { initFilterToggle } = await import("./filter-toggle.js");
+
+    // Act
+    initFilterToggle();
+
+    // Assert
+    const [, config] = filterToggleButtonSpy.mock.calls[0] as [HTMLElement, { closeButtonContainer: { selector: string } }];
+    expect(config.closeButtonContainer.selector).toBe(".moj-filter__header-action");
+    expect(document.querySelector(".app-filter__hide")).toBeNull();
   });
 });

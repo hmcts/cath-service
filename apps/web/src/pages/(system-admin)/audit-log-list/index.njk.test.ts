@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { assertErrorSummary, assertNoErrors, createTestEnvironment, render } from "@hmcts/test-support";
+import { cy as webCoreCy, en as webCoreEn } from "@hmcts/web-core";
 import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 import { cy } from "./cy.js";
@@ -163,6 +164,25 @@ describe("audit-log-list template", () => {
       expect($("h2").text()).toContain(cy.filters.heading);
       expect($('a[href="/audit-log-list"]').text()).toContain(cy.filters.clearFilters);
       expect($(".govuk-body").text()).toContain(cy.noResults);
+    });
+  });
+
+  describe("Filter panel order", () => {
+    it("should render the filter hint first and the apply button last in the filter options", () => {
+      const { $ } = render(env, TEMPLATE, { ...buildData(), filterPanel: webCoreEn.filterPanel });
+      const options = $(".moj-filter__options").children();
+
+      expect(options.first().attr("id")).toBe("filter-hint");
+      expect(options.first().text().trim()).toBe(webCoreEn.filterPanel.hint);
+      expect(options.last().is("button.govuk-button")).toBe(true);
+      expect(options.last().attr("aria-describedby")).toBe("filter-hint");
+      expect($(".moj-filter__options > button.govuk-button")).toHaveLength(1);
+    });
+
+    it("should render the Welsh filter hint", () => {
+      const { $ } = render(env, TEMPLATE, { ...buildData({ content: cy }), filterPanel: webCoreCy.filterPanel });
+
+      expect($("#filter-hint").text().trim()).toBe(webCoreCy.filterPanel.hint);
     });
   });
 });

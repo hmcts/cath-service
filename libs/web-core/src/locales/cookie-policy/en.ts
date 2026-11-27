@@ -108,10 +108,7 @@ export const en = {
     phone: "0300 303 0656",
     hours: "Monday to Friday 8am to 5pm"
   },
-  backToTop: {
-    text: "Back to top",
-    ariaLabel: "Back to top of page"
-  },
+  backToTop: "Back to top",
   successBanner: "Success",
   successMessage: "Your cookie settings have been saved"
 };

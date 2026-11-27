@@ -32,14 +32,14 @@ test.describe("Reference Data Management", () => {
 
   test("system admin can navigate from dashboard to reference data landing page @nightly", async ({ page }) => {
     // Dashboard should show "Reference Data" tile and NOT show old tiles
-    // Matched by href: the "Delete Court" tile description also contains "reference data"
-    const referenceDataTile = page.locator('a.admin-tile[href="/reference-data"]');
+    // Matched by exact link name: the "Delete Court" tile description also contains "reference data"
+    const referenceDataTile = page.locator(".admin-tile").getByRole("link", { name: "Reference Data", exact: true });
     await expect(referenceDataTile).toBeVisible();
 
-    const uploadTile = page.locator('a.admin-tile:has-text("Upload Reference Data")');
+    const uploadTile = page.locator(".admin-tile").getByRole("link", { name: "Upload Reference Data", exact: true });
     await expect(uploadTile).toHaveCount(0);
 
-    const metadataTile = page.locator('a.admin-tile:has-text("Manage Location Metadata")');
+    const metadataTile = page.locator(".admin-tile").getByRole("link", { name: "Manage Location Metadata", exact: true });
     await expect(metadataTile).toHaveCount(0);
 
     // Navigate to reference data landing
@@ -66,7 +66,7 @@ test.describe("Reference Data Management", () => {
     await page.goto("/reference-data");
 
     // Click Upload Reference Data tile
-    const uploadTile = page.locator('a.admin-tile:has-text("Upload Reference Data")');
+    const uploadTile = page.locator(".admin-tile").getByRole("link", { name: "Upload Reference Data", exact: true });
     await uploadTile.click();
 
     await expect(page).toHaveURL("/reference-data-upload");
@@ -81,7 +81,7 @@ test.describe("Reference Data Management", () => {
 
   test("system admin can create jurisdiction data through full journey @nightly", async ({ page }) => {
     // Navigate: Dashboard → Manage Jurisdiction Data → Create
-    const jurisdictionTile = page.locator('a.admin-tile:has-text("Manage Jurisdiction Data")');
+    const jurisdictionTile = page.locator(".admin-tile").getByRole("link", { name: "Manage Jurisdiction Data", exact: true });
     await jurisdictionTile.click();
 
     await expect(page).toHaveURL("/jurisdiction-data");
@@ -204,7 +204,7 @@ test.describe("Reference Data Management", () => {
   test("system admin can manage location jurisdiction data @nightly", async ({ page }) => {
     // Navigate to location jurisdiction search
     await page.goto("/reference-data");
-    const locationJurisdictionTile = page.locator('a.admin-tile:has-text("Manage Location Jurisdiction and Region Data")');
+    const locationJurisdictionTile = page.locator(".admin-tile").getByRole("link", { name: "Manage Location Jurisdiction and Region Data", exact: true });
     await locationJurisdictionTile.click();
 
     await expect(page).toHaveURL("/location-jurisdiction-search");

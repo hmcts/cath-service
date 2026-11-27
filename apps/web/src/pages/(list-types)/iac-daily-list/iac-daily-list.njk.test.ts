@@ -280,10 +280,10 @@ describe("iac-daily-list template", () => {
   });
 
   describe("Back to top link", () => {
-    it("should render a back-to-top link pointing at the top anchor", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderList();
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(commonEn.backToTop);
     });
@@ -297,7 +297,7 @@ describe("iac-daily-list template", () => {
       expect($(".govuk-body").text()).toContain(commonCy.listDate);
       expect($("details.govuk-details .govuk-details__summary-text").text()).toContain(commonCy.importantInformationHeading);
       expect($("p.govuk-body-s").text()).toContain(commonCy.dataSource);
-      expect($(".back-to-top a").text()).toContain(commonCy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(commonCy.backToTop);
     });
 
     it("should render Welsh table headers", () => {

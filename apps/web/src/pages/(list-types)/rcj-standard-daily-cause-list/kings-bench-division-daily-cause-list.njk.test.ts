@@ -315,7 +315,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
     it("should render a back-to-top link", () => {
       const { $ } = renderList();
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(commonEn.backToTop);
     });
@@ -342,7 +342,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
       expect(sectionTitles).toContain(listCy.bundlesTitle);
 
       expect($(".search-container h2").text()).toContain(commonCy.searchCasesTitle);
-      expect($(".back-to-top a").text()).toContain(commonCy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(commonCy.backToTop);
     });
 
     it("should render the Welsh table headers in column order", () => {

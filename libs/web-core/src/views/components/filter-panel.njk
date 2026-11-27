@@ -1,0 +1,72 @@
+{#
+  Fork of the MoJ filter component (moj/components/filter/template.njk). Every MoJ
+  class name is kept so FilterToggleButton and filter-toggle.ts still work. The
+  Apply button follows the options, so keyboard users reach it by tabbing forward
+  after choosing filters, and a hint at the top explains this.
+#}
+{% macro appFilter(params) %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% set hintId = params.hint.id if params.hint and params.hint.id else "filter-hint" %}
+<div class="moj-filter" data-module="moj-filter" {%- for attribute, value in params.attributes %} {{ attribute }}="{{ value }}"{% endfor %}>
+
+  <div class="moj-filter__header">
+
+    <div class="moj-filter__header-title">
+      <h2 class="govuk-heading-m">{{ params.heading.html | safe if params.heading.html else params.heading.text }}</h2>
+    </div>
+
+    <div class="moj-filter__header-action"></div>
+
+  </div>
+
+  <div class="moj-filter__content">
+
+    {% if params.selectedFilters %}
+
+      <div class="moj-filter__selected">
+
+        <div class="moj-filter__selected-heading">
+
+          <div class="moj-filter__heading-title">
+            <h2 class="govuk-heading-m">{{ params.selectedFilters.heading.html | safe if params.selectedFilters.heading.html else params.selectedFilters.heading.text }}</h2>
+          </div>
+
+          <div class="moj-filter__heading-action">
+            <p><a class="govuk-link govuk-link--no-visited-state" href="{{ params.selectedFilters.clearLink.href }}">{{ params.selectedFilters.clearLink.text }}</a></p>
+          </div>
+
+        </div>
+
+        {% for category in params.selectedFilters.categories %}
+          <h3 class="govuk-heading-s govuk-!-margin-bottom-0">{{ category.heading.html | safe if category.heading.html else category.heading.text }}</h3>
+
+          <ul class="moj-filter-tags">
+            {% for item in category.items %}
+              <li><a class="moj-filter__tag" href="{{ item.href }}"><span class="govuk-visually-hidden">Remove this filter</span> {{ item.text }}</a></li>
+            {% endfor %}
+          </ul>
+        {% endfor %}
+
+      </div>
+    {% endif %}
+
+    <div class="moj-filter__options">
+
+      {% if params.hint and params.hint.text %}
+        <p class="govuk-hint app-filter__hint" id="{{ hintId }}">{{ params.hint.text }}</p>
+      {% endif %}
+
+      {{ params.optionsHtml | safe }}
+
+      {{ govukButton({
+        text: params.submit.text if params.submit.text else "Apply filters",
+        classes: "app-filter__apply",
+        attributes: { "aria-describedby": hintId } if (params.hint and params.hint.text) else {}
+      }) }}
+
+    </div>
+
+  </div>
+
+</div>
+{% endmacro %}

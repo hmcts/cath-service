@@ -327,10 +327,10 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list template", 
   });
 
   describe("Back to top link", () => {
-    it("should render a back-to-top link targeting the h1 id", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderList();
 
-      const backToTop = $(".back-to-top a.govuk-link[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.backToTop);
     });
@@ -363,7 +363,7 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list template", 
 
       expect($("p.govuk-body-s").text()).toContain(cy.dataSource);
       expect($("p.govuk-body-s").text()).toContain("Llwytho â Llaw");
-      expect($(".back-to-top a").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
       expect($(`a[href="${cy.factLinkUrl}"]`).text()).toContain(cy.factLinkText);
       expect($(`a[href="${cy.openingStatement.observeLinkUrl}"]`).text()).toContain(cy.openingStatement.observeLinkText);
     });

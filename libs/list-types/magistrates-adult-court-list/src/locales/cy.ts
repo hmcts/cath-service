@@ -37,6 +37,7 @@ export const cy = {
   listingTime: "Amser rhestru",
   searchCases: "Chwilio Achosion",
   dataSource: "Ffynhonnell y Data",
+  linkToTop: "Yn ôl i'r brig",
   cautionNote:
     "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y’i diffinnir yn Neddf Gwarchod Data 2018, a elwid gynt yn Ddata Personol Sensitif, a dylid ei drin yn y ffordd briodol.",
   cautionReporting:

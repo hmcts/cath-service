@@ -1,4 +1,5 @@
 {% extends "layouts/base-template.njk" %}
+{% from "components/back-to-top.njk" import appBackToTop %}
 
 
 {% block page_content %}
@@ -75,9 +76,7 @@
 
     <p class="govuk-body-s govuk-!-margin-top-6">{{ t.dataSource }}: {{ dataSource }}</p>
 
-    <div class="govuk-!-margin-top-6">
-      <a href="#top" class="govuk-link">{{ t.backToTop }}</a>
-    </div>
+    {{ appBackToTop({ text: t.backToTop }) }}
 
   </div>
 </div>

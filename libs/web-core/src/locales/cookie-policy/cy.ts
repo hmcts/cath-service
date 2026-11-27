@@ -121,10 +121,7 @@ export const cy = {
     phone: "0300 303 0656",
     hours: "Dydd Llun i ddydd Gwener 8am i 5pm"
   },
-  backToTop: {
-    text: "Yn ôl i frig y dudalen",
-    ariaLabel: "Yn ôl i frig y dudalen"
-  },
+  backToTop: "Yn ôl i frig y dudalen",
   successBanner: "Llwyddiant",
   successMessage: "Mae eich gosodiadau cwcis wedi'u cadw"
 };

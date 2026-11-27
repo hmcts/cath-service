@@ -28,14 +28,21 @@ test.describe("Page Structure", () => {
     await expect(phaseBanner).toBeVisible();
     const betaTag = phaseBanner.locator(".govuk-phase-banner__content__tag");
     await expect(betaTag).toHaveText("beta");
-    const feedbackLink = phaseBanner.locator('a[href*="smartsurvey.co.uk"]');
+    // The new tab warning is part of the link text, per the GOV.UK Design System
+    const feedbackLink = phaseBanner.getByRole("link", { name: "feedback (opens in a new tab)", exact: true });
+    await expect(phaseBanner).toContainText("feedback (opens in a new tab) will help us to improve it.");
     await expect(feedbackLink).toBeVisible();
-    await expect(feedbackLink).toContainText("feedback");
+    await expect(feedbackLink).toHaveAttribute("href", /smartsurvey\.co\.uk/);
+    await expect(feedbackLink).toHaveAttribute("target", "_blank");
+    await expect(feedbackLink).toHaveAttribute("rel", /noopener/);
+    await expect(feedbackLink).not.toHaveAttribute("aria-label");
 
-    // Welsh toggle in phase banner
-    const languageToggle = page.locator(".app-phase-banner__language");
+    // Welsh toggle in phase banner: accessible name matches the visible "Cymraeg" (WCAG 2.5.3)
+    const languageToggle = phaseBanner.getByRole("link", { name: "Cymraeg", exact: true });
     await expect(languageToggle).toBeVisible();
     await expect(languageToggle).toHaveText("Cymraeg");
+    await expect(languageToggle).toHaveAttribute("lang", "cy");
+    await expect(languageToggle).not.toHaveAttribute("aria-label");
 
     // Footer with all required links
     const footer = page.locator(".govuk-footer");
@@ -122,10 +129,15 @@ test.describe("Page Structure", () => {
     const signInLink = page.locator('.govuk-service-navigation__link[href="/sign-in"]');
     await expect(signInLink).toHaveText("Mewngofnodi");
 
-    // Verify English toggle is available
-    const englishToggle = page.locator(".app-phase-banner__language");
+    // Verify English toggle is available, named by its visible text, with lang="en"
+    const englishToggle = page.locator(".govuk-phase-banner").getByRole("link", { name: "English", exact: true });
     await expect(englishToggle).toBeVisible();
-    await expect(englishToggle).toHaveText("English");
+    await expect(englishToggle).toHaveAttribute("lang", "en");
+    await expect(englishToggle).not.toHaveAttribute("aria-label");
+
+    // Welsh feedback link, with the new tab warning in the link text
+    await expect(page.locator(".govuk-phase-banner").getByRole("link", { name: "adborth (yn agor mewn tab newydd)", exact: true })).toBeVisible();
+    await expect(page.locator(".govuk-phase-banner")).toContainText("adborth (yn agor mewn tab newydd)");
 
     // Verify footer links are in Welsh
     const cookiesLink = page.locator('.govuk-footer__link[href="/cookie-policy"]');

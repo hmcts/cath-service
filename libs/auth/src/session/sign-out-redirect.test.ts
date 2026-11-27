@@ -120,4 +120,33 @@ describe("buildSignOutRedirectUrl", () => {
     // Assert
     expect(result.searchParams.get("post_logout_redirect_uri")).toBe(`${ORIGIN}/session-logged-out?lng=cy`);
   });
+  it("should return to the given path for a Crime IDAM user", () => {
+    // Act
+    const result = buildSignOutRedirectUrl({
+      provenance: "CRIME_IDAM",
+      locale: "en",
+      origin: ORIGIN,
+      idToken: undefined,
+      returnPath: "/session-expired?lng=en&reSignInUrl=CRIME"
+    });
+
+    // Assert
+    expect(result).toBe("/session-expired?lng=en&reSignInUrl=CRIME");
+  });
+
+  it("should end the Microsoft session and return to the given path for an SSO admin", () => {
+    // Act
+    const result = buildSignOutRedirectUrl({
+      provenance: "SSO",
+      locale: "cy",
+      origin: ORIGIN,
+      idToken: undefined,
+      returnPath: "/session-expired?lng=cy&reSignInUrl=SSO"
+    });
+
+    // Assert
+    const url = new URL(result);
+    expect(url.pathname).toBe(`/${TENANT_ID}/oauth2/v2.0/logout`);
+    expect(url.searchParams.get("post_logout_redirect_uri")).toBe(`${ORIGIN}/session-expired?lng=cy&reSignInUrl=SSO`);
+  });
 });

@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { assertNoErrors, createTestEnvironment, render } from "@hmcts/test-support";
+import { cy as webCoreCy, en as webCoreEn } from "@hmcts/web-core";
 import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 import { cy } from "./cy.js";
@@ -242,6 +243,25 @@ describe("courts-tribunals-list template", () => {
 
     it("should have same sub-jurisdiction label keys in English and Welsh", () => {
       expect(Object.keys(en.subJurisdictionLabels).sort()).toEqual(Object.keys(cy.subJurisdictionLabels).sort());
+    });
+  });
+
+  describe("Filter panel order", () => {
+    it("should render the filter hint first and the apply button last in the filter options", () => {
+      const { $ } = render(env, TEMPLATE, buildData(en, "en", { filterPanel: webCoreEn.filterPanel }));
+      const options = $(".moj-filter__options").children();
+
+      expect(options.first().attr("id")).toBe("filter-hint");
+      expect(options.first().text().trim()).toBe(webCoreEn.filterPanel.hint);
+      expect(options.last().is("button.govuk-button")).toBe(true);
+      expect(options.last().attr("aria-describedby")).toBe("filter-hint");
+      expect($(".moj-filter__options > button.govuk-button")).toHaveLength(1);
+    });
+
+    it("should render the Welsh filter hint", () => {
+      const { $ } = render(env, TEMPLATE, buildData(cy, "cy", { filterPanel: webCoreCy.filterPanel }));
+
+      expect($("#filter-hint").text().trim()).toBe(webCoreCy.filterPanel.hint);
     });
   });
 });

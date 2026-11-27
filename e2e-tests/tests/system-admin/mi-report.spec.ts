@@ -33,7 +33,7 @@ test.describe("MI Report download", () => {
 
   test("system admin selects a period and report type and downloads the xlsx", async ({ page }) => {
     // Navigate from the dashboard tile
-    await page.click('a.admin-tile:has-text("Download MI Report")');
+    await page.locator(".admin-tile").getByRole("link", { name: "Download MI Report", exact: true }).click();
     await page.waitForURL("**/mi-report");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Download MI Report");
 

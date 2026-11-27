@@ -366,7 +366,7 @@ describe("kings-bench-masters-daily-cause-list template", () => {
     it("should render a back-to-top link", () => {
       const { $ } = renderList();
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.common.backToTop);
     });
@@ -423,7 +423,7 @@ describe("kings-bench-masters-daily-cause-list template", () => {
       ]);
 
       expect($("p.govuk-body-s").text()).toContain(cy.common.dataSource);
-      expect($(".back-to-top a[href='#top']").text()).toContain(cy.common.backToTop);
+      expect($("a.app-back-to-top__link[href='#main-content']").text()).toContain(cy.common.backToTop);
     });
 
     it("should render Welsh hearing data in the correct columns", () => {

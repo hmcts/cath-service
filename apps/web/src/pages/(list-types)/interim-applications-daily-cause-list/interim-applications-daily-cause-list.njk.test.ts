@@ -112,7 +112,7 @@ describe("interim-applications-daily-cause-list template", () => {
   });
 
   describe("Page header", () => {
-    it("should render the list title in the h1 with the back-to-top anchor id", () => {
+    it("should render the list title in the h1 with the top anchor id", () => {
       const { $ } = renderPage();
 
       const heading = $("h1#top");
@@ -234,10 +234,10 @@ describe("interim-applications-daily-cause-list template", () => {
       expect(footer.text()).toContain("HMCTS Publishing Service");
     });
 
-    it("should render a back-to-top link pointing at the heading anchor", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderPage();
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.backToTop);
     });
@@ -257,7 +257,7 @@ describe("interim-applications-daily-cause-list template", () => {
 
       expect($(".govuk-details").text()).toContain(cy.openJusticeMessage3);
       expect(rowCells($, cy.pageTitle)[COLUMN.judge]).toBe("Barnwr A");
-      expect($(".back-to-top a").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
     });
   });
 });

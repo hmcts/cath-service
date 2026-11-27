@@ -40,14 +40,26 @@ export const cy = {
     }
   },
   language: {
-    switch: "English",
-    switchAriaLabel: "Newid iaith i Saesneg"
+    switch: "English"
   },
   feedback: {
     part1: "Mae hwn yn wasanaeth newydd – bydd eich ",
     part2: "adborth",
     part3: " yn ein helpu i'w wella.",
-    ariaLabel: "Rhoi adborth am y dudalen hon",
+    newTab: "(yn agor mewn tab newydd)",
     link: "https://www.smartsurvey.co.uk/s/FBSPI22/?pageurl="
+  },
+  filterPanel: {
+    hint: "[WELSH TRANSLATION REQUIRED: 'Select one or more filters and then select the apply filters button']"
+  },
+  sessionTimeout: {
+    heading: "[WELSH TRANSLATION REQUIRED: 'You’re about to be signed out due to inactivity.']",
+    countdown: "[WELSH TRANSLATION REQUIRED: 'For your security, you will be signed out in {time}.']",
+    minute: "[WELSH TRANSLATION REQUIRED: 'minute']",
+    minutes: "[WELSH TRANSLATION REQUIRED: 'minutes']",
+    second: "[WELSH TRANSLATION REQUIRED: 'second']",
+    seconds: "[WELSH TRANSLATION REQUIRED: 'seconds']",
+    continue: "Parhau",
+    keepAliveError: "[WELSH TRANSLATION REQUIRED: 'We could not keep you signed in. Try again.']"
   }
 };

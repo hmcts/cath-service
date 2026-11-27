@@ -18,10 +18,12 @@
 <div class="govuk-grid-row">
   {% for option in options %}
     <div class="govuk-grid-column-one-half">
-      <a href="{{ option.href }}" class="admin-tile">
-        <h2 class="admin-tile__heading">{{ option.label }}</h2>
+      <div class="admin-tile">
+        <h2 class="admin-tile__heading">
+          <a href="{{ option.href }}" class="govuk-link govuk-link--no-visited-state admin-tile__link">{{ option.label }}</a>
+        </h2>
         <p class="admin-tile__description">{{ option.description }}</p>
-      </a>
+      </div>
     </div>
   {% endfor %}
 </div>

@@ -28,6 +28,7 @@ export const en = {
   offenceDetails: "Offence Details",
   searchCases: "Search Cases",
   dataSource: "Data Source",
+  linkToTop: "Back to top",
   cautionNote:
     "Note this document contains Special Category Data as defined by Data Protection Act 2018, formally known as Sensitive Personal Data, and should be handled appropriately.",
   cautionReporting:

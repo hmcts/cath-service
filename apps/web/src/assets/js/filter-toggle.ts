@@ -4,6 +4,7 @@ const FILTER_SELECTOR = ".moj-filter";
 const TOGGLE_CONTAINER_SELECTOR = ".moj-action-bar__filter";
 const HEADER_ACTION_SELECTOR = ".moj-filter__header-action";
 const OPTIONS_SELECTOR = ".moj-filter__options";
+const APPLY_BUTTON_SELECTOR = ":scope > .govuk-button";
 const HIDE_CONTAINER_CLASS = "app-filter__hide";
 const SELECTED_SELECTOR = ".moj-filter__selected";
 const CLEAR_ACTION_SELECTOR = ".moj-filter__heading-action";
@@ -23,9 +24,10 @@ export function initFilterToggle(): void {
 
   // By default MOJ appends its close ("Hide filters") button into the header at the
   // top of the panel, styled with a ✕ cross. We want a plain "Hide filters" button
-  // directly beneath the green "Apply filters" button instead. Give MOJ an empty
-  // container placed right after the Apply button to render that button into, and
-  // (below) restyle it as a normal secondary button so the ✕ cross is dropped.
+  // directly beneath the green "Apply filters" button at the bottom of the options
+  // instead. Give MOJ an empty container placed right after the Apply button to
+  // render that button into, and (below) restyle it as a normal secondary button so
+  // the ✕ cross is dropped.
   const closeContainerSelector = ensureHideContainer(filter);
 
   const { showText, hideText, closeText, startHidden, bigModeMediaQuery } = filter.dataset;
@@ -74,14 +76,15 @@ function keepRevealPanelOpenOnLoad(filter: HTMLElement, startHidden: string | un
   toggleButton.textContent = hideText ?? "Hide filters";
 }
 
-// Inserts an empty container immediately after the "Apply filters" button (the first
-// button in .moj-filter__options) for MOJ to render its close/"Hide filters" button
+// Inserts an empty container immediately after the "Apply filters" button (the
+// .govuk-button that is a direct child of .moj-filter__options, so buttons inside the
+// filter options themselves are never matched) for MOJ to render its close/"Hide filters" button
 // into, and returns a selector for it. Falls back to MOJ's default header-action
 // container if the options block or Apply button is not found, so the toggle still
 // constructs (MOJ requires both button containers to resolve).
 function ensureHideContainer(filter: HTMLElement): string {
   const options = filter.querySelector<HTMLElement>(OPTIONS_SELECTOR);
-  const applyButton = options?.querySelector<HTMLElement>(".govuk-button");
+  const applyButton = options?.querySelector<HTMLElement>(APPLY_BUTTON_SELECTOR);
   if (!options || !applyButton) return HEADER_ACTION_SELECTOR;
 
   let container = filter.querySelector<HTMLElement>(`.${HIDE_CONTAINER_CLASS}`);

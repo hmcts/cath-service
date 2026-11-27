@@ -1,11 +1,14 @@
+// Clickable card: only the heading is a link, and its ::after overlay stretches
+// over the whole tile so the card stays clickable with a single link name and a
+// single tab stop for keyboard and screen reader users.
 .admin-tile {
+  position: relative;
   display: block;
   padding: 20px;
   margin-bottom: 30px;
   min-height: 150px;
   background-color: #f3f2f1;
   border: 1px solid #b1b4b6;
-  text-decoration: none;
   transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
 
   &:hover {
@@ -13,16 +16,18 @@
     border-color: #1d70b8;
   }
 
-  &:focus {
-    outline: 3px solid #ffdd00;
-    outline-offset: 0;
-    background-color: #ffdd00;
-    border-color: #0b0c0c;
-  }
-
   @media (min-width: 40.0625em) {
     padding: 25px;
   }
+}
+
+.admin-tile__link::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 
 .admin-tile__heading {

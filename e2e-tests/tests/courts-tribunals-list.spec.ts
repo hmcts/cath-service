@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { axeCheck } from "../utils/axe-helper.js";
+import { expectBackToTopMovesFocusToMain } from "../utils/back-to-top-helpers.js";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
 
 // Shared test locations for the entire test suite
@@ -65,6 +66,11 @@ test.describe("Courts and Tribunals List Page", () => {
       }
 
       expect(accessibilityScanResults.violations).toEqual([]);
+
+      // Back to top moves keyboard focus to the main content, in English and Welsh
+      await expectBackToTopMovesFocusToMain(page, "Back to top");
+      await page.goto("/courts-tribunals-list?lng=cy");
+      await expectBackToTopMovesFocusToMain(page, "Yn ôl i frig y dudalen");
     });
   });
 
@@ -285,13 +291,31 @@ test.describe("Courts and Tribunals List Page", () => {
     test("should filter locations by region", async ({ page }) => {
       await page.goto("/courts-tribunals-list");
 
-      // Select London region (regionId = 1)
-      const londonCheckbox = page.locator('input[name="region"][value="1"]');
-      await londonCheckbox.check();
+      // The hint sits at the top of the options and describes the Apply button, which comes last
+      const options = page.locator(".moj-filter__options");
+      const hint = "Select one or more filters and then select the apply filters button";
+      await expect(options.locator("#filter-hint")).toHaveText(hint);
+      const applyButton = page.getByRole("button", { name: "Apply filters", exact: true });
+      await expect(applyButton).toHaveAccessibleDescription(hint);
+      await expect(options.locator(":scope > button.govuk-button").last()).toHaveText("Apply filters");
 
-      // Apply filters
-      const applyButton = page.getByRole("button", { name: /apply filters/i });
-      await applyButton.click();
+      // Select London region (regionId = 1) with the keyboard, then Tab forwards only to Apply
+      const londonCheckbox = page.locator('input[name="region"][value="1"]');
+      await londonCheckbox.focus();
+      await page.keyboard.press("Space");
+      await expect(londonCheckbox).toBeChecked();
+      let isApplyFocused = false;
+      for (let i = 0; i < 60 && !isApplyFocused; i++) {
+        await page.keyboard.press("Tab");
+        isApplyFocused = await applyButton.evaluate((el) => el === document.activeElement);
+      }
+      expect(isApplyFocused).toBe(true);
+
+      const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
+      expect(accessibilityScanResults.violations).toEqual([]);
+
+      // Apply filters with the keyboard
+      await page.keyboard.press("Enter");
 
       // Wait for navigation with filter parameters
       await page.waitForURL(/.*region=1.*/);
@@ -302,6 +326,11 @@ test.describe("Courts and Tribunals List Page", () => {
       // Verify selected filter tag appears
       const filterTag = page.locator(".moj-filter__tag");
       await expect(filterTag.first()).toBeVisible();
+
+      // Welsh: hint still first, Apply still last
+      await page.goto("/courts-tribunals-list?lng=cy");
+      await expect(options.locator("#filter-hint")).toBeVisible();
+      await expect(options.locator(":scope > button.govuk-button").last()).toHaveAttribute("aria-describedby", "filter-hint");
     });
 
     test("should filter locations by jurisdiction @nightly", async ({ page }) => {
