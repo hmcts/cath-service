@@ -21,6 +21,7 @@ vi.mock("@hmcts/web-core", () => ({
     single: vi.fn(() => vi.fn((_req: any, _res: any, next: any) => next()))
   })),
   createFileUploadMiddleware: vi.fn(() => vi.fn((_req: any, _res: any, next: any) => next())),
+  deploymentHealthCheck: vi.fn(() => vi.fn()),
   errorHandler: vi.fn(() => vi.fn()),
   expressSessionRedis: vi.fn(() => vi.fn()),
   notFoundHandler: vi.fn(() => vi.fn())
@@ -261,6 +262,11 @@ describe("Web Application", () => {
       expect(cftIdamHealthCheck).toHaveBeenCalled();
     });
 
+    it("should configure the deployment health check", async () => {
+      const { deploymentHealthCheck } = await import("@hmcts/web-core");
+      expect(deploymentHealthCheck).toHaveBeenCalled();
+    });
+
     it("should configure monitoring middleware", async () => {
       const { monitoringMiddleware } = await import("@hmcts-cft/cloud-native-platform");
       expect(monitoringMiddleware).toHaveBeenCalled();
@@ -469,6 +475,7 @@ describe("Web Application", () => {
           req.fileUploadError = mockError;
           next();
         }),
+        deploymentHealthCheck: vi.fn(() => vi.fn()),
         errorHandler: vi.fn(() => vi.fn()),
         expressSessionRedis: vi.fn(() => vi.fn()),
         notFoundHandler: vi.fn(() => vi.fn())
