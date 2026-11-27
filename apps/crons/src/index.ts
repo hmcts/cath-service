@@ -7,7 +7,7 @@ const __dirname = path.dirname(__filename);
 const chartPath = path.join(__dirname, "../helm/values.yaml");
 
 export const main = async () => {
-  await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL"] });
+  await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL", ...localEnvOverrides()] });
 
   const { default: config } = await import("config");
   const { serviceName, connectionString, enabled } = config.get<{
@@ -36,6 +36,15 @@ export const main = async () => {
     await monitoring?.flush();
   }
 };
+
+// Off-cluster the library loads the real Key Vault; values already set locally must win, or a local
+// expired-artefacts run would delete blobs in a shared storage account.
+function localEnvOverrides(): string[] {
+  if (process.env.NODE_ENV === "production") return [];
+  return Object.entries(process.env)
+    .filter(([, value]) => value !== undefined && value.trim() !== "")
+    .map(([key]) => key);
+}
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {

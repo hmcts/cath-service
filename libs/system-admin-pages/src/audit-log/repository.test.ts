@@ -7,7 +7,8 @@ vi.mock("@hmcts/postgres-prisma", () => ({
       create: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
-      count: vi.fn()
+      count: vi.fn(),
+      deleteMany: vi.fn()
     }
   }
 }));
@@ -329,6 +330,47 @@ describe("repository", () => {
       const result = await repository.findUniqueActions();
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe("deleteExpiredAuditLogs", () => {
+    it("should delete audit logs older than 90 days and return the cutoff and count", async () => {
+      // Arrange
+      const now = new Date("2026-06-02T01:00:00.000Z");
+      const expectedCutoff = new Date("2026-03-04T01:00:00.000Z");
+      vi.mocked(prisma.auditLog.deleteMany).mockResolvedValue({ count: 12 });
+
+      // Act
+      const result = await repository.deleteExpiredAuditLogs(now);
+
+      // Assert
+      expect(prisma.auditLog.deleteMany).toHaveBeenCalledWith({ where: { timestamp: { lt: expectedCutoff } } });
+      expect(result).toEqual({ cutoff: expectedCutoff, deleted: 12 });
+    });
+
+    it("should use the current time when none is injected", async () => {
+      // Arrange
+      vi.mocked(prisma.auditLog.deleteMany).mockResolvedValue({ count: 0 });
+      const before = Date.now();
+
+      // Act
+      const result = await repository.deleteExpiredAuditLogs();
+
+      // Assert
+      expect(result.cutoff.getTime()).toBeGreaterThanOrEqual(before - 90 * 24 * 60 * 60 * 1000);
+      expect(result.cutoff.getTime()).toBeLessThanOrEqual(Date.now() - 90 * 24 * 60 * 60 * 1000);
+      expect(result.deleted).toBe(0);
+    });
+
+    it("should propagate a database failure", async () => {
+      // Arrange
+      vi.mocked(prisma.auditLog.deleteMany).mockRejectedValue(new Error("Database unavailable"));
+
+      // Act
+      const result = repository.deleteExpiredAuditLogs(new Date());
+
+      // Assert
+      await expect(result).rejects.toThrow("Database unavailable");
     });
   });
 });

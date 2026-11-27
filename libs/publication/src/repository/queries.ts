@@ -183,16 +183,9 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
   });
 
   for (const artefact of artefacts) {
-    // New blobs are stored without an extension (just the artefactId).
-    deleteBlob(artefact.artefactId, CONTAINER.ARTEFACT).catch((error) => {
-      console.error(`Failed to delete blob for artefact ${artefact.artefactId}:`, error);
+    void deleteArtefactBlobs(artefact.artefactId, artefact.sourceArtefactId).catch((error) => {
+      console.error(describeError(error));
     });
-    // Backward-compat: older blobs were stored with the extension appended — best-effort cleanup.
-    const extension = artefact.sourceArtefactId ? path.extname(artefact.sourceArtefactId) || ".pdf" : ".pdf";
-    deleteBlob(`${artefact.artefactId}${extension}`, CONTAINER.ARTEFACT).catch(() => {
-      // Silently ignore — legacy blob may not exist for new artefacts.
-    });
-    void deleteDerivedFiles(artefact.artefactId);
   }
 
   await prisma.artefact.deleteMany({
@@ -202,6 +195,26 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
       }
     }
   });
+}
+
+export async function deleteArtefactBlobs(artefactId: string, sourceArtefactId: string | null): Promise<void> {
+  // New blobs are stored under the bare artefactId; older ones had the source file extension appended.
+  const legacyExtension = (sourceArtefactId && path.extname(sourceArtefactId)) || ".pdf";
+  const targets = [
+    { name: artefactId, container: CONTAINER.ARTEFACT },
+    { name: `${artefactId}${legacyExtension}`, container: CONTAINER.ARTEFACT },
+    { name: `${artefactId}.pdf`, container: CONTAINER.PUBLICATIONS },
+    { name: `${artefactId}.xlsx`, container: CONTAINER.PUBLICATIONS }
+  ];
+
+  const results = await Promise.allSettled(targets.map((target) => deleteBlob(target.name, target.container)));
+  const failures = results.flatMap((result, index) =>
+    result.status === "rejected" ? [`${targets[index].container}/${targets[index].name} (${describeError(result.reason)})`] : []
+  );
+
+  if (failures.length > 0) {
+    throw new Error(`Failed to delete blobs for artefact ${artefactId}: ${failures.join(", ")}`);
+  }
 }
 
 export async function deleteArtefactsByLocationId(locationId: string): Promise<number> {
@@ -383,4 +396,8 @@ async function deleteDerivedFiles(artefactId: string): Promise<void> {
       console.error(`Failed to delete Excel blob for artefact ${artefactId}:`, error);
     })
   ]);
+}
+
+function describeError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

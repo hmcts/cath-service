@@ -1,0 +1,20 @@
+model ArtefactArchive {
+  artefactId       String    @id @map("artefact_id") @db.Uuid
+  type             String    @db.VarChar(50)
+  locationId       String    @map("location_id")
+  listTypeName     String    @map("list_type_name") @db.VarChar(1000)
+  contentDate      DateTime  @map("content_date") @db.Date
+  sensitivity      String
+  language         String
+  displayFrom      DateTime? @map("display_from")
+  displayTo        DateTime? @map("display_to")
+  isFlatFile       Boolean   @map("is_flat_file")
+  provenance       String
+  sourceArtefactId String?   @map("source_artefact_id")
+  supersededCount  Int       @map("superseded_count")
+  lastReceivedDate DateTime  @map("last_received_date")
+  archivedDate     DateTime  @default(now()) @map("archived_date")
+
+  @@index([archivedDate])
+  @@map("artefact_archive")
+}

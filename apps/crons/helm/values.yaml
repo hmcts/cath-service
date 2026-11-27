@@ -18,5 +18,9 @@ job:
           alias: APPLICATION_INSIGHTS_CONNECTION_STRING
         - name: postgres-url
           alias: DATABASE_URL
+        - name: storageaccount-connection-string
+          alias: AZURE_STORAGE_CONNECTION_STRING
+        - name: storageaccount-name
+          alias: AZURE_STORAGE_ACCOUNT_NAME
   schedule: "0 0/10 * * *" # this is just a placeholder, configure in your flux
   concurrencyPolicy: Forbid
