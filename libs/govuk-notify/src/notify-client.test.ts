@@ -57,6 +57,23 @@ describe("sendNotifyEmail", () => {
     expect(mockValidateEmailRateLimit).toHaveBeenCalledWith("user@example.com", "HIGH", "Email");
   });
 
+  it("should forward the email description to the rate limiter", async () => {
+    // Arrange
+    const { sendNotifyEmail } = await import("./notify-client.js");
+
+    // Act
+    await sendNotifyEmail({
+      apiKey: "test-api-key",
+      templateId: "test-template-id",
+      emailAddress: "user@example.com",
+      emailLimit: "HIGH",
+      emailDescription: "OTP email"
+    });
+
+    // Assert
+    expect(mockValidateEmailRateLimit).toHaveBeenCalledWith("user@example.com", "HIGH", "OTP email");
+  });
+
   it("should not send the email when the rate limit is exceeded", async () => {
     const { sendNotifyEmail } = await import("./notify-client.js");
     mockValidateEmailRateLimit.mockRejectedValue(new Error("Rate limit has been exceeded. Email failed to be sent to u***@example.com"));
@@ -184,6 +201,21 @@ describe("sendNotifyEmailWithRetry", () => {
     expect(mockSendEmail).toHaveBeenCalledTimes(2);
     expect(mockValidateEmailRateLimit).toHaveBeenCalledOnce();
     expect(mockValidateEmailRateLimit).toHaveBeenCalledWith("user@example.com", "HIGH", "Email");
+  });
+
+  it("should forward the email description to the rate limiter when retrying", async () => {
+    // Arrange
+    const { sendNotifyEmailWithRetry } = await import("./notify-client.js");
+    mockSendEmail.mockResolvedValue({ data: { id: "notification-123" } });
+
+    // Act
+    await sendNotifyEmailWithRetry(
+      { apiKey: "test-api-key", templateId: "test-template-id", emailAddress: "user@example.com", emailDescription: "OTP email" },
+      { retryAttempts: 0, retryDelayMs: 0 }
+    );
+
+    // Assert
+    expect(mockValidateEmailRateLimit).toHaveBeenCalledWith("user@example.com", "STANDARD", "OTP email");
   });
 
   it("should not send or retry when the rate limit is exceeded", async () => {

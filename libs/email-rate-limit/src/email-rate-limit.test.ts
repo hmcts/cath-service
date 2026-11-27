@@ -6,7 +6,7 @@ vi.mock("@hmcts/redis", () => ({
   tryConsumeToken: mockTryConsumeToken
 }));
 
-import { validateEmailRateLimit } from "./email-rate-limit.js";
+import { isEmailRateLimitError, validateEmailRateLimit } from "./email-rate-limit.js";
 
 describe("validateEmailRateLimit", () => {
   beforeEach(() => {
@@ -83,5 +83,45 @@ describe("validateEmailRateLimit", () => {
     mockTryConsumeToken.mockRejectedValue(new Error("Redis unavailable"));
 
     await expect(validateEmailRateLimit("user@example.com", "STANDARD", "Test email")).rejects.toThrow("Redis unavailable");
+  });
+});
+
+describe("isEmailRateLimitError", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should identify the error thrown when the limit is exceeded without changing its message", async () => {
+    // Arrange
+    mockTryConsumeToken.mockResolvedValue(false);
+
+    // Act
+    const error = await validateEmailRateLimit("john@example.com", "HIGH", "OTP email").catch((caught: unknown) => caught);
+
+    // Assert
+    expect(isEmailRateLimitError(error)).toBe(true);
+    expect((error as Error).message).toBe("Rate limit has been exceeded. OTP email failed to be sent to j***@example.com");
+  });
+
+  it("should return false for a plain Error", () => {
+    // Arrange
+    const error = new Error("Redis unavailable");
+
+    // Act
+    const result = isEmailRateLimitError(error);
+
+    // Assert
+    expect(result).toBe(false);
+  });
+
+  it("should return false for values that are not errors", () => {
+    // Arrange
+    const values = [undefined, null, "EmailRateLimitError", { name: "EmailRateLimitError" }];
+
+    // Act
+    const results = values.map(isEmailRateLimitError);
+
+    // Assert
+    expect(results).toEqual([false, false, false, false]);
   });
 });

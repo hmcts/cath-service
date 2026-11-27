@@ -19,6 +19,7 @@
     "@hmcts/blob-ingestion": "workspace:*",
     "@hmcts/cookie-manager": "1.1.0",
     "@hmcts/location": "workspace:*",
+    "@hmcts/notifications": "workspace:*",
     "@hmcts/pdda-html-upload": "workspace:*",
     "@hmcts/public-pages": "workspace:*",
     "@hmcts/publication": "workspace:*",
