@@ -1,3 +1,4 @@
+import { getSeedLocationIds } from "./seed-location-data.js";
 import {
   getAllTestArtefacts,
   getArtefactsByLocation,
@@ -55,11 +56,15 @@ export async function verifySeedData(): Promise<VerificationResult> {
     const locations = (await getLocationsWithRelationships()) as any[];
     console.log(`✓ Found ${locations.length} locations`);
 
-    if (locations.length < 10) {
-      errors.push(`Expected at least 10 locations, found ${locations.length}`);
+    // Every location in the seed CSV must exist. A fixed minimum count drifted when #1384 removed a CSV row,
+    // and only failed on a fresh database: shared preview databases hold enough other locations to pass it
+    const seededLocationIds = new Set(locations.map((l: any) => l.locationId));
+    const missingLocationIds = getSeedLocationIds().filter((id) => !seededLocationIds.has(id));
+    if (missingLocationIds.length > 0) {
+      errors.push(`Seeded locations not found: ${missingLocationIds.join(", ")}`);
     }
 
-    // Verify specific test locations exist
+    // Location 9001 backs the "no publications" tests, so check its relationships too
     const requiredLocationIds = [9001];
     for (const locationId of requiredLocationIds) {
       const location = locations.find((l: any) => l.locationId === locationId);
