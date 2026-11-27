@@ -1,4 +1,5 @@
 import ExcelJSPkg from "exceljs";
+import { ExcelFileReadError, ExcelValidationError, type ExcelValidationIssue } from "./excel-validation-error.js";
 
 const { Workbook } = ExcelJSPkg;
 
@@ -18,6 +19,8 @@ export interface ExcelConversionResult<T = Record<string, string>> {
   data: T[];
   errors: string[];
 }
+
+const MISSING_REQUIRED_VALUE_REASON = "Missing required value";
 
 const HTML_TAG_PATTERN = /<[^>]{1,200}>/;
 
@@ -83,9 +86,7 @@ export function validateDateFormat(pattern: RegExp, format: string) {
 }
 
 export async function convertExcelToJson<T = Record<string, string>>(buffer: Buffer, config: ExcelConverterConfig): Promise<T[]> {
-  const workbook = new Workbook();
-  // @ts-expect-error - ExcelJS types expect Node Buffer but accepts our Buffer type at runtime
-  await workbook.xlsx.load(buffer);
+  const workbook = await loadWorkbook(buffer);
 
   const worksheet = workbook.worksheets[0];
   if (!worksheet) {
@@ -119,28 +120,38 @@ export async function convertExcelToJson<T = Record<string, string>>(buffer: Buf
   }
 
   if (jsonData.length > 0) {
-    const actualHeaders = headers.map((h) => h.toLowerCase().trim());
-    validateHeaders(actualHeaders, config.fields);
-  }
-
-  const results: T[] = [];
-
-  for (let i = 0; i < jsonData.length; i++) {
-    const row = jsonData[i];
-    const rowNumber = i + 2;
-
-    try {
-      const result = parseRow(row, rowNumber, config.fields);
-      results.push(result as T);
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Error in row ${rowNumber}: ${error.message}`);
-      }
-      throw error;
+    const actualHeaders = headers.map((h) => h?.toLowerCase().trim());
+    const headerIssue = findMissingHeadersIssue(actualHeaders, config.fields);
+    if (headerIssue) {
+      throw new ExcelValidationError([headerIssue], []);
     }
   }
 
+  const results: T[] = [];
+  const issues: ExcelValidationIssue[] = [];
+
+  for (let i = 0; i < jsonData.length; i++) {
+    const parsed = parseRow(jsonData[i], i + 1, i + 2, config.fields);
+    results.push(parsed.data as T);
+    issues.push(...parsed.issues);
+  }
+
+  if (issues.length > 0) {
+    throw new ExcelValidationError(issues, results);
+  }
+
   return results;
+}
+
+export async function loadWorkbook(buffer: Buffer): Promise<ExcelJSPkg.Workbook> {
+  const workbook = new Workbook();
+  try {
+    // @ts-expect-error - ExcelJS types expect Node Buffer but accepts our Buffer type at runtime
+    await workbook.xlsx.load(buffer);
+  } catch (error) {
+    throw new ExcelFileReadError(error);
+  }
+  return workbook;
 }
 
 function formatDateValue(value: Date): string {
@@ -164,42 +175,74 @@ function formatExcelTime(value: Date): string {
   return minutes === 0 ? `${hour12}${period}` : `${hour12}:${String(minutes).padStart(2, "0")}${period}`;
 }
 
-function validateHeaders(actualHeaders: string[], fields: FieldConfig[]): void {
-  const expectedHeaders = fields.map((f) => f.header.toLowerCase());
-  const missingHeaders = expectedHeaders.filter((expected) => !actualHeaders.includes(expected));
+function findMissingHeadersIssue(actualHeaders: (string | undefined)[], fields: FieldConfig[]): ExcelValidationIssue | undefined {
+  const missingHeaders = fields.filter((field) => !actualHeaders.includes(field.header.toLowerCase())).map((field) => field.header);
 
-  if (missingHeaders.length > 0) {
-    const headerNames = fields.filter((f) => missingHeaders.includes(f.header.toLowerCase())).map((f) => f.header);
-
-    throw new Error(`Excel file must contain columns: ${fields.map((f) => f.header).join(", ")}. Missing: ${headerNames.join(", ")}`);
+  if (missingHeaders.length === 0) {
+    return undefined;
   }
+
+  return {
+    reason: `Missing columns: ${missingHeaders.join(", ")}`,
+    message: `Excel file must contain columns: ${fields.map((f) => f.header).join(", ")}. Missing: ${missingHeaders.join(", ")}`
+  };
 }
 
-function parseRow(row: Record<string, unknown>, rowNumber: number, fields: FieldConfig[]): Record<string, string> {
-  const result: Record<string, string> = {};
+function parseRow(row: Record<string, unknown>, dataRowNumber: number, legacyRowNumber: number, fields: FieldConfig[]): ParsedRow {
+  const data: Record<string, string> = {};
+  const issues: ExcelValidationIssue[] = [];
 
   for (const field of fields) {
-    const value = getField(row, field, rowNumber);
+    const value = getField(row, field);
+    data[field.fieldName] = value;
 
-    if (value && field.validators) {
-      for (const validator of field.validators) {
-        validator(value, rowNumber);
+    if (value === "") {
+      if (field.required ?? true) {
+        issues.push({
+          rowNumber: dataRowNumber,
+          columnHeader: field.header,
+          reason: MISSING_REQUIRED_VALUE_REASON,
+          message: `Error in row ${legacyRowNumber}: Missing required field '${field.header}' in row ${legacyRowNumber}`
+        });
       }
+      continue;
     }
 
-    result[field.fieldName] = value;
+    const validatorMessage = runValidators(value, legacyRowNumber, field.validators);
+    if (validatorMessage) {
+      issues.push({
+        rowNumber: dataRowNumber,
+        columnHeader: field.header,
+        reason: validatorMessage.replace(` in row ${legacyRowNumber}`, ""),
+        message: `Error in row ${legacyRowNumber}: ${validatorMessage}`
+      });
+    }
   }
 
-  return result;
+  return { data, issues };
 }
 
-function getField(row: Record<string, unknown>, field: FieldConfig, rowNumber: number): string {
+function getField(row: Record<string, unknown>, field: FieldConfig): string {
   const key = Object.keys(row).find((k) => findFieldForHeader([field], k));
-  const value = key ? readCellValue(row[key]) : "";
+  return key ? readCellValue(row[key]) : "";
+}
 
-  if (value === "" && (field.required ?? true)) {
-    throw new Error(`Missing required field '${field.header}' in row ${rowNumber}`);
+// Returns the first validator failure for the field, so one cell yields at most one issue
+function runValidators(value: string, rowNumber: number, validators: FieldConfig["validators"] = []): string | undefined {
+  for (const validator of validators) {
+    try {
+      validator(value, rowNumber);
+    } catch (error) {
+      if (error instanceof Error) {
+        return error.message;
+      }
+      throw error;
+    }
   }
+  return undefined;
+}
 
-  return value;
+interface ParsedRow {
+  data: Record<string, string>;
+  issues: ExcelValidationIssue[];
 }

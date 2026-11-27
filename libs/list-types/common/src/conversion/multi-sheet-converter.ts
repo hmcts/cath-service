@@ -1,5 +1,6 @@
 import ExcelJSPkg from "exceljs";
-import { convertExcelToJson, type ExcelConverterConfig } from "./excel-to-json.js";
+import { convertExcelToJson, type ExcelConverterConfig, loadWorkbook } from "./excel-to-json.js";
+import { ExcelValidationError, type ExcelValidationIssue, isExcelValidationError } from "./excel-validation-error.js";
 
 const { Workbook } = ExcelJSPkg;
 
@@ -46,8 +47,8 @@ export interface MultiSheetConverterOptions {
   /**
    * Match worksheets by exact name only, disabling the positional-index fallback.
    * When true, a workbook whose tabs match none of the configured worksheet names is
-   * rejected (throws) rather than silently filing data into the sheet at index 0. A tab
-   * that matches no section still yields an empty array for that section. Use this for
+   * rejected (throws) rather than silently filing data into the sheet at index 0. A section
+   * whose tab is missing is left out of the result. Use this for
    * lists where sibling tabs share the same field config (so the positional fallback
    * cannot distinguish sections and would mis-file data).
    */
@@ -75,9 +76,7 @@ export async function createMultiSheetConverter(
   sheets: SheetConfig[],
   options: MultiSheetConverterOptions = {}
 ): Promise<Record<string, any[]>> {
-  const workbook = new Workbook();
-  // @ts-expect-error - ExcelJS types expect Node Buffer but accepts our Buffer type at runtime
-  await workbook.xlsx.load(buffer);
+  const workbook = await loadWorkbook(buffer);
 
   // Ensure at least one worksheet exists
   if (!workbook.worksheets[0]) {
@@ -88,14 +87,34 @@ export async function createMultiSheetConverter(
   // otherwise produce a silently-empty (or, without this mode, mis-filed) list. Reject it so
   // the publisher gets a clear error naming the tabs the workbook must contain.
   if (options.matchByNameOnly && !sheets.some((sheet) => findWorksheetByName(workbook, sheet.worksheetName))) {
-    throw new Error(`Excel file has no recognised worksheet tabs. Expected tabs named: ${sheets.map((sheet) => sheet.worksheetName).join(", ")}`);
+    const message = `Excel file has no recognised worksheet tabs. Expected tabs named: ${sheets.map((sheet) => sheet.worksheetName).join(", ")}`;
+    throw new ExcelValidationError([{ reason: message, message }]);
   }
 
   const result: Record<string, any[]> = {};
+  const issues: ExcelValidationIssue[] = [];
 
+  // A tab that cannot be found is left out of the result, so the list type schema decides whether it is required.
+  // Every found tab is converted, even after one fails, so the publisher sees every error in one upload.
   for (const sheet of sheets) {
     const worksheet = resolveWorksheet(workbook, sheet, options.matchByNameOnly);
-    result[sheet.dataKey] = worksheet ? await convertSheetToJson(worksheet, sheet.config) : [];
+    if (!worksheet) {
+      continue;
+    }
+
+    try {
+      result[sheet.dataKey] = await convertSheetToJson(worksheet, sheet.config);
+    } catch (error) {
+      if (!isExcelValidationError(error)) {
+        throw error;
+      }
+      issues.push(...error.issues.map((issue) => ({ ...issue, sheetName: worksheet.name, sheetKey: sheet.dataKey })));
+      result[sheet.dataKey] = Array.isArray(error.partialData) ? error.partialData : [];
+    }
+  }
+
+  if (issues.length > 0) {
+    throw new ExcelValidationError(issues, result);
   }
 
   return result;
@@ -108,7 +127,26 @@ export function resolveWorksheet(workbook: ExcelJSPkg.Workbook, sheet: Worksheet
 }
 
 function findWorksheetByName(workbook: ExcelJSPkg.Workbook, worksheetName: string): ExcelJSPkg.Worksheet | undefined {
-  return workbook.getWorksheet(worksheetName) || workbook.getWorksheet(worksheetName.slice(0, EXCEL_WORKSHEET_NAME_MAX_LENGTH));
+  const candidates = [worksheetName, worksheetName.slice(0, EXCEL_WORKSHEET_NAME_MAX_LENGTH)];
+  const exactMatch = candidates.map((name) => workbook.getWorksheet(name)).find(Boolean);
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  // PIP keys each tab by its camelCased name, so it accepts a tab whose case or spacing differs
+  // from the template (e.g. "Commercial court" or "Commercial Court "). Match the same way.
+  const candidateKeys = candidates.map(toSheetKey);
+  return workbook.worksheets.find((worksheet) => worksheet && candidateKeys.includes(toSheetKey(worksheet.name)));
+}
+
+// Mirrors Apache Commons CaseUtils.toCamelCase(name, false, ' '), which PIP uses to key each tab
+function toSheetKey(name: string): string {
+  return name
+    .toLowerCase()
+    .split(" ")
+    .filter(Boolean)
+    .map((word, index) => (index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)))
+    .join("");
 }
 
 export interface WorksheetLocator {

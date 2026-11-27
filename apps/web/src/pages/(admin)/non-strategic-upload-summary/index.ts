@@ -222,9 +222,6 @@ const postHandler = async (req: Request, res: Response) => {
     const locale = req.query.lng === "cy" ? "cy" : "en";
     const { courtName, listTypeName } = await resolveUploadDisplayNames(uploadData, locale);
 
-    // Extract error message from error object
-    const errorMessage = error instanceof Error ? error.message : "We could not process your upload. Please try again.";
-
     return res.render("non-strategic-upload-summary/index", {
       pageTitle: lang.pageTitle,
       heading: lang.heading,
@@ -247,7 +244,7 @@ const postHandler = async (req: Request, res: Response) => {
         language: LANGUAGE_LABELS[uploadData.language] || uploadData.language,
         displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
       },
-      errors: [{ text: errorMessage, href: "#" }]
+      errors: [{ text: lang.uploadFailed, href: "#" }]
     });
   }
 };

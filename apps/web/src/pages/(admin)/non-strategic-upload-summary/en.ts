@@ -10,5 +10,6 @@ export const en = {
   language: "Language",
   displayFileDates: "Display file dates",
   change: "Change",
-  confirmButton: "Confirm"
+  confirmButton: "Confirm",
+  uploadFailed: "Unable to upload publication, please verify that provided fields are correct"
 };

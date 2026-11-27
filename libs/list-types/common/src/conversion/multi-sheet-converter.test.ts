@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 import { type ExcelConverterConfig, validateNoHtmlTags } from "./excel-to-json.js";
+import { type ExcelValidationError, isExcelFileReadError, isExcelValidationError } from "./excel-validation-error.js";
 import { createMultiSheetConverter, resolveWorksheet, type SheetConfig } from "./multi-sheet-converter.js";
 import { validateTimeFormatSimple } from "./validators.js";
 
@@ -53,6 +54,28 @@ describe("resolveWorksheet", () => {
     expect(worksheet?.name).toBe("Sheet2");
   });
 
+  it("should match a tab whose name differs only in case or spacing, as PIP does", () => {
+    // Arrange
+    const workbook = buildWorkbook(["Other", " planning   COURT "]);
+
+    // Act
+    const worksheet = resolveWorksheet(workbook, { worksheetName: "Planning Court", worksheetIndex: 0 }, true);
+
+    // Assert
+    expect(worksheet?.name).toBe(" planning   COURT ");
+  });
+
+  it("should not match a tab whose words differ from the expected name", () => {
+    // Arrange
+    const workbook = buildWorkbook(["Planning Courts", "PlanningCourt"]);
+
+    // Act
+    const worksheet = resolveWorksheet(workbook, { worksheetName: "Planning Court", worksheetIndex: 0 }, true);
+
+    // Assert
+    expect(worksheet).toBeUndefined();
+  });
+
   it("should return undefined when neither name nor index resolve", () => {
     // Arrange
     const workbook = buildWorkbook(["Sheet1"]);
@@ -83,7 +106,7 @@ describe("createMultiSheetConverter", () => {
     });
   });
 
-  it("should return an empty array for a sheet that cannot be resolved", async () => {
+  it("should leave out the key of a sheet that cannot be resolved", async () => {
     // Arrange
     const buffer = Buffer.from(await buildWorkbook(["Main hearings"]).xlsx.writeBuffer());
 
@@ -94,7 +117,8 @@ describe("createMultiSheetConverter", () => {
     ]);
 
     // Assert
-    expect(result.planning).toEqual([]);
+    expect(result).toEqual({ main: [{ venue: "Main hearings venue" }] });
+    expect(result).not.toHaveProperty("planning");
   });
 });
 
@@ -167,7 +191,7 @@ describe("createMultiSheetConverter", () => {
       );
     });
 
-    it("should yield an empty section for a genuinely-missing tab when at least one matches", async () => {
+    it("should leave out a genuinely-missing tab when at least one matches", async () => {
       // Arrange — Financial List present, Appeal List absent.
       const buffer = await createWorkbook([{ name: "Financial List", rows: [HEADERS, ROW] }]);
 
@@ -176,7 +200,7 @@ describe("createMultiSheetConverter", () => {
 
       // Assert
       expect(result.financialList).toHaveLength(1);
-      expect(result.appealList).toHaveLength(0);
+      expect(result).not.toHaveProperty("appealList");
     });
 
     it("should match a section whose name exceeds Excel's 31-char tab-name limit", async () => {
@@ -203,7 +227,7 @@ describe("createMultiSheetConverter", () => {
 
       // Assert — preserves existing behaviour for the other multi-tab list types.
       expect(result.appealList).toHaveLength(1);
-      expect(result.financialList).toHaveLength(0);
+      expect(result).not.toHaveProperty("financialList");
     });
   });
 
@@ -214,5 +238,114 @@ describe("createMultiSheetConverter", () => {
 
     // Act & Assert
     await expect(createMultiSheetConverter(buffer, SHEETS, { matchByNameOnly: true })).rejects.toThrow("Excel file must contain at least one worksheet");
+  });
+});
+
+describe("createMultiSheetConverter located issues", () => {
+  async function captureError(promise: Promise<unknown>): Promise<unknown> {
+    try {
+      await promise;
+    } catch (error) {
+      return error;
+    }
+    throw new Error("Expected the conversion to throw");
+  }
+
+  it("should combine errors from every tab in tab order, tagged with the tab name", async () => {
+    // Arrange - Financial List is first in the workbook but second in the config
+    const buffer = await createWorkbook([
+      { name: "Financial List", rows: [HEADERS, ["Judge B", "half ten", "Court 2", "Trial", "CR-2", "Financial case", ""]] },
+      {
+        name: "Appeal List",
+        rows: [HEADERS, ["Judge A", "10am", "Court 1", "Trial", "CR-1", "Appeal case", ""], ["", "10am", "Court 1", "Trial", "CR-3", "Another", ""]]
+      }
+    ]);
+
+    // Act
+    const error = (await captureError(createMultiSheetConverter(buffer, SHEETS, { matchByNameOnly: true }))) as ExcelValidationError;
+
+    // Assert
+    expect(isExcelValidationError(error)).toBe(true);
+    expect(error.issues.map(({ sheetName, sheetKey, rowNumber, columnHeader }) => ({ sheetName, sheetKey, rowNumber, columnHeader }))).toEqual([
+      { sheetName: "Appeal List", sheetKey: "appealList", rowNumber: 2, columnHeader: "Judge" },
+      { sheetName: "Financial List", sheetKey: "financialList", rowNumber: 1, columnHeader: "Time" }
+    ]);
+    expect(error.message).toBe("Error in row 3: Missing required field 'Judge' in row 3");
+  });
+
+  it("should keep row positions for every tab in the partial data", async () => {
+    // Arrange
+    const buffer = await createWorkbook([
+      { name: "Appeal List", rows: [HEADERS, ["", "10am", "Court 1", "Trial", "CR-1", "Appeal case", ""]] },
+      { name: "Financial List", rows: [HEADERS, ["Judge B", "2pm", "Court 2", "Trial", "CR-2", "Financial case", ""]] }
+    ]);
+
+    // Act
+    const error = (await captureError(createMultiSheetConverter(buffer, SHEETS, { matchByNameOnly: true }))) as ExcelValidationError;
+
+    // Assert
+    const partialData = error.partialData as Record<string, { judge: string; caseName: string }[]>;
+    expect(partialData.appealList).toHaveLength(1);
+    expect(partialData.appealList[0].judge).toBe("");
+    expect(partialData.financialList[0].caseName).toBe("Financial case");
+  });
+
+  it("should use the actual tab name under the positional fallback", async () => {
+    // Arrange
+    const buffer = await createWorkbook([{ name: "Sheet 1", rows: [HEADERS, ["", "10am", "Court 1", "Trial", "CR-1", "Case", ""]] }]);
+
+    // Act
+    const error = (await captureError(createMultiSheetConverter(buffer, SHEETS))) as ExcelValidationError;
+
+    // Assert
+    expect(error.issues[0].sheetName).toBe("Sheet 1");
+    expect(error.issues[0].sheetKey).toBe("appealList");
+  });
+
+  it("should report a tab with missing headers once, alongside other tabs' errors", async () => {
+    // Arrange
+    const buffer = await createWorkbook([
+      {
+        name: "Appeal List",
+        rows: [
+          ["Judge", "Venue"],
+          ["Judge A", "Court 1"]
+        ]
+      },
+      { name: "Financial List", rows: [HEADERS, ["Judge B", "half ten", "Court 2", "Trial", "CR-2", "Financial case", ""]] }
+    ]);
+
+    // Act
+    const error = (await captureError(createMultiSheetConverter(buffer, SHEETS, { matchByNameOnly: true }))) as ExcelValidationError;
+
+    // Assert
+    expect(error.issues).toHaveLength(2);
+    expect(error.issues[0]).toMatchObject({ sheetName: "Appeal List", reason: "Missing columns: Time, Type, Case Number, Case Name, Additional Information" });
+    expect(error.issues[0].rowNumber).toBeUndefined();
+    expect(error.issues[1]).toMatchObject({ sheetName: "Financial List", rowNumber: 1, columnHeader: "Time" });
+  });
+
+  it("should rethrow a non-validation error from a tab at once", async () => {
+    // Arrange
+    const sheets: SheetConfig[] = [{ ...SHEETS[0], config: { ...FIXTURE_CONFIG, minRows: 2 } }, SHEETS[1]];
+    const buffer = await createWorkbook([
+      { name: "Appeal List", rows: [HEADERS, ROW] },
+      { name: "Financial List", rows: [HEADERS, ["", "half ten", "Court 2", "Trial", "CR-2", "Financial case", ""]] }
+    ]);
+
+    // Act
+    const error = await captureError(createMultiSheetConverter(buffer, sheets, { matchByNameOnly: true }));
+
+    // Assert
+    expect(isExcelValidationError(error)).toBe(false);
+    expect((error as Error).message).toBe("Excel file must contain at least 2 data rows");
+  });
+
+  it("should throw ExcelFileReadError for a corrupt workbook", async () => {
+    // Act
+    const error = await captureError(createMultiSheetConverter(Buffer.from("not a workbook"), SHEETS));
+
+    // Assert
+    expect(isExcelFileReadError(error)).toBe(true);
   });
 });

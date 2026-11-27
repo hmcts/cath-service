@@ -115,6 +115,29 @@ describe("json-validator", () => {
       expect(result.errors).toEqual([]);
     });
 
+    it("should return structured issues alongside the unchanged error strings", () => {
+      const schemaPath = path.join(TEST_SCHEMA_DIR, "nested-schema.json");
+      const validator = createJsonValidator(schemaPath);
+
+      const result = validator({ user: { lastName: 5 } });
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual(["user: must have required property 'firstName'", "user.lastName: must be string"]);
+      expect(result.issues).toEqual([
+        { instancePath: "/user", keyword: "required", params: { missingProperty: "firstName" }, message: "must have required property 'firstName'" },
+        { instancePath: "/user/lastName", keyword: "type", params: { type: "string" }, message: "must be string" }
+      ]);
+    });
+
+    it("should return no issues for valid data", () => {
+      const schemaPath = path.join(TEST_SCHEMA_DIR, "valid-schema.json");
+      const validator = createJsonValidator(schemaPath);
+
+      const result = validator({ name: "John", age: 30 });
+
+      expect(result.issues).toEqual([]);
+    });
+
     it("should cache compiled validators for the same schema path", () => {
       const schemaPath = path.join(TEST_SCHEMA_DIR, "valid-schema.json");
       const validator1 = createJsonValidator(schemaPath);

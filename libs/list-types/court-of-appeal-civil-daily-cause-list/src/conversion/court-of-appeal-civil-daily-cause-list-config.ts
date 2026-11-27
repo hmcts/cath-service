@@ -77,6 +77,7 @@ const convertCivilAppealExcel = (buffer: Buffer) => createMultiSheetConverter(bu
 
 const converter = {
   config: DAILY_HEARINGS_CONFIG,
+  sheets: COURT_OF_APPEAL_CIVIL_SHEETS,
   convertExcelToJson: convertCivilAppealExcel as any
 };
 

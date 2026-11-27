@@ -6,7 +6,15 @@ export {
   validateDateFormat,
   validateNoHtmlTags
 } from "./conversion/excel-to-json.js";
+export {
+  ExcelFileReadError,
+  ExcelValidationError,
+  type ExcelValidationIssue,
+  isExcelFileReadError,
+  isExcelValidationError
+} from "./conversion/excel-validation-error.js";
 export { convertSheetToJson, createMultiSheetConverter, type SheetConfig } from "./conversion/multi-sheet-converter.js";
+export { validateNonStrategicExcel } from "./conversion/non-strategic-excel-validation.js";
 export {
   convertExcelForListType,
   convertExcelForListTypeName,
@@ -85,5 +93,5 @@ export { formatAccusedDateOfBirth } from "./sjp/accused-date-of-birth.js";
 export * from "./sjp/json-parser.js";
 export * from "./sjp/sjp-paginator.js";
 export * from "./sjp/sjp-service.js";
-export { createJsonValidator, type ValidationResult } from "./validation/json-validator.js";
+export { createJsonValidator, type ValidationIssue, type ValidationResult } from "./validation/json-validator.js";
 export { convertListTypeNameToKebabCase, type ListTypeInfo, validateListTypeJson } from "./validation/list-type-validator.js";

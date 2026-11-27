@@ -552,7 +552,7 @@ describe("non-strategic-upload-summary page", () => {
       expect(res.send).toHaveBeenCalledWith("Upload not found");
     });
 
-    it("should handle errors and display error message", async () => {
+    it("should show the generic upload error instead of the raw error message", async () => {
       const mockUploadData = {
         file: Buffer.from("test"),
         fileName: "test.xlsx",
@@ -583,7 +583,7 @@ describe("non-strategic-upload-summary page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "non-strategic-upload-summary/index",
         expect.objectContaining({
-          errors: expect.arrayContaining([expect.objectContaining({ text: "Database error" })])
+          errors: [{ text: "Unable to upload publication, please verify that provided fields are correct", href: "#" }]
         })
       );
     });

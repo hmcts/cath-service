@@ -2,6 +2,7 @@ import {
   createMultiSheetConverter,
   type ExcelConverterConfig,
   registerConverterByName,
+  type SheetConfig,
   validateEmailFormat,
   validateNoHtmlTags,
   validateTimeFormatSimple
@@ -50,16 +51,18 @@ export const OPEN_JUSTICE_CONFIG: ExcelConverterConfig = {
   minRows: 0
 };
 
-const convertInterimApplicationsExcel = (buffer: Buffer) =>
-  createMultiSheetConverter(buffer, [
-    { worksheetName: "Hearing List", worksheetIndex: 0, dataKey: "hearingList", config: INTERIM_APPLICATIONS_HEARINGS_CONFIG },
-    { worksheetName: "Open Justice Statement Details", worksheetIndex: 1, dataKey: "openJusticeStatementDetails", config: OPEN_JUSTICE_CONFIG }
-  ]);
+const INTERIM_APPLICATIONS_SHEETS: SheetConfig[] = [
+  { worksheetName: "Hearing List", worksheetIndex: 0, dataKey: "hearingList", config: INTERIM_APPLICATIONS_HEARINGS_CONFIG },
+  { worksheetName: "Open Justice Statement Details", worksheetIndex: 1, dataKey: "openJusticeStatementDetails", config: OPEN_JUSTICE_CONFIG }
+];
+
+const convertInterimApplicationsExcel = (buffer: Buffer) => createMultiSheetConverter(buffer, INTERIM_APPLICATIONS_SHEETS);
 
 // The multi-sheet converter returns an object shape, not the array the single-sheet converter type
 // expects, so a cast is required here (matching the sibling court-of-appeal-civil converter).
 const converter = {
   config: INTERIM_APPLICATIONS_HEARINGS_CONFIG,
+  sheets: INTERIM_APPLICATIONS_SHEETS,
   convertExcelToJson: convertInterimApplicationsExcel as any
 };
 

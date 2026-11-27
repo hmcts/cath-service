@@ -9,6 +9,8 @@ import {
   validateDateFormat,
   validateNoHtmlTags
 } from "./excel-to-json.js";
+import { type ExcelFileReadError, type ExcelValidationError, isExcelFileReadError, isExcelValidationError } from "./excel-validation-error.js";
+import { validateTimeFormatSimple } from "./validators.js";
 
 async function createExcelBuffer(data: unknown[][]): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
@@ -661,5 +663,166 @@ describe("excel-to-json", () => {
 
       expect(() => validator("2025-01-01", 10)).toThrow(/row 10.*Expected format: dd\/MM\/yyyy/);
     });
+  });
+});
+
+describe("convertExcelToJson located issues", () => {
+  const CONFIG: ExcelConverterConfig = {
+    fields: [
+      { header: "Judge", fieldName: "judge", required: true, validators: [(value, rowNumber) => validateNoHtmlTags(value, "Judge", rowNumber)] },
+      { header: "Time", fieldName: "time", required: true, validators: [validateTimeFormatSimple] },
+      { header: "Venue", fieldName: "venue", required: true },
+      { header: "Notes", fieldName: "notes", required: false }
+    ]
+  };
+
+  async function captureError(buffer: Buffer, config: ExcelConverterConfig = CONFIG): Promise<unknown> {
+    try {
+      await convertExcelToJson(buffer, config);
+    } catch (error) {
+      return error;
+    }
+    throw new Error("Expected convertExcelToJson to throw");
+  }
+
+  it("should collect every row and field error with 1-based data-row numbers, columns and reasons", async () => {
+    // Arrange
+    const buffer = await createExcelBuffer([
+      ["Judge", "Time", "Venue", "Notes"],
+      ["Judge A", "10am", "Court 1", ""],
+      ["", "half ten", "Court 2", ""],
+      ["<b>Judge</b>", "2pm", "", ""]
+    ]);
+
+    // Act
+    const error = await captureError(buffer);
+
+    // Assert
+    expect(isExcelValidationError(error)).toBe(true);
+    const { issues } = error as ExcelValidationError;
+    expect(issues.map(({ rowNumber, columnHeader, reason }) => ({ rowNumber, columnHeader, reason }))).toEqual([
+      { rowNumber: 2, columnHeader: "Judge", reason: "Missing required value" },
+      { rowNumber: 2, columnHeader: "Time", reason: "Invalid time format 'half ten'. Expected format: h:mma (e.g., 9:30am) or ha (e.g., 2pm)" },
+      { rowNumber: 3, columnHeader: "Judge", reason: "Invalid content in 'Judge': HTML tags are not allowed" },
+      { rowNumber: 3, columnHeader: "Venue", reason: "Missing required value" }
+    ]);
+    expect(issues.every((issue) => issue.sheetName === undefined)).toBe(true);
+  });
+
+  it("should keep the legacy first-error text as the message", async () => {
+    // Arrange
+    const buffer = await createExcelBuffer([
+      ["Judge", "Time", "Venue", "Notes"],
+      ["Judge A", "10am", "Court 1"],
+      ["", "half ten", "Court 2"]
+    ]);
+
+    // Act
+    const error = (await captureError(buffer)) as ExcelValidationError;
+
+    // Assert
+    expect(error.message).toBe("Error in row 3: Missing required field 'Judge' in row 3");
+    expect(error.issues[1].message).toBe("Error in row 3: Invalid time format 'half ten' in row 3. Expected format: h:mma (e.g., 9:30am) or ha (e.g., 2pm)");
+  });
+
+  it("should keep every row in its original position in the partial data", async () => {
+    // Arrange
+    const buffer = await createExcelBuffer([
+      ["Judge", "Time", "Venue", "Notes"],
+      ["Judge A", "10am", "Court 1"],
+      ["Judge B", "half ten", "Court 2"]
+    ]);
+
+    // Act
+    const error = (await captureError(buffer)) as ExcelValidationError;
+
+    // Assert
+    expect(error.partialData).toEqual([
+      { judge: "Judge A", time: "10am", venue: "Court 1", notes: "" },
+      { judge: "Judge B", time: "half ten", venue: "Court 2", notes: "" }
+    ]);
+  });
+
+  it("should report missing headers as one sheet-level issue and not validate the rows", async () => {
+    // Arrange
+    const buffer = await createExcelBuffer([
+      ["Judge", "Notes"],
+      ["", ""],
+      ["", ""]
+    ]);
+
+    // Act
+    const error = (await captureError(buffer)) as ExcelValidationError;
+
+    // Assert
+    expect(error.issues).toEqual([
+      {
+        reason: "Missing columns: Time, Venue",
+        message: "Excel file must contain columns: Judge, Time, Venue, Notes. Missing: Time, Venue"
+      }
+    ]);
+    expect(error.message).toBe("Excel file must contain columns: Judge, Time, Venue, Notes. Missing: Time, Venue");
+  });
+
+  it("should ignore extra headers", async () => {
+    // Arrange
+    const buffer = await createExcelBuffer([
+      ["Judge", "Time", "Venue", "Notes", "Internal notes"],
+      ["Judge A", "10am", "Court 1", "", "Staff only"]
+    ]);
+
+    // Act
+    const result = await convertExcelToJson(buffer, CONFIG);
+
+    // Assert
+    expect(result).toEqual([{ judge: "Judge A", time: "10am", venue: "Court 1", notes: "" }]);
+  });
+
+  it("should throw ExcelFileReadError with the original error as cause for a corrupt buffer", async () => {
+    // Arrange
+    const buffer = Buffer.from("this is not an xlsx file");
+
+    // Act
+    const error = await captureError(buffer);
+
+    // Assert
+    expect(isExcelFileReadError(error)).toBe(true);
+    expect((error as ExcelFileReadError).cause).toBeInstanceOf(Error);
+  });
+
+  it("should keep minRows as a plain error", async () => {
+    // Arrange
+    const buffer = await createExcelBuffer([["Judge", "Time", "Venue"]]);
+
+    // Act
+    const error = await captureError(buffer);
+
+    // Assert
+    expect(isExcelValidationError(error)).toBe(false);
+    expect((error as Error).message).toBe("Excel file must contain at least 1 data row");
+  });
+
+  it("should rethrow a validator failure that is not an Error", async () => {
+    // Arrange
+    const config: ExcelConverterConfig = {
+      fields: [
+        {
+          header: "Judge",
+          fieldName: "judge",
+          validators: [
+            () => {
+              throw "not an error";
+            }
+          ]
+        }
+      ]
+    };
+    const buffer = await createExcelBuffer([["Judge"], ["Judge A"]]);
+
+    // Act
+    const error = await captureError(buffer, config);
+
+    // Assert
+    expect(error).toBe("not an error");
   });
 });

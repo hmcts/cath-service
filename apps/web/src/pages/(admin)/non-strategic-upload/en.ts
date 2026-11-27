@@ -55,6 +55,7 @@ export const en = {
     displayFromInvalid: "Please enter a valid display file from date",
     displayToRequired: "Please enter a valid display file to date",
     displayToInvalid: "Please enter a valid display file to date",
-    displayToBeforeFrom: "'Display to' date must be the same as or later than 'Display from' date"
+    displayToBeforeFrom: "'Display to' date must be the same as or later than 'Display from' date",
+    uploadFailed: "Unable to upload publication, please verify that provided fields are correct"
   }
 };

@@ -7,3 +7,4 @@ export * from "./manual-upload/validation.js";
 export * from "./media-application/model.js";
 export * from "./media-application/queries.js";
 export * from "./media-application/service.js";
+export { formatExcelValidationErrors } from "./non-strategic-upload/excel-error-messages.js";

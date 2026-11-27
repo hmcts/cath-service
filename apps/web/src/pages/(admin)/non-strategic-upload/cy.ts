@@ -55,6 +55,7 @@ export const cy = {
     displayFromInvalid: "Rhowch ddyddiad dangos y ffeil o dilys",
     displayToRequired: "Rhowch ddyddiad dangos y ffeil tan dilys",
     displayToInvalid: "Rhowch ddyddiad dangos y ffeil tan dilys",
-    displayToBeforeFrom: "Rhaid i'r dyddiad dangos tan fod ar ôl y dyddiad dangos o"
+    displayToBeforeFrom: "Rhaid i'r dyddiad dangos tan fod ar ôl y dyddiad dangos o",
+    uploadFailed: "Unable to upload publication, please verify that provided fields are correct"
   }
 };
