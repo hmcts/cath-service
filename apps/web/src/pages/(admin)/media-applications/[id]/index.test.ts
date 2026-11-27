@@ -71,8 +71,9 @@ describe("media-application details page", () => {
             dateApplied: "Date applied",
             proofOfId: "Proof of ID"
           },
-          proofOfIdText: "(opens in a new window)",
+          proofOfIdText: "(opens in new tab)",
           viewProofOfId: "View",
+          viewProofOfIdHidden: "proof of ID",
           approveButton: "Approve application",
           rejectButton: "Reject application",
           fileNotAvailable: "File not available",
@@ -113,8 +114,9 @@ describe("media-application details page", () => {
             dateApplied: "Dyddiad gwneud cais",
             proofOfId: "Prawf o ID"
           },
-          proofOfIdText: "(yn agor mewn ffenestr newydd)",
+          proofOfIdText: "(opens in new tab)",
           viewProofOfId: "Gweld",
+          viewProofOfIdHidden: "proof of ID",
           approveButton: "Cymeradwyo cais",
           rejectButton: "Gwrthod cais",
           fileNotAvailable: "Ffeil ar gael ddim",

@@ -71,7 +71,7 @@
       {% if application.proofOfIdOriginalName %}
         {% set summaryRows = (summaryRows.push({
           key: { text: tableHeaders.proofOfId },
-          value: { html: application.proofOfIdOriginalName },
+          value: { text: application.proofOfIdOriginalName },
           actions: {
             items: [
               {

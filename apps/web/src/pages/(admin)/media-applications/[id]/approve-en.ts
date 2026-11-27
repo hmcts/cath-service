@@ -8,8 +8,9 @@ export const en = {
     dateApplied: "Date applied",
     proofOfId: "Proof of ID"
   },
-  proofOfIdText: "(opens in a new window)",
+  proofOfIdText: "(opens in new tab)",
   viewProofOfId: "View",
+  viewProofOfIdHidden: "proof of ID",
   fileNotAvailable: "File not available",
   radioLegend: "Confirm approval",
   radioOptions: {

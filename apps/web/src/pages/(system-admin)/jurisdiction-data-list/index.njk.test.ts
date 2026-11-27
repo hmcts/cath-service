@@ -41,6 +41,25 @@ describe("jurisdiction-data-list template", () => {
   });
 
   describe("Template file", () => {
+    it("should give every column header visible text", () => {
+      const { $ } = render(env, TEMPLATE, buildData(en));
+
+      const headers = $("thead th")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(headers).toEqual([en.nameColumn, en.typeColumn, en.actionColumn]);
+      expect(headers.every((text) => text !== "")).toBe(true);
+    });
+
+    it("should render a visually hidden table caption", () => {
+      const { $ } = render(env, TEMPLATE, buildData(en));
+
+      const caption = $("table caption");
+      expect(caption).toHaveLength(1);
+      expect(caption.text().trim()).toBe(en.tableCaption);
+      expect(caption.hasClass("govuk-visually-hidden")).toBe(true);
+    });
+
     it("should exist", () => {
       expect(existsSync(path.join(__dirname, "index.njk"))).toBe(true);
     });

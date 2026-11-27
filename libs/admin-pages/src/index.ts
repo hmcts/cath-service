@@ -1,6 +1,7 @@
 // Business logic exports
 export * from "./manual-upload/file-storage.js";
 export * from "./manual-upload/model.js";
+export * from "./manual-upload/pending-file-download.js";
 export * from "./manual-upload/storage.js";
 export * from "./manual-upload/upload-form-helpers.js";
 export * from "./manual-upload/validation.js";

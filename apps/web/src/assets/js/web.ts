@@ -4,6 +4,7 @@ import { initBackToTop } from "./back-to-top.js";
 import { initFilterPanel } from "./filter-panel.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { initListTypeSensitivity } from "./list-type-sensitivity.js";
+import { initRestoreFileUpload } from "./restore-file-upload.js";
 import { initSearchAutocomplete } from "./search-autocomplete.js";
 import { initSortableTable } from "./sortable-table.js";
 import "./session-timeout.js";
@@ -22,6 +23,7 @@ if (document.readyState === "loading") {
     initFilterToggle();
     initBackToTop();
     initListTypeSensitivity();
+    void initRestoreFileUpload();
     initTableSearch();
     initSortableTable();
     initSjpFilterSearch();
@@ -34,6 +36,7 @@ if (document.readyState === "loading") {
   initFilterToggle();
   initBackToTop();
   initListTypeSensitivity();
+  void initRestoreFileUpload();
   initTableSearch();
   initSortableTable();
   initSjpFilterSearch();

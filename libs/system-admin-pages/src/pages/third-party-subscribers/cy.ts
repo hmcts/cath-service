@@ -8,5 +8,6 @@ export const cy = {
   createNewUserButton: "Creu tanysgrifwr newydd",
   manageLink: "Rheoli",
   noUsersMessage: "Nid oes tanysgrifwyr trydydd parti.",
-  back: "Yn ôl"
+  back: "Yn ôl",
+  tableCaption: "Third-party subscribers"
 };

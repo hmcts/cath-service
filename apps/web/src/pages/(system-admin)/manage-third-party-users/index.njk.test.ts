@@ -33,6 +33,15 @@ describe("manage-third-party-users template", () => {
   });
 
   describe("English content", () => {
+    it("should render a visually hidden table caption", () => {
+      const { $ } = render(env, TEMPLATE, { ...en, locale: "en", users: mockUsers });
+
+      const caption = $("table caption");
+      expect(caption).toHaveLength(1);
+      expect(caption.text().trim()).toBe(en.tableCaption);
+      expect(caption.hasClass("govuk-visually-hidden")).toBe(true);
+    });
+
     it("should render the page heading and create-user button", () => {
       const data = { ...en, locale: "en", users: mockUsers };
 

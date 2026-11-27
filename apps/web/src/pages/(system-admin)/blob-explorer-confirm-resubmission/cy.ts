@@ -13,5 +13,6 @@ export const cy = {
   metadataSensitivity: "Sensitivity",
   metadataContentDate: "Content Date",
   metadataDisplayFrom: "Display From",
-  metadataDisplayTo: "Display To"
+  metadataDisplayTo: "Display To",
+  metadataTableCaption: "Publication details"
 };

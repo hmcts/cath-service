@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
-// The combobox only exists once search-autocomplete.ts has initialised, so typing into it never lands in the original
-// input (which keeps the same id but is hidden). The full option text is typed so the listbox holds exactly that option,
+// The combobox only exists once search-autocomplete.ts has initialised (it replaces the original input), so waiting for
+// it guarantees the enhanced field is in use. The full option text is typed so the listbox holds exactly that option,
 // which makes the keyboard selection deterministic.
 export async function selectAutocompleteOption(page: Page, combobox: Locator, optionText: string): Promise<string> {
   await combobox.fill(optionText);

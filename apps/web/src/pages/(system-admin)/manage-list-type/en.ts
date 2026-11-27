@@ -21,5 +21,6 @@ export const en = {
   hideButton: "Hide list type",
   showButton: "Show list type",
   notSet: "Not set",
-  noneSelected: "None selected"
+  noneSelected: "None selected",
+  tableCaption: "List type details"
 };

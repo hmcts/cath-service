@@ -7,6 +7,8 @@ export const cy = {
     action: "Gweithred"
   },
   viewLink: "Gweld",
+  viewLinkHidden: "application for",
+  tableCaption: "Applications to assess",
   noApplications: "Nid oes ceisiadau yn disgwyl.",
   errorMessages: {
     loadFailed: "Methu llwytho ceisiadau. Ceisiwch eto'n hwyrach."

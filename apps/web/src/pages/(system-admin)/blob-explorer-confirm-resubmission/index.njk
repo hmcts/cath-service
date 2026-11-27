@@ -21,6 +21,8 @@
     {% else %}
 
       {{ govukTable({
+        caption: metadataTableCaption,
+        captionClasses: "govuk-visually-hidden",
         rows: [
           [
             {

@@ -15,7 +15,8 @@ export const en = {
   },
   nameColumn: "Name",
   typeColumn: "Type",
-  actionColumn: "",
+  actionColumn: "Actions",
   modifyLinkText: "Modify",
-  noResultsText: "No records found"
+  noResultsText: "No records found",
+  tableCaption: "Jurisdictions and sub-jurisdictions"
 };

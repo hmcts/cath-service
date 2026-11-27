@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockRedisClient = vi.hoisted(() => ({
   setEx: vi.fn(),
-  get: vi.fn()
+  get: vi.fn(),
+  del: vi.fn()
 }));
 
 vi.mock("@hmcts/redis", () => ({
@@ -13,7 +14,16 @@ vi.mock("node:crypto", () => ({
   randomUUID: vi.fn().mockReturnValue("test-uuid-123")
 }));
 
-import { getManualUpload, getNonStrategicUpload, storeManualUpload, storeNonStrategicUpload } from "./storage.js";
+import {
+  deletePendingFile,
+  getManualUpload,
+  getNonStrategicUpload,
+  getPendingFile,
+  retainPendingFile,
+  storeManualUpload,
+  storeNonStrategicUpload,
+  storePendingFile
+} from "./storage.js";
 
 describe("manual-upload-storage", () => {
   beforeEach(() => {
@@ -303,6 +313,148 @@ describe("non-strategic-upload-storage", () => {
       const result = await getNonStrategicUpload("test-id");
 
       expect(result?.file.toString()).toBe(originalContent);
+    });
+  });
+});
+
+describe("pending-file-storage", () => {
+  const pdfFile = {
+    buffer: Buffer.from("pdf content"),
+    originalname: "hearing-list.pdf",
+    mimetype: "application/pdf",
+    size: 11
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe("storePendingFile", () => {
+    it("should store the file under a pending key with a 1 hour TTL and return a reference", async () => {
+      // Arrange
+      mockRedisClient.setEx.mockResolvedValue("OK");
+
+      // Act
+      const reference = await storePendingFile("manual-upload", pdfFile);
+
+      // Assert
+      expect(reference).toEqual({ id: "test-uuid-123", fileName: "hearing-list.pdf" });
+      expect(mockRedisClient.setEx).toHaveBeenCalledWith("manual-upload-pending:test-uuid-123", 3600, expect.any(String));
+      const stored = JSON.parse(mockRedisClient.setEx.mock.calls[0][2]);
+      expect(stored).toEqual({
+        fileName: "hearing-list.pdf",
+        fileType: "application/pdf",
+        fileBase64: Buffer.from("pdf content").toString("base64")
+      });
+    });
+
+    it("should use the non-strategic prefix when given", async () => {
+      // Arrange
+      mockRedisClient.setEx.mockResolvedValue("OK");
+
+      // Act
+      await storePendingFile("non-strategic-upload", pdfFile);
+
+      // Assert
+      expect(mockRedisClient.setEx).toHaveBeenCalledWith("non-strategic-upload-pending:test-uuid-123", 3600, expect.any(String));
+    });
+  });
+
+  describe("getPendingFile", () => {
+    it("should return the decoded file when it exists", async () => {
+      // Arrange
+      mockRedisClient.get.mockResolvedValue(
+        JSON.stringify({ fileName: "hearing-list.pdf", fileType: "application/pdf", fileBase64: Buffer.from("pdf content").toString("base64") })
+      );
+
+      // Act
+      const file = await getPendingFile("manual-upload", "abc");
+
+      // Assert
+      expect(mockRedisClient.get).toHaveBeenCalledWith("manual-upload-pending:abc");
+      expect(file).toEqual(pdfFile);
+    });
+
+    it("should return null when the file has expired", async () => {
+      // Arrange
+      mockRedisClient.get.mockResolvedValue(null);
+
+      // Act
+      const file = await getPendingFile("manual-upload", "expired");
+
+      // Assert
+      expect(file).toBeNull();
+    });
+  });
+
+  describe("deletePendingFile", () => {
+    it("should delete the pending key", async () => {
+      // Arrange
+      mockRedisClient.del.mockResolvedValue(1);
+
+      // Act
+      await deletePendingFile("non-strategic-upload", "abc");
+
+      // Assert
+      expect(mockRedisClient.del).toHaveBeenCalledWith("non-strategic-upload-pending:abc");
+    });
+  });
+
+  describe("retainPendingFile", () => {
+    const current = { id: "old-id", fileName: "old.pdf" };
+    const fieldErrors = [{ text: "Please select a list type", href: "#listType" }];
+    const fileErrors = [{ text: "Please upload a valid file format", href: "#file" }];
+
+    it("should store a new valid file when only other fields have errors", async () => {
+      // Arrange
+      mockRedisClient.setEx.mockResolvedValue("OK");
+
+      // Act
+      const reference = await retainPendingFile("manual-upload", undefined, pdfFile, fieldErrors);
+
+      // Assert
+      expect(reference).toEqual({ id: "test-uuid-123", fileName: "hearing-list.pdf" });
+      expect(mockRedisClient.del).not.toHaveBeenCalled();
+    });
+
+    it("should replace the kept file when a new file is chosen", async () => {
+      // Arrange
+      mockRedisClient.setEx.mockResolvedValue("OK");
+
+      // Act
+      const reference = await retainPendingFile("manual-upload", current, pdfFile, fieldErrors);
+
+      // Assert
+      expect(mockRedisClient.del).toHaveBeenCalledWith("manual-upload-pending:old-id");
+      expect(reference).toEqual({ id: "test-uuid-123", fileName: "hearing-list.pdf" });
+    });
+
+    it("should keep the current reference when no new file is chosen", async () => {
+      // Act
+      const reference = await retainPendingFile("manual-upload", current, undefined, fieldErrors);
+
+      // Assert
+      expect(reference).toBe(current);
+      expect(mockRedisClient.setEx).not.toHaveBeenCalled();
+      expect(mockRedisClient.del).not.toHaveBeenCalled();
+    });
+
+    it("should not keep a new file that failed its own checks", async () => {
+      // Act
+      const reference = await retainPendingFile("manual-upload", undefined, pdfFile, fileErrors);
+
+      // Assert
+      expect(reference).toBeUndefined();
+      expect(mockRedisClient.setEx).not.toHaveBeenCalled();
+    });
+
+    it("should discard the kept file when there is a file error", async () => {
+      // Act
+      const reference = await retainPendingFile("manual-upload", current, undefined, fileErrors);
+
+      // Assert
+      expect(reference).toBeUndefined();
+      expect(mockRedisClient.del).toHaveBeenCalledWith("manual-upload-pending:old-id");
     });
   });
 });

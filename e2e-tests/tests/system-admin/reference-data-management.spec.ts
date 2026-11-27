@@ -232,6 +232,19 @@ test.describe("Reference Data Management", () => {
 
     await expect(page).toHaveURL("/location-jurisdiction-update");
 
+    // Every checkbox has its own id and label, so axe finds no duplicate ids and each box can be targeted by its label
+    const updateScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+    expect(updateScanResults.violations).toEqual([]);
+    const ruleIds = (await new AxeBuilder({ page }).withRules(["duplicate-id", "duplicate-id-aria", "label"]).analyze()).violations.map(
+      (violation) => violation.id
+    );
+    expect(ruleIds).toEqual([]);
+
+    const highCourt = page.getByLabel("High Court", { exact: true });
+    await expect(highCourt).toHaveCount(1);
+    await highCourt.check();
+    await expect(highCourt).toBeChecked();
+
     // Verify Confirm and Cancel buttons
     await expect(page.getByRole("button", { name: /Confirm/i })).toBeVisible();
     const cancelButton = page.locator('a.govuk-button--warning:has-text("Cancel")');

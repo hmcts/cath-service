@@ -21,11 +21,13 @@
           { text: app.name },
           { text: app.employer },
           { text: app.appliedDate | date('DD MMM YYYY') },
-          { html: '<a href="/media-applications/' + app.id + '" class="govuk-link">' + viewLink + '</a>' }
+          { html: '<a href="/media-applications/' + app.id + '" class="govuk-link">' + viewLink + '<span class="govuk-visually-hidden"> ' + viewLinkHidden + ' ' + (app.name | escape) + '</span></a>' }
         ]), rows) %}
       {% endfor %}
 
       {{ govukTable({
+        caption: tableCaption,
+        captionClasses: "govuk-visually-hidden",
         head: [
           { text: tableHeaders.name },
           { text: tableHeaders.employer },

@@ -47,6 +47,25 @@ describe("find-users template", () => {
   });
 
   describe("English content", () => {
+    it("should give every column header visible text", () => {
+      const { $ } = render(env, TEMPLATE, { ...baseData });
+
+      const headers = $("thead th")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(headers).toEqual([en.tableHeadEmail, en.tableHeadRole, en.tableHeadProvenance, en.tableHeadManage]);
+      expect(headers.every((text) => text !== "")).toBe(true);
+    });
+
+    it("should render a visually hidden table caption", () => {
+      const { $ } = render(env, TEMPLATE, { ...baseData });
+
+      const caption = $("table caption");
+      expect(caption).toHaveLength(1);
+      expect(caption.text().trim()).toBe(en.tableCaption);
+      expect(caption.hasClass("govuk-visually-hidden")).toBe(true);
+    });
+
     it("should render the page heading", () => {
       const data = { ...baseData };
 

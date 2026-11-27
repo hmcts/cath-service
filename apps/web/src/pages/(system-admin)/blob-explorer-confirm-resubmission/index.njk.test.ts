@@ -36,6 +36,15 @@ describe("blob-explorer-confirm-resubmission template", () => {
   });
 
   describe("English content", () => {
+    it("should render a visually hidden table caption", () => {
+      const { $ } = render(env, TEMPLATE, { ...en, metadata, artefactId: "abc-123", formatDateTime, locale: "en" });
+
+      const caption = $("table caption");
+      expect(caption).toHaveLength(1);
+      expect(caption.text().trim()).toBe(en.metadataTableCaption);
+      expect(caption.hasClass("govuk-visually-hidden")).toBe(true);
+    });
+
     it("should render the page heading", () => {
       const data = { ...en, metadata, artefactId: "abc-123", formatDateTime, locale: "en" };
 

@@ -26,7 +26,17 @@ test.describe("Audit Log Viewer", () => {
     await expect(page.locator("th:has-text('Timestamp')")).toBeVisible();
     await expect(page.locator("th:has-text('Email')")).toBeVisible();
     await expect(page.locator("th:has-text('Action')")).toBeVisible();
-    await expect(page.locator("th:has-text('View')")).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "View" })).toBeVisible();
+
+    // Date error summary link moves focus to the day input
+    await page.locator('input[name="day"]').fill("21");
+    await page.locator('button:has-text("Apply filters")').click();
+    await page.waitForURL(/.*day=21.*/);
+    const dateErrorLink = page.locator(".govuk-error-summary").getByRole("link", { name: "Enter a valid date" });
+    await expect(dateErrorLink).toHaveAttribute("href", "#date-day");
+    await dateErrorLink.click();
+    await expect(page.locator("#date-day")).toBeFocused();
+    await page.goto("/audit-log-list");
 
     // Verify filter panel
     const filterHeading = page.getByRole("heading", { level: 2, name: "Filter", exact: true });

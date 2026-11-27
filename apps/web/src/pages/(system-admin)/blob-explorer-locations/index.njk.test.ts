@@ -24,6 +24,15 @@ describe("blob-explorer-locations template", () => {
   });
 
   describe("English content", () => {
+    it("should render a visually hidden table caption", () => {
+      const { $ } = render(env, TEMPLATE, { ...en, tableRows: buildTableRows(), locale: "en" });
+
+      const caption = $("table caption");
+      expect(caption).toHaveLength(1);
+      expect(caption.text().trim()).toBe(en.locationsTableCaption);
+      expect(caption.hasClass("govuk-visually-hidden")).toBe(true);
+    });
+
     it("should render the page heading and description", () => {
       const data = { ...en, tableRows: buildTableRows(), locale: "en" };
 

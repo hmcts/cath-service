@@ -11,6 +11,9 @@
     <h1 class="govuk-heading-l" id="top">{{ title }}</h1>
 
     {{ govukTable({
+      caption: tableCaption,
+      captionClasses: "govuk-visually-hidden",
+      firstCellIsHeader: true,
       rows: [
         [
           { text: userIdLabel },

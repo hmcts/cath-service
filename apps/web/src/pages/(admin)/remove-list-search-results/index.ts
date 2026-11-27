@@ -9,6 +9,10 @@ import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const NO_DATE = "—";
+const SORT_COLUMNS: readonly SortColumn[] = ["listType", "courtName", "contentDate", "language", "sensitivity"];
+const SORT_ORDERS: readonly SortOrder[] = ["asc", "desc"];
+const DEFAULT_SORT_COLUMN: SortColumn = "contentDate";
+const DEFAULT_SORT_ORDER: SortOrder = "desc";
 
 function formatDateString(date: Date): string {
   return date.toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
@@ -19,18 +23,10 @@ function formatDateRangeString(from: Date | null, to: Date | null): string {
   return `${from ? formatDateString(from) : NO_DATE} to ${to ? formatDateString(to) : NO_DATE}`;
 }
 
-type SortColumn = "listType" | "courtName" | "contentDate" | "language" | "sensitivity";
-type SortOrder = "asc" | "desc";
-
-interface ArtefactRow {
-  artefactId: string;
-  listType: string;
-  courtName: string;
-  contentDate: string;
-  contentDateRaw: Date;
-  displayDates: string;
-  language: string;
-  sensitivity: string;
+function parseSortQuery(query: Request["query"]): { sortBy: SortColumn; order: SortOrder } {
+  const sortBy = SORT_COLUMNS.find((column) => column === query.sort) ?? DEFAULT_SORT_COLUMN;
+  const order = SORT_ORDERS.find((value) => value === query.order) ?? DEFAULT_SORT_ORDER;
+  return { sortBy, order };
 }
 
 function sortArtefacts(rows: ArtefactRow[], sortBy: SortColumn, order: SortOrder): ArtefactRow[] {
@@ -80,6 +76,7 @@ async function buildArtefactRows(
         courtName,
         contentDate: formatDateString(artefact.contentDate),
         contentDateRaw: artefact.contentDate,
+        contentDateSortValue: artefact.contentDate.getTime(),
         displayDates: formatDateRangeString(artefact.displayFrom, artefact.displayTo),
         language: LANGUAGE_LABELS[artefact.language] || artefact.language,
         sensitivity: SENSITIVITY_LABELS[artefact.sensitivity] || artefact.sensitivity
@@ -102,8 +99,7 @@ const getHandler = async (req: Request, res: Response) => {
     return res.redirect(`/remove-list-search${lng}`);
   }
 
-  const sortBy = (req.query.sort as SortColumn) || "contentDate";
-  const order = (req.query.order as SortOrder) || "desc";
+  const { sortBy, order } = parseSortQuery(req.query);
 
   const { artefactRows, resultCount } = await buildArtefactRows(sessionData.locationId, locale, sortBy, order);
 
@@ -119,8 +115,7 @@ const getHandler = async (req: Request, res: Response) => {
     artefactRows,
     resultCount,
     sortBy,
-    order,
-    isDefaultSort: req.query.sort === undefined
+    order
   });
 };
 
@@ -137,8 +132,7 @@ const postHandler = async (req: Request, res: Response) => {
   const selectedArtefacts = Array.isArray(req.body.artefacts) ? req.body.artefacts : req.body.artefacts ? [req.body.artefacts] : [];
 
   if (selectedArtefacts.length === 0) {
-    const sortBy = (req.query.sort as SortColumn) || "contentDate";
-    const order = (req.query.order as SortOrder) || "desc";
+    const { sortBy, order } = parseSortQuery(req.query);
 
     const { artefactRows, resultCount } = await buildArtefactRows(sessionData.locationId, locale, sortBy, order);
 
@@ -155,7 +149,6 @@ const postHandler = async (req: Request, res: Response) => {
       resultCount,
       sortBy,
       order,
-      isDefaultSort: req.query.sort === undefined,
       errors: [
         {
           text: t.errorNoSelection,
@@ -176,3 +169,18 @@ const postHandler = async (req: Request, res: Response) => {
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), getHandler];
 export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), postHandler];
+
+type SortColumn = "listType" | "courtName" | "contentDate" | "language" | "sensitivity";
+type SortOrder = "asc" | "desc";
+
+interface ArtefactRow {
+  artefactId: string;
+  listType: string;
+  courtName: string;
+  contentDate: string;
+  contentDateRaw: Date;
+  contentDateSortValue: number;
+  displayDates: string;
+  language: string;
+  sensitivity: string;
+}

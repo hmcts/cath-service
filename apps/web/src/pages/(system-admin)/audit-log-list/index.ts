@@ -48,11 +48,11 @@ const getHandler = async (req: Request, res: Response) => {
   // Validate and apply date filter
   if (day || month || year) {
     if (!day || !month || !year) {
-      errors.date = { text: content.invalidDate, href: "#day" };
+      errors.date = { text: content.invalidDate, href: "#date-day" };
     } else {
       const parsedDate = auditLogService.parseDate(day, month, year);
       if (!parsedDate) {
-        errors.date = { text: content.invalidDate, href: "#day" };
+        errors.date = { text: content.invalidDate, href: "#date-day" };
       } else {
         filters.date = parsedDate;
       }
@@ -103,6 +103,7 @@ const getHandler = async (req: Request, res: Response) => {
     emailHeader: content.tableHeaders.email,
     actionHeader: content.tableHeaders.action,
     viewHeader: content.tableHeaders.view,
+    tableCaption: content.tableCaption,
     viewLinkText: content.viewLink,
     noResultsText: content.noResults,
     backToTopText: content.backToTop,

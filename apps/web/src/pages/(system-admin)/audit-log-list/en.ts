@@ -7,6 +7,7 @@ export const en = {
     action: "Action",
     view: "View"
   },
+  tableCaption: "Audit log entries",
   timestampFormat: "Date (dd/mm/yyyy) Time (hh:mm:ss)",
   filters: {
     heading: "Filter",

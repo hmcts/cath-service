@@ -32,6 +32,7 @@ const getHandler = async (req: Request, res: Response) => {
     en,
     cy,
     title: content.detailTitle,
+    tableCaption: content.detailTableCaption,
     log,
     userIdLabel: content.detailLabels.userId,
     emailLabel: content.detailLabels.email,

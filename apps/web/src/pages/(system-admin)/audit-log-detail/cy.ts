@@ -45,5 +45,6 @@ export const cy = {
   entryNotFound: "Ni ellid dod o hyd i gofnod log archwilio",
 
   // Access Control
-  accessDenied: "Nid oes gennych ganiatâd i gael mynediad at y gwasanaeth hwn"
+  accessDenied: "Nid oes gennych ganiatâd i gael mynediad at y gwasanaeth hwn",
+  detailTableCaption: "Audit log entry details"
 };

@@ -21,5 +21,6 @@ export const en = {
   deleteText: "Delete",
   noListTypesText: "No list types found.",
   addNewListTypeLink: "Add a new list type",
-  backToDashboard: "Back to System Admin Dashboard"
+  backToDashboard: "Back to System Admin Dashboard",
+  tableCaption: "List types"
 };

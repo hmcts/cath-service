@@ -7,8 +7,9 @@ export const en = {
     dateApplied: "Date applied",
     proofOfId: "Proof of ID"
   },
-  proofOfIdText: "(opens in a new window)",
+  proofOfIdText: "(opens in new tab)",
   viewProofOfId: "View",
+  viewProofOfIdHidden: "proof of ID",
   approveButton: "Approve application",
   rejectButton: "Reject application",
   fileNotAvailable: "File not available",

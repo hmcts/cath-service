@@ -1,7 +1,7 @@
 import { validateListTypeJson } from "@hmcts/list-types-common";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
 import { type DateInput, parseDate } from "@hmcts/web-core";
-import type { UploadFormData, ValidationError } from "./model.js";
+import type { UploadedFile, UploadFormData, ValidationError } from "./model.js";
 
 export type { ValidationError };
 
@@ -30,7 +30,7 @@ interface UploadContent {
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 const MIN_LOCATION_NAME_LENGTH = 3;
 
-async function validateFileUpload(file: Express.Multer.File | undefined, errorMessages: ErrorMessages, allowedExtensions: RegExp): Promise<ValidationError[]> {
+async function validateFileUpload(file: UploadedFile | undefined, errorMessages: ErrorMessages, allowedExtensions: RegExp): Promise<ValidationError[]> {
   const errors: ValidationError[] = [];
 
   if (!file) {
@@ -49,7 +49,7 @@ async function validateFileUpload(file: Express.Multer.File | undefined, errorMe
   return errors;
 }
 
-async function validateJsonFileSchema(file: Express.Multer.File, listType: string, listTypes: ListTypeSummary[]): Promise<ValidationError | null> {
+async function validateJsonFileSchema(file: UploadedFile, listType: string, listTypes: ListTypeSummary[]): Promise<ValidationError | null> {
   const isJsonFile = /\.json$/i.test(file.originalname);
   if (!isJsonFile || !listType) {
     return null;
@@ -129,7 +129,7 @@ function validateDateRange(
   const toDate = parseDate(body.displayTo);
 
   if (fromDate && toDate && toDate < fromDate) {
-    return { text: errorMessages.displayToBeforeFrom, href: "#displayTo" };
+    return { text: errorMessages.displayToBeforeFrom, href: "#displayTo-day" };
   }
 
   return null;
@@ -142,7 +142,7 @@ function validateListTypeIsVisible(body: UploadFormData, listTypes: ListTypeSumm
 
 async function validateUploadForm(
   body: UploadFormData,
-  file: Express.Multer.File | undefined,
+  file: UploadedFile | undefined,
   errorMessages: ErrorMessages,
   allowedExtensions: RegExp,
   validateJson: boolean
@@ -202,31 +202,27 @@ async function validateUploadForm(
   return errors;
 }
 
-export async function validateManualUploadForm(body: UploadFormData, file: Express.Multer.File | undefined, t: UploadContent): Promise<ValidationError[]> {
+export async function validateManualUploadForm(body: UploadFormData, file: UploadedFile | undefined, t: UploadContent): Promise<ValidationError[]> {
   return validateUploadForm(body, file, t.errorMessages, /\.(csv|doc|docx|htm|html|json|pdf)$/i, true);
 }
 
-export async function validateNonStrategicUploadForm(
-  body: UploadFormData,
-  file: Express.Multer.File | undefined,
-  t: UploadContent
-): Promise<ValidationError[]> {
+export async function validateNonStrategicUploadForm(body: UploadFormData, file: UploadedFile | undefined, t: UploadContent): Promise<ValidationError[]> {
   return validateUploadForm(body, file, t.errorMessages, /\.xlsx$/i, false);
 }
 
 export function validateDate(dateInput: DateInput | undefined, fieldName: string, requiredMessage: string, invalidMessage: string): ValidationError | null {
   if (!dateInput?.day || !dateInput.month || !dateInput.year) {
-    return { text: requiredMessage, href: `#${fieldName}` };
+    return { text: requiredMessage, href: `#${fieldName}-day` };
   }
 
   // Validate day and month are exactly 2 characters
   if (dateInput.day.length !== 2 || dateInput.month.length !== 2) {
-    return { text: invalidMessage, href: `#${fieldName}` };
+    return { text: invalidMessage, href: `#${fieldName}-day` };
   }
 
   const parsedDate = parseDate(dateInput);
   if (!parsedDate) {
-    return { text: invalidMessage, href: `#${fieldName}` };
+    return { text: invalidMessage, href: `#${fieldName}-day` };
   }
 
   return null;

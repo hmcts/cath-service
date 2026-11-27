@@ -6,5 +6,6 @@ export const en = {
   numberOfSubscriptionsColumnHeader: "Number of subscriptions",
   actionsColumnHeader: "Actions",
   manageLink: "Manage",
-  noUsersMessage: "No third party users found"
+  noUsersMessage: "No third party users found",
+  tableCaption: "Third-party users"
 };

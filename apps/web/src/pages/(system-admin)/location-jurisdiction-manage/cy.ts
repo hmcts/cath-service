@@ -6,5 +6,6 @@ export const cy = {
   jurisdictionColumn: "Awdurdodaeth",
   subJurisdictionColumn: "Is-awdurdodaeth",
   updateButton: "Diweddaru",
-  deleteButton: "Dileu"
+  deleteButton: "Dileu",
+  tableCaption: "Jurisdictions for this location"
 };

@@ -28,6 +28,8 @@
       {% endfor %}
 
       {{ govukTable({
+        caption: tableCaption,
+        captionClasses: "govuk-visually-hidden",
         head: [
           { text: tableHeadings.name },
           { text: tableHeadings.createdDate },

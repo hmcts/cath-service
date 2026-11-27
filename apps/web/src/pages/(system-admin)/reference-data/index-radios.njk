@@ -22,16 +22,14 @@
       }) }}
     {% endif %}
 
-    <h1 class="govuk-heading-l">{{ title }}</h1>
-
     <form method="post" novalidate>
       {{ govukRadios({
         name: "action",
         fieldset: {
           legend: {
             text: title,
-            isPageHeading: false,
-            classes: "govuk-visually-hidden"
+            isPageHeading: true,
+            classes: "govuk-fieldset__legend--l"
           }
         },
         items: radioItems,

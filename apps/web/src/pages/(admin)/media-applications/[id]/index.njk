@@ -37,27 +37,24 @@
             key: { text: tableHeaders.proofOfId },
             value: {
               html: (
-                '<div style="display: flex; justify-content: space-between; align-items: center;"><span>' + proofOfIdFilename + ' ' + proofOfIdText + '</span><a href="/media-applications/' + application.id + '/proof-of-id" class="govuk-link" target="_blank" rel="noopener noreferrer" aria-label="Opens in new window">' + viewProofOfId + '</a></div>' if application.proofOfIdPath else fileNotAvailable
+                '<p class="govuk-body govuk-!-margin-bottom-1">' + (proofOfIdFilename | escape) + '</p><a href="/media-applications/' + application.id + '/proof-of-id" class="govuk-link" target="_blank" rel="noopener noreferrer">' + viewProofOfId + '<span class="govuk-visually-hidden"> ' + viewProofOfIdHidden + '</span> ' + proofOfIdText + '</a>' if application.proofOfIdPath else fileNotAvailable
               )
             }
           }
         ]
       }) }}
 
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
-        <form action="/media-applications/{{ application.id }}/approve" method="get">
-          {{ govukButton({
-            text: approveButton,
-            classes: "govuk-button--primary"
-          }) }}
-        </form>
+      <div class="govuk-button-group">
+        {{ govukButton({
+          text: approveButton,
+          href: "/media-applications/" + application.id + "/approve"
+        }) }}
 
-        <form action="/media-applications/{{ application.id }}/reject-reasons" method="get">
-          {{ govukButton({
-            text: rejectButton,
-            classes: "govuk-button--warning"
-          }) }}
-        </form>
+        {{ govukButton({
+          text: rejectButton,
+          href: "/media-applications/" + application.id + "/reject-reasons",
+          classes: "govuk-button--warning"
+        }) }}
       </div>
     {% endif %}
   </div>

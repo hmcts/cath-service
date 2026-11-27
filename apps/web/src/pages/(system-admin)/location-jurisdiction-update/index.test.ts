@@ -71,10 +71,10 @@ describe("location-jurisdiction-update page", () => {
           subJurisdictionGroups: [
             {
               heading: "Type of civil court",
-              items: [{ value: "10", text: "County Court", checked: true }]
+              items: [{ id: "subJurisdiction-10", value: "10", text: "County Court", checked: true }]
             }
           ],
-          regionCheckboxes: [{ value: "5", text: "London", checked: true }]
+          regionCheckboxes: [{ id: "region-5", value: "5", text: "London", checked: true }]
         })
       );
     });

@@ -4,5 +4,6 @@ export const cy = {
   locationsDescription: "Choose a location to see all publications associated with it.",
   locationsTableHeadingLocation: "Location",
   locationsTableHeadingPublications: "Number of publications per venue",
-  locationsError: "We could not load locations. Try again later."
+  locationsError: "We could not load locations. Try again later.",
+  locationsTableCaption: "Locations with publications"
 };

@@ -164,3 +164,117 @@ describe("non-strategic-upload template", () => {
     });
   });
 });
+
+describe("non-strategic-upload template accessibility structure", () => {
+  let env: nunjucks.Environment;
+
+  const dateErrors = (t: typeof en) => [
+    { text: t.errorMessages.hearingStartDateRequired, href: "#hearingStartDate-day" },
+    { text: t.errorMessages.displayFromInvalid, href: "#displayFrom-day" },
+    { text: t.errorMessages.displayToBeforeFrom, href: "#displayTo-day" }
+  ];
+
+  beforeEach(() => {
+    env = createTestEnvironment([path.join(__dirname, "../../"), path.join(__dirname, "../../../../../../libs/web-core/src/views")]);
+  });
+
+  it("should link every date error summary item to an existing day input", () => {
+    const { $ } = render(env, TEMPLATE, { ...buildData(en), errors: dateErrors(en) });
+
+    const hrefs = $(".govuk-error-summary__list a")
+      .map((_, el) => $(el).attr("href"))
+      .get();
+
+    expect(hrefs).toEqual(["#hearingStartDate-day", "#displayFrom-day", "#displayTo-day"]);
+    for (const href of hrefs) {
+      expect($(`input${href}`)).toHaveLength(1);
+    }
+  });
+
+  it("should still render the inline date errors against the -day hrefs", () => {
+    const { $ } = render(env, TEMPLATE, { ...buildData(en), errors: dateErrors(en) });
+
+    expect($("#hearingStartDate-error").text()).toContain(en.errorMessages.hearingStartDateRequired);
+    expect($("#displayFrom-error").text()).toContain(en.errorMessages.displayFromInvalid);
+    expect($("#displayTo-error").text()).toContain(en.errorMessages.displayToBeforeFrom);
+    expect($("#hearingStartDate-day").hasClass("govuk-input--error")).toBe(true);
+  });
+
+  it("should mark up the sensitivity labels as h4 headings with no bold text", () => {
+    const { $ } = render(env, TEMPLATE, buildData(en));
+
+    const subHeadings = $("aside h4")
+      .map((_, el) => $(el).text().trim())
+      .get();
+
+    expect(subHeadings).toEqual([en.pageHelpSensitivityPublic, en.pageHelpSensitivityPrivate, en.pageHelpSensitivityClassified]);
+    expect($("aside strong")).toHaveLength(0);
+  });
+
+  it("should not skip heading levels in the page help aside", () => {
+    const { $ } = render(env, TEMPLATE, buildData(en));
+
+    const levels = $("aside")
+      .find("h2, h3, h4")
+      .map((_, el) => Number(el.tagName.substring(1)))
+      .get();
+
+    expect(levels[0]).toBe(2);
+    for (let i = 1; i < levels.length; i++) {
+      expect(levels[i]).toBeLessThanOrEqual(levels[i - 1] + 1);
+    }
+    expect(levels).toContain(4);
+  });
+
+  it("should render the h1 as the first heading in main, before the warning", () => {
+    const { $ } = render(env, TEMPLATE, buildData(en));
+
+    const firstHeading = $("main").find("h1, h2, h3, h4").first();
+
+    expect(firstHeading.prop("tagName")).toBe("H1");
+    expect(firstHeading.text().trim()).toBe(en.title);
+  });
+
+  it("should render a plain file input when no file is kept", () => {
+    const { $ } = render(env, TEMPLATE, buildData(en));
+
+    const input = $("input#file[type='file']");
+    expect(input.attr("data-pending-file-url")).toBeUndefined();
+    expect(input.attr("data-pending-file-name")).toBeUndefined();
+    expect(input.attr("aria-describedby")).toBeUndefined();
+    expect(input.attr("accept")).toBe(".xlsx");
+  });
+
+  it("should mark the file input so the kept file can be put back into it", () => {
+    const { $ } = render(env, TEMPLATE, { ...buildData(en), pendingFileName: "hearing-list.xlsx", pendingFileUrl: "/non-strategic-upload/pending-file" });
+
+    const input = $("input#file[type='file']");
+    expect(input.attr("data-pending-file-url")).toBe("/non-strategic-upload/pending-file");
+    expect(input.attr("data-pending-file-name")).toBe("hearing-list.xlsx");
+    expect(input.attr("accept")).toBe(".xlsx");
+  });
+
+  it("should not render any separate kept-file text, hint or remove button", () => {
+    const { $ } = render(env, TEMPLATE, { ...buildData(en), pendingFileName: "hearing-list.xlsx", pendingFileUrl: "/non-strategic-upload/pending-file" });
+
+    expect($("#file-uploaded")).toHaveLength(0);
+    expect($("#file-hint")).toHaveLength(0);
+    expect($("#remove-file-form")).toHaveLength(0);
+    expect($("input#file").attr("aria-describedby")).toBeUndefined();
+    expect($("form[enctype] button")).toHaveLength(1);
+  });
+
+  it("should escape the kept file name in the file input attribute", () => {
+    const { html } = render(env, TEMPLATE, { ...buildData(en), pendingFileName: '"><b>bad</b>', pendingFileUrl: "/non-strategic-upload/pending-file" });
+
+    expect(html).not.toContain('"><b>bad</b>');
+  });
+
+  it("should link the file error message to the file input", () => {
+    const { $ } = render(env, TEMPLATE, { ...buildData(en), errors: [{ text: en.errorMessages.fileRequired, href: "#file" }] });
+
+    expect($("#file-error").text()).toContain(en.errorMessages.fileRequired);
+    expect($("#file").attr("aria-describedby")).toBe("file-error");
+    expect($("#file").closest(".govuk-form-group").hasClass("govuk-form-group--error")).toBe(true);
+  });
+});

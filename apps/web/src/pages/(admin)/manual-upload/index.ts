@@ -1,4 +1,13 @@
-import { LANGUAGE_LABELS, SENSITIVITY_LABELS, selectOption, storeManualUpload, transformDateFields, validateManualUploadForm } from "@hmcts/admin-pages";
+import {
+  deletePendingFile,
+  LANGUAGE_LABELS,
+  retainPendingFile,
+  SENSITIVITY_LABELS,
+  selectOption,
+  storeManualUpload,
+  transformDateFields,
+  validateManualUploadForm
+} from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language } from "@hmcts/publication";
@@ -7,6 +16,8 @@ import { saveSession } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
+
+const PENDING_FILE_PREFIX = "manual-upload";
 
 async function getListTypes() {
   const strategicListTypes = await findStrategicListTypes();
@@ -42,6 +53,12 @@ const getHandler = async (req: Request, res: Response) => {
   const errors = req.session.manualUploadErrors || [];
 
   delete req.session.manualUploadErrors;
+
+  // The kept file is only offered straight after a failed submit; a refresh or the summary "Change" link drops it.
+  const pendingFile = errors.length > 0 ? req.session.manualUploadPendingFile : undefined;
+  if (!pendingFile) {
+    await discardPendingFile(req);
+  }
 
   // Clear form data on refresh if not successfully submitted
   if (!wasSubmitted) {
@@ -80,6 +97,8 @@ const getHandler = async (req: Request, res: Response) => {
     sensitivityOptions: selectOption(SENSITIVITY_OPTIONS, formData.sensitivity),
     languageOptions: selectOption(LANGUAGE_OPTIONS, formData.language || Language.ENGLISH),
     listTypeSensitivityMap: JSON.stringify(listTypeSensitivityMap),
+    pendingFileName: pendingFile?.fileName,
+    pendingFileUrl: pendingFile ? "/manual-upload/pending-file" : undefined,
     locale,
     hideLanguageToggle: true
   });
@@ -93,7 +112,8 @@ const postHandler = async (req: Request, res: Response) => {
 
   // Check for multer errors (e.g., file too large)
   const fileUploadError = req.fileUploadError;
-  let errors = await validateManualUploadForm(formData, req.file, t);
+  const file = req.file;
+  let errors = await validateManualUploadForm(formData, file, t);
 
   // If multer threw a file size error, replace the "fileRequired" error with the file size error
   if (fileUploadError && fileUploadError.code === "LIMIT_FILE_SIZE") {
@@ -102,6 +122,7 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   if (errors.length > 0) {
+    req.session.manualUploadPendingFile = await retainPendingFile(PENDING_FILE_PREFIX, req.session.manualUploadPendingFile, req.file, errors);
     req.session.manualUploadErrors = errors;
     req.session.manualUploadForm = formData;
     await saveSession(req.session);
@@ -109,9 +130,9 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   const uploadId = await storeManualUpload({
-    file: req.file!.buffer,
-    fileName: req.file!.originalname,
-    fileType: req.file!.mimetype,
+    file: file!.buffer,
+    fileName: file!.originalname,
+    fileType: file!.mimetype,
     locationId: formData.locationId!,
     listType: formData.listType!,
     hearingStartDate: formData.hearingStartDate!,
@@ -121,12 +142,21 @@ const postHandler = async (req: Request, res: Response) => {
     displayTo: formData.displayTo!
   });
 
+  await discardPendingFile(req);
   req.session.manualUploadForm = formData;
   req.session.manualUploadSubmitted = true;
   await saveSession(req.session);
 
   res.redirect(`/manual-upload-summary?uploadId=${uploadId}`);
 };
+
+async function discardPendingFile(req: Request) {
+  const reference = req.session.manualUploadPendingFile;
+  if (reference) {
+    await deletePendingFile(PENDING_FILE_PREFIX, reference.id);
+    delete req.session.manualUploadPendingFile;
+  }
+}
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), getHandler];
 export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), postHandler];

@@ -21,24 +21,32 @@ const extractFormData = (body: Request["body"]) => ({
 
 const hasNonEmptyValue = (value: string | undefined) => value && value.trim().length > 0;
 
-const hasAtLeastOneMessage = (formData: ReturnType<typeof extractFormData>) =>
+const hasAtLeastOneMessage = (formData: FormData) =>
   hasNonEmptyValue(formData.cautionMessage) ||
   hasNonEmptyValue(formData.welshCautionMessage) ||
   hasNonEmptyValue(formData.noListMessage) ||
   hasNonEmptyValue(formData.welshNoListMessage);
 
-const findDisallowedTags = (formData: ReturnType<typeof extractFormData>) => {
-  for (const field of MESSAGE_FIELDS) {
-    const value = formData[field];
-    const tags = value ? findDisallowedHtmlTags(value) : [];
-
-    if (tags.length > 0) {
-      return { field, tags };
-    }
+// Agreed mock-up: an empty form lists the summary-only "at least one" message, then one required message per field.
+const validateMessages = (formData: FormData, content: Content): MessageError[] => {
+  if (!hasAtLeastOneMessage(formData)) {
+    return [
+      { text: content.atLeastOneMessageRequired, href: "#cautionMessage" },
+      ...MESSAGE_FIELDS.map((field) => ({ text: content[`${field}Required`], href: `#${field}`, field }))
+    ];
   }
 
-  return undefined;
+  return MESSAGE_FIELDS.flatMap((field) => {
+    const value = formData[field];
+    const tags = value ? findDisallowedHtmlTags(value) : [];
+    return tags.length > 0 ? [{ text: content.htmlTagsNotAllowed(content[`${field}Label`], tags), href: `#${field}`, field }] : [];
+  });
 };
+
+const toFieldErrors = (errors: MessageError[]) =>
+  Object.fromEntries(errors.filter((error) => error.field).map((error) => [error.field, { text: error.text }])) as Partial<
+    Record<MessageField, { text: string }>
+  >;
 
 const getHandler = async (req: Request, res: Response) => {
   const language = getLanguage(req);
@@ -60,7 +68,8 @@ const getHandler = async (req: Request, res: Response) => {
     noListMessage: existingMetadata?.noListMessage || "",
     welshNoListMessage: existingMetadata?.welshNoListMessage || "",
     hasExistingMetadata: !!existingMetadata,
-    errors: undefined
+    errors: undefined,
+    fieldErrors: {}
   });
 };
 
@@ -82,7 +91,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   const formData = extractFormData(req.body);
 
-  const renderWithError = async (errorText: string, href = "#cautionMessage") => {
+  const renderWithErrors = async (messageErrors: MessageError[]) => {
     const existingMetadata = await getLocationMetadataByLocationId(locationId);
     return res.render("location-metadata-manage/index", {
       ...content,
@@ -92,17 +101,14 @@ const postHandler = async (req: Request, res: Response) => {
       noListMessage: formData.noListMessage || "",
       welshNoListMessage: formData.welshNoListMessage || "",
       hasExistingMetadata: !!existingMetadata,
-      errors: [{ text: errorText, href }]
+      errors: messageErrors.map(({ text, href }) => ({ text, href })),
+      fieldErrors: toFieldErrors(messageErrors)
     });
   };
 
-  if (!hasAtLeastOneMessage(formData)) {
-    return renderWithError(content.atLeastOneMessageRequired);
-  }
-
-  const disallowed = findDisallowedTags(formData);
-  if (disallowed) {
-    return renderWithError(content.htmlTagsNotAllowed(content[`${disallowed.field}Label`], disallowed.tags), `#${disallowed.field}`);
+  const validationErrors = validateMessages(formData, content);
+  if (validationErrors.length > 0) {
+    return renderWithErrors(validationErrors);
   }
 
   try {
@@ -116,9 +122,19 @@ const postHandler = async (req: Request, res: Response) => {
 
     res.redirect(`/location-metadata-success${getLanguageParam(language)}`);
   } catch (error) {
-    return renderWithError((error as Error).message);
+    return renderWithErrors([{ text: (error as Error).message, href: "#cautionMessage" }]);
   }
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];
 export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), postHandler];
+
+type Content = typeof en | typeof cy;
+type FormData = ReturnType<typeof extractFormData>;
+type MessageField = (typeof MESSAGE_FIELDS)[number];
+
+interface MessageError {
+  text: string;
+  href: string;
+  field?: MessageField;
+}

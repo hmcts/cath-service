@@ -110,11 +110,12 @@ test.describe("Remove Publication Flow", () => {
     await expect(page.locator('button:has-text("Parhau")')).toBeVisible();
 
     // STEP 6: Navigate back to English and select location
-    await page.goto("/remove-list-search");
+    // The locale is persisted in the session, so English must be requested explicitly
+    await page.goto("/remove-list-search?lng=en");
     if (page.url().includes("login.microsoftonline.com")) {
       await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
       await page.waitForURL("/admin-dashboard");
-      await page.goto("/remove-list-search");
+      await page.goto("/remove-list-search?lng=en");
     }
 
     const courtInput = page.getByRole("combobox", { name: /search by court or tribunal name/i });
@@ -130,6 +131,30 @@ test.describe("Remove Publication Flow", () => {
 
     // STEP 7: Should redirect to search results page
     await expect(page).toHaveURL(/\/remove-list-search-results/);
+    await expect(page.locator("table caption")).toHaveText("Select content to remove");
+
+    // STEP 8: Sort controls are buttons, sorting happens in place and keeps focus and selections
+    const resultsUrl = page.url();
+    const firstCheckbox = page.locator('input[name="artefacts"]').first();
+    await firstCheckbox.check();
+
+    const contentDateSortButton = page.getByRole("button", { name: "Content Date" });
+    await expect(contentDateSortButton).toBeVisible();
+    const contentDateHeader = page.getByRole("columnheader", { name: "Content Date" });
+    await expect(contentDateHeader).toHaveAttribute("aria-sort", "descending");
+    await expect(page.getByRole("button", { name: "List Type" })).toBeVisible();
+
+    await contentDateSortButton.focus();
+    await page.keyboard.press("Enter");
+
+    await expect(contentDateHeader).toHaveAttribute("aria-sort", "ascending");
+    await expect(contentDateSortButton).toBeFocused();
+    await expect(firstCheckbox).toBeChecked();
+    expect(page.url()).toBe(resultsUrl);
+
+    // STEP 9: Test accessibility on the results page after sorting
+    const resultsAccessibilityScan = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
+    expect(resultsAccessibilityScan.violations).toEqual([]);
   });
 
   test("Local Admin can access remove publication from dashboard @nightly", async ({ page }) => {

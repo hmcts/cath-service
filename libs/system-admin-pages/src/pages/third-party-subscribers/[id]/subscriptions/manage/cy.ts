@@ -18,5 +18,6 @@ export const cy = {
   nextButton: "Nesaf",
   previousButton: "Blaenorol",
   back: "Yn ôl",
-  pageOf: (current: number, total: number) => `Tudalen ${current} o ${total}`
+  pageOf: (current: number, total: number) => `Tudalen ${current} o ${total}`,
+  tableCaption: "List type subscriptions"
 };

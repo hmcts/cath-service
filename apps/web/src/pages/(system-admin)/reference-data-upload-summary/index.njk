@@ -55,10 +55,9 @@
       ]
     }) }}
 
-    <h2 class="govuk-heading-l">{{ previewTitle }}</h2>
-
-    <div style="overflow-x: auto;">
+    <div class="app-table-scroll" tabindex="0" role="region" aria-label="{{ previewTitle }}">
       <table class="govuk-table">
+        <caption class="govuk-table__caption govuk-table__caption--l">{{ previewTitle }}</caption>
         <thead class="govuk-table__head">
           <tr class="govuk-table__row">
             <th scope="col" class="govuk-table__header">{{ locationIdHeader }}</th>

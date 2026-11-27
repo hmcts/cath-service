@@ -6,5 +6,6 @@ export const cy = {
   numberOfSubscriptionsColumnHeader: "Nifer y tanysgrifiadau",
   actionsColumnHeader: "Camau gweithredu",
   manageLink: "Rheoli",
-  noUsersMessage: "Ni chanfuwyd defnyddwyr trydydd parti"
+  noUsersMessage: "Ni chanfuwyd defnyddwyr trydydd parti",
+  tableCaption: "Third-party users"
 };

@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { selectAutocompleteOption } from "../../utils/autocomplete-helpers.js";
 import { axeCheck } from "../../utils/axe-helper.js";
+import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 
 test.describe("Location Metadata Management", () => {
@@ -46,6 +48,51 @@ test.describe("Location Metadata Management", () => {
     await expect(heading).toContainText("Dod o hyd i'r metadata lleoliad i'w reoli");
 
     // Accessibility check in Welsh
+    accessibilityScanResults = await axeCheck(page).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+
+    // Select a court the test owns and submit the manage form empty
+    const court = await createUniqueTestLocation({ namePrefix: "Location Metadata Court" });
+    await page.goto("/location-metadata-search?lng=en");
+    expect(await selectAutocompleteOption(page, searchInput, court.name)).toBe(String(court.locationId));
+    await continueButton.click();
+    await expect(page).toHaveURL(/\/location-metadata-manage/);
+
+    await page.getByRole("button", { name: "Create" }).click();
+
+    const englishMessages = [
+      "Enter at least one message",
+      "Enter English caution message",
+      "Enter Welsh caution message",
+      "Enter English no list message",
+      "Enter Welsh no list message"
+    ];
+    await expect(errorSummary.getByRole("heading", { name: "There is a problem" })).toBeVisible();
+    await expect(errorSummary.getByRole("link")).toHaveText(englishMessages);
+
+    const fields = [
+      { id: "cautionMessage", label: "English caution message", message: englishMessages[1] },
+      { id: "welshCautionMessage", label: "Welsh caution message", message: englishMessages[2] },
+      { id: "noListMessage", label: "English no list message", message: englishMessages[3] },
+      { id: "welshNoListMessage", label: "Welsh no list message", message: englishMessages[4] }
+    ];
+    for (const field of fields) {
+      await expect(page.locator(`#${field.id}-error`)).toContainText(field.message);
+      await expect(page.getByLabel(field.label, { exact: true })).toHaveAttribute("aria-describedby", new RegExp(`${field.id}-error`));
+    }
+
+    await errorSummary.getByRole("link", { name: "Enter Welsh no list message" }).click();
+    await expect(page.locator("#welshNoListMessage")).toBeFocused();
+
+    accessibilityScanResults = await axeCheck(page).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+
+    // Welsh: the five messages come from cy.ts
+    await page.goto("/location-metadata-manage?lng=cy");
+    await page.getByRole("button", { name: "Creu" }).click();
+    await expect(errorSummary.getByRole("link")).toHaveText(["Rhowch o leiaf un neges", ...englishMessages.slice(1)]);
+    await expect(page.locator(".govuk-error-message")).toHaveCount(4);
+
     accessibilityScanResults = await axeCheck(page).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
   });

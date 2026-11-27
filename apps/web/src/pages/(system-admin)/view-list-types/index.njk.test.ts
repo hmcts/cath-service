@@ -39,6 +39,15 @@ describe("view-list-types template", () => {
   });
 
   describe("English content", () => {
+    it("should render a visually hidden table caption", () => {
+      const { $ } = render(env, TEMPLATE, { ...en, tableRows: buildTableRows(en) });
+
+      const caption = $("table caption");
+      expect(caption).toHaveLength(1);
+      expect(caption.text().trim()).toBe(en.tableCaption);
+      expect(caption.hasClass("govuk-visually-hidden")).toBe(true);
+    });
+
     it("should render the page heading", () => {
       const data = { ...en, tableRows: buildTableRows(en) };
 

@@ -35,6 +35,7 @@ const getHandler = async (req: Request, res: Response) => {
       tableHeaders: lang.tableHeaders,
       proofOfIdText: lang.proofOfIdText,
       viewProofOfId: lang.viewProofOfId,
+      viewProofOfIdHidden: lang.viewProofOfIdHidden,
       approveButton: lang.approveButton,
       rejectButton: lang.rejectButton,
       fileNotAvailable: lang.fileNotAvailable,

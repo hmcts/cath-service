@@ -48,7 +48,7 @@
             key: { text: tableHeaders.proofOfId },
             value: {
               html: (
-                '<div style="display: flex; justify-content: space-between; align-items: center;"><span>' + proofOfIdFilename + ' ' + proofOfIdText + '</span><a href="/media-applications/' + application.id + '/proof-of-id" class="govuk-link" target="_blank" rel="noopener noreferrer" aria-label="Opens in new window">' + viewProofOfId + '</a></div>' if application.proofOfIdPath else fileNotAvailable
+                '<p class="govuk-body govuk-!-margin-bottom-1">' + (proofOfIdFilename | escape) + '</p><a href="/media-applications/' + application.id + '/proof-of-id" class="govuk-link" target="_blank" rel="noopener noreferrer">' + viewProofOfId + '<span class="govuk-visually-hidden"> ' + viewProofOfIdHidden + '</span> ' + proofOfIdText + '</a>' if application.proofOfIdPath else fileNotAvailable
               )
             }
           }

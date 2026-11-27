@@ -8,8 +8,9 @@ export const cy = {
     dateApplied: "Dyddiad gwneud cais",
     proofOfId: "Prawf o ID"
   },
-  proofOfIdText: "(yn agor mewn ffenestr newydd)",
+  proofOfIdText: "(opens in new tab)",
   viewProofOfId: "Gweld",
+  viewProofOfIdHidden: "proof of ID",
   fileNotAvailable: "Ffeil ar gael ddim",
   radioLegend: "Cadarnhau cymeradwyaeth",
   radioOptions: {

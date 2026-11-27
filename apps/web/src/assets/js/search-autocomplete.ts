@@ -53,6 +53,7 @@ async function initAutocompleteForInput(locationInput: HTMLInputElement) {
     const searchLabel = locationInput.getAttribute("data-search-label") || "Search for a court or tribunal";
     const noResultsMessage = locationInput.getAttribute("data-no-results-message") || "No results found";
     const hasError = locationInput.classList.contains("govuk-input--error");
+    const describedByIds = (locationInput.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean);
 
     const container = locationInput.parentElement;
     if (!container) return;
@@ -119,14 +120,9 @@ async function initAutocompleteForInput(locationInput: HTMLInputElement) {
 
     const autocompleteInput = wrapper.querySelector(`#${inputId}`) as HTMLInputElement;
     if (autocompleteInput) {
-      // Add label for accessibility
-      if (!wrapper.querySelector("label")) {
-        const label = document.createElement("label");
-        label.className = "govuk-label govuk-visually-hidden";
-        label.htmlFor = inputId;
-        label.textContent = "Search";
-        wrapper.insertBefore(label, wrapper.firstChild);
-      }
+      // The original input shares the autocomplete's id; removing it leaves one element for the visible label to point at.
+      locationInput.remove();
+      keepDescribedBy(autocompleteInput, describedByIds);
 
       // Apply error styling if needed
       if (hasError) {
@@ -167,6 +163,22 @@ async function initAutocompleteForInput(locationInput: HTMLInputElement) {
     console.error(`Error initializing autocomplete for input ${locationInput.id}:`, error);
     // Leave the original input intact so the form is still usable
   }
+}
+
+// accessible-autocomplete re-renders aria-describedby with its own assistive hint, so re-add the hint and error ids whenever it changes.
+function keepDescribedBy(input: HTMLInputElement, ids: string[]) {
+  if (ids.length === 0) return;
+
+  const apply = () => {
+    const current = (input.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean);
+    const missing = ids.filter((id) => !current.includes(id));
+    if (missing.length > 0) {
+      input.setAttribute("aria-describedby", [...current, ...missing].join(" "));
+    }
+  };
+
+  apply();
+  new MutationObserver(apply).observe(input, { attributes: true, attributeFilter: ["aria-describedby"] });
 }
 
 export async function initSearchAutocomplete() {

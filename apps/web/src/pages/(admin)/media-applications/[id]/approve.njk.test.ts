@@ -27,6 +27,7 @@ const buildData = (lang: typeof en | typeof cy, overrides: Record<string, unknow
   tableHeaders: lang.tableHeaders,
   proofOfIdText: lang.proofOfIdText,
   viewProofOfId: lang.viewProofOfId,
+  viewProofOfIdHidden: lang.viewProofOfIdHidden,
   fileNotAvailable: lang.fileNotAvailable,
   radioLegend: lang.radioLegend,
   radioOptions: lang.radioOptions,
@@ -83,7 +84,18 @@ describe("approve template", () => {
 
       const link = $(`a[href="/media-applications/${mockApplication.id}/proof-of-id"]`);
       expect(link).toHaveLength(1);
-      expect(link.text()).toContain(en.viewProofOfId);
+      expect(link.attr("aria-label")).toBeUndefined();
+      expect(link.text().replace(/\s+/g, " ").trim()).toBe("View proof of ID (opens in new tab)");
+      expect(link.attr("target")).toBe("_blank");
+    });
+
+    it("should escape the proof of id filename", () => {
+      const data = buildData(en, { proofOfIdFilename: "<i>id</i>.pdf" });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($(".govuk-summary-list i")).toHaveLength(0);
+      expect($(".govuk-summary-list p.govuk-body").text()).toBe("<i>id</i>.pdf");
     });
 
     it("should render the file not available text when there is no proof path", () => {

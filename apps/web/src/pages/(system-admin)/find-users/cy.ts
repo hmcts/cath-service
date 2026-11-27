@@ -19,7 +19,7 @@ export const cy = {
   tableHeadEmail: "E-bost",
   tableHeadRole: "Rôl",
   tableHeadProvenance: "Tarddiad",
-  tableHeadManage: "",
+  tableHeadManage: "Actions",
   manageLink: "Rheoli",
   paginationPrevious: "Blaenorol",
   paginationNext: "Nesaf",
@@ -34,5 +34,6 @@ export const cy = {
   provenanceCftIdam: "CFT IdAM",
   provenanceSso: "SSO",
   provenanceB2c: "B2C",
-  provenanceCrimeIdam: "Crime IdAM"
+  provenanceCrimeIdam: "Crime IdAM",
+  tableCaption: "Users"
 };

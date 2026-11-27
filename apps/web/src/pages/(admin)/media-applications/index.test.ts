@@ -65,6 +65,8 @@ describe("media-applications list page", () => {
           action: "Action"
         },
         viewLink: "View",
+        viewLinkHidden: "application for",
+        tableCaption: "Applications to assess",
         noApplications: "There are no pending applications.",
         applications: mockApplications
       });
@@ -97,6 +99,8 @@ describe("media-applications list page", () => {
           action: "Gweithred"
         },
         viewLink: "Gweld",
+        viewLinkHidden: "application for",
+        tableCaption: "Applications to assess",
         noApplications: "Nid oes ceisiadau yn disgwyl.",
         applications: mockApplications
       });

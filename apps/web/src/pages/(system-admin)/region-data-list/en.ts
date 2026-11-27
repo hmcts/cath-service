@@ -2,7 +2,8 @@ export const en = {
   title: "Modify an existing region",
   backLink: "/region-data",
   nameColumn: "Name",
-  actionColumn: "",
+  actionColumn: "Actions",
   modifyLinkText: "Modify",
-  noResultsText: "No records found"
+  noResultsText: "No records found",
+  tableCaption: "Regions"
 };

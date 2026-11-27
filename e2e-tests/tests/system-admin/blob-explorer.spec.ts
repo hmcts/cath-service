@@ -82,6 +82,26 @@ test.describe("Blob Explorer", () => {
     const publicationsTable = page.locator("table.govuk-table");
     await expect(publicationsTable).toBeVisible();
 
+    // At 320px only the table region scrolls sideways, not the whole page
+    const desktopViewport = page.viewportSize();
+    await page.setViewportSize({ width: 320, height: 640 });
+    const hasPageHorizontalScroll = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(hasPageHorizontalScroll).toBe(false);
+
+    // The scroll region can be reached with the keyboard
+    const tableRegion = page.getByRole("region", { name: "Publications for this location" });
+    await expect(tableRegion).toBeVisible();
+    let isRegionFocused = false;
+    for (let tabPresses = 0; tabPresses < 40 && !isRegionFocused; tabPresses++) {
+      await page.keyboard.press("Tab");
+      isRegionFocused = await tableRegion.evaluate((element) => element === document.activeElement);
+    }
+    expect(isRegionFocused).toBe(true);
+
+    if (desktopViewport) {
+      await page.setViewportSize(desktopViewport);
+    }
+
     // STEP 7: Open this test's own artefact to view the JSON file page
     await page.getByRole("link", { name: artefactId, exact: true }).click();
 

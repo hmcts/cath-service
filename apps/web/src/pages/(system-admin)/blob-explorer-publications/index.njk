@@ -22,7 +22,10 @@
     {% endif %}
 
     {% if tableRows.length > 0 %}
+      <div class="app-table-scroll" tabindex="0" role="region" aria-label="{{ publicationsTableCaption }}">
       {{ govukTable({
+        caption: publicationsTableCaption,
+        captionClasses: "govuk-visually-hidden",
         head: [
           {
             text: publicationsTableHeadingArtefactId
@@ -39,6 +42,7 @@
         ],
         rows: tableRows
       }) }}
+      </div>
     {% else %}
       <p class="govuk-body">No publications found for this location.</p>
     {% endif %}

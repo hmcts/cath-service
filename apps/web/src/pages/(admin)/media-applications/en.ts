@@ -7,6 +7,8 @@ export const en = {
     action: "Action"
   },
   viewLink: "View",
+  viewLinkHidden: "application for",
+  tableCaption: "Applications to assess",
   noApplications: "There are no pending applications.",
   errorMessages: {
     loadFailed: "Unable to load applications. Please try again later."

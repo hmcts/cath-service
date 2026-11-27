@@ -12,6 +12,13 @@ export interface UploadFormData {
   displayTo?: DateInput;
 }
 
+export interface PendingFileReference {
+  id: string;
+  fileName: string;
+}
+
+export type UploadedFile = Pick<Express.Multer.File, "buffer" | "originalname" | "mimetype" | "size">;
+
 export interface ValidationError {
   text: string;
   href: string;
@@ -34,12 +41,14 @@ declare module "express-session" {
     manualUploadForm?: UploadFormData;
     manualUploadErrors?: ValidationError[];
     manualUploadSubmitted?: boolean;
+    manualUploadPendingFile?: PendingFileReference;
     uploadConfirmed?: boolean;
     successPageViewed?: boolean;
     viewedLanguage?: "en" | "cy";
     nonStrategicUploadForm?: UploadFormData;
     nonStrategicUploadErrors?: ValidationError[];
     nonStrategicUploadSubmitted?: boolean;
+    nonStrategicUploadPendingFile?: PendingFileReference;
     nonStrategicUploadConfirmed?: boolean;
     nonStrategicSuccessPageViewed?: boolean;
     nonStrategicViewedLanguage?: "en" | "cy";

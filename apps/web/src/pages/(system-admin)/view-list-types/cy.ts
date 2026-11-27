@@ -21,5 +21,6 @@ export const cy = {
   deleteText: "Dileu",
   noListTypesText: "Ni chanfuwyd unrhyw fathau o restrau.",
   addNewListTypeLink: "Ychwanegu math newydd o restr",
-  backToDashboard: "Yn ôl i Ddangosfwrdd Gweinyddwr System"
+  backToDashboard: "Yn ôl i Ddangosfwrdd Gweinyddwr System",
+  tableCaption: "List types"
 };

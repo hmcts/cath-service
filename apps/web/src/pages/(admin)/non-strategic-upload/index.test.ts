@@ -112,6 +112,16 @@ vi.mock("@hmcts/system-admin-pages", () => ({
   })
 }));
 
+const mockRedisClient = vi.hoisted(() => ({
+  setEx: vi.fn(),
+  get: vi.fn(),
+  del: vi.fn()
+}));
+
+vi.mock("@hmcts/redis", () => ({
+  getRedisClient: vi.fn(async () => mockRedisClient)
+}));
+
 vi.mock("@hmcts/admin-pages", async () => {
   const actual = await vi.importActual<typeof import("@hmcts/admin-pages")>("@hmcts/admin-pages");
   return {
@@ -689,5 +699,219 @@ describe("non-strategic-upload page", () => {
       // Should proceed to summary without Excel validation
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-summary?uploadId=test-upload-id-123");
     });
+  });
+});
+
+describe("non-strategic-upload page keeps a valid uploaded file across validation errors", () => {
+  const validBody = {
+    locationId: "1",
+    listType: "3",
+    "hearingStartDate-day": "15",
+    "hearingStartDate-month": "06",
+    "hearingStartDate-year": "2025",
+    sensitivity: "PUBLIC",
+    language: "ENGLISH",
+    "displayFrom-day": "10",
+    "displayFrom-month": "06",
+    "displayFrom-year": "2025",
+    "displayTo-day": "20",
+    "displayTo-month": "06",
+    "displayTo-year": "2025"
+  };
+  const uploadedFile = {
+    buffer: Buffer.from("file content"),
+    originalname: "hearing-list.xlsx",
+    mimetype: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    size: 12
+  } as Express.Multer.File;
+  const keptReference = { id: "kept-id", fileName: "kept.xlsx" };
+  const fieldErrors = [{ text: "Please select a list type", href: "#listType" }];
+
+  function buildSession(overrides: Record<string, unknown> = {}) {
+    return { save: vi.fn((cb: (err?: unknown) => void) => cb()), ...overrides } as any;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRedisClient.setEx.mockResolvedValue("OK");
+    mockRedisClient.del.mockResolvedValue(1);
+    mockRedisClient.get.mockResolvedValue(null);
+  });
+
+  it("should keep a valid file when only other fields have errors", async () => {
+    // Arrange
+    const session = buildSession();
+    const req = { body: validBody, file: uploadedFile, session } as unknown as Request;
+    const res = { redirect: vi.fn() } as unknown as Response;
+    vi.mocked(validateNonStrategicUploadForm).mockResolvedValue(fieldErrors);
+
+    // Act
+    await callHandler(POST, req, res);
+
+    // Assert
+    expect(mockRedisClient.setEx).toHaveBeenCalledWith(expect.stringMatching(/^non-strategic-upload-pending:/), 3600, expect.any(String));
+    expect(session.nonStrategicUploadPendingFile).toEqual({ id: expect.any(String), fileName: "hearing-list.xlsx" });
+    expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
+  });
+
+  it("should not keep a file that failed its own validation", async () => {
+    // Arrange
+    const session = buildSession();
+    const req = { body: validBody, file: uploadedFile, session } as unknown as Request;
+    const res = { redirect: vi.fn() } as unknown as Response;
+    vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([{ text: "Invalid file", href: "#file" }, ...fieldErrors]);
+
+    // Act
+    await callHandler(POST, req, res);
+
+    // Assert
+    expect(mockRedisClient.setEx).not.toHaveBeenCalled();
+    expect(session.nonStrategicUploadPendingFile).toBeUndefined();
+  });
+
+  it("should not store anything and drop the kept file when the new file is too large", async () => {
+    // Arrange
+    const session = buildSession({ nonStrategicUploadPendingFile: keptReference });
+    const req = { body: validBody, session, fileUploadError: { code: "LIMIT_FILE_SIZE" } } as unknown as Request;
+    const res = { redirect: vi.fn() } as unknown as Response;
+    vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([{ text: "Please provide a file", href: "#file" }]);
+
+    // Act
+    await callHandler(POST, req, res);
+
+    // Assert
+    expect(vi.mocked(validateNonStrategicUploadForm).mock.calls[0][1]).toBeUndefined();
+    expect(mockRedisClient.get).not.toHaveBeenCalled();
+    expect(mockRedisClient.setEx).not.toHaveBeenCalled();
+    expect(mockRedisClient.del).toHaveBeenCalledWith("non-strategic-upload-pending:kept-id");
+    expect(session.nonStrategicUploadPendingFile).toBeUndefined();
+  });
+
+  it("should require a file again when the file input is submitted empty", async () => {
+    // Arrange
+    const session = buildSession({ nonStrategicUploadPendingFile: keptReference });
+    const req = { body: validBody, session } as unknown as Request;
+    const res = { redirect: vi.fn() } as unknown as Response;
+    vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([{ text: "Please provide a file", href: "#file" }]);
+
+    // Act
+    await callHandler(POST, req, res);
+
+    // Assert
+    expect(vi.mocked(validateNonStrategicUploadForm).mock.calls[0][1]).toBeUndefined();
+    expect(mockRedisClient.get).not.toHaveBeenCalled();
+    expect(mockRedisClient.del).toHaveBeenCalledWith("non-strategic-upload-pending:kept-id");
+    expect(session.nonStrategicUploadPendingFile).toBeUndefined();
+  });
+
+  it("should use the submitted file and clean up the kept file on success", async () => {
+    // Arrange
+    const session = buildSession({ nonStrategicUploadPendingFile: keptReference });
+    const req = { body: validBody, file: uploadedFile, session } as unknown as Request;
+    const res = { redirect: vi.fn() } as unknown as Response;
+    vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
+
+    // Act
+    await callHandler(POST, req, res);
+
+    // Assert
+    expect(storeNonStrategicUpload).toHaveBeenCalledWith(expect.objectContaining({ file: uploadedFile.buffer, fileName: uploadedFile.originalname }));
+    expect(mockRedisClient.del).toHaveBeenCalledWith("non-strategic-upload-pending:kept-id");
+    expect(session.nonStrategicUploadPendingFile).toBeUndefined();
+    expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-summary?uploadId=test-upload-id-123");
+  });
+
+  it("should keep the existing reference when resubmitting with errors and no new file", async () => {
+    // Arrange
+    const session = buildSession({ nonStrategicUploadPendingFile: keptReference });
+    const req = { body: validBody, session } as unknown as Request;
+    const res = { redirect: vi.fn() } as unknown as Response;
+    mockRedisClient.get.mockResolvedValue(
+      JSON.stringify({ fileName: "kept.xlsx", fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileBase64: "" })
+    );
+    vi.mocked(validateNonStrategicUploadForm).mockResolvedValue(fieldErrors);
+
+    // Act
+    await callHandler(POST, req, res);
+
+    // Assert
+    expect(session.nonStrategicUploadPendingFile).toEqual(keptReference);
+    expect(mockRedisClient.del).not.toHaveBeenCalled();
+    expect(mockRedisClient.setEx).not.toHaveBeenCalled();
+  });
+
+  it("should replace the kept file when a new file is chosen", async () => {
+    // Arrange
+    const session = buildSession({ nonStrategicUploadPendingFile: keptReference });
+    const req = { body: validBody, file: uploadedFile, session } as unknown as Request;
+    const res = { redirect: vi.fn() } as unknown as Response;
+    vi.mocked(validateNonStrategicUploadForm).mockResolvedValue(fieldErrors);
+
+    // Act
+    await callHandler(POST, req, res);
+
+    // Assert
+    expect(mockRedisClient.get).not.toHaveBeenCalled();
+    expect(mockRedisClient.del).toHaveBeenCalledWith("non-strategic-upload-pending:kept-id");
+    expect(session.nonStrategicUploadPendingFile).toEqual({ id: expect.any(String), fileName: "hearing-list.xlsx" });
+  });
+
+  it("should treat an expired kept file as no file", async () => {
+    // Arrange
+    const session = buildSession({ nonStrategicUploadPendingFile: keptReference });
+    const req = { body: validBody, session } as unknown as Request;
+    const res = { redirect: vi.fn() } as unknown as Response;
+    mockRedisClient.get.mockResolvedValue(null);
+    vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([{ text: "Please provide a file", href: "#file" }]);
+
+    // Act
+    await callHandler(POST, req, res);
+
+    // Assert
+    expect(vi.mocked(validateNonStrategicUploadForm).mock.calls[0][1]).toBeUndefined();
+    expect(session.nonStrategicUploadPendingFile).toBeUndefined();
+    expect(session.nonStrategicUploadErrors).toEqual([{ text: "Please provide a file", href: "#file" }]);
+  });
+
+  it("should pass the kept file to the page so it can be put back into the file input", async () => {
+    // Arrange
+    const session = buildSession({
+      nonStrategicUploadPendingFile: keptReference,
+      nonStrategicUploadErrors: fieldErrors,
+      nonStrategicUploadForm: { listType: "1" }
+    });
+    const req = { session, query: {} } as unknown as Request;
+    const res = { render: vi.fn() } as unknown as Response;
+
+    // Act
+    await callHandler(GET, req, res);
+
+    // Assert
+    const renderData = vi.mocked(res.render).mock.calls[0][1] as any;
+    expect(renderData.pendingFileName).toBe("kept.xlsx");
+    expect(renderData.pendingFileUrl).toBe("/non-strategic-upload/pending-file");
+    expect(renderData.data).toEqual(expect.objectContaining({ listType: "1" }));
+    expect(session.nonStrategicUploadPendingFile).toEqual(keptReference);
+    expect(mockRedisClient.del).not.toHaveBeenCalled();
+  });
+
+  it("should drop the kept file on refresh or when arriving from the summary Change link", async () => {
+    // Arrange
+    const session = buildSession({
+      nonStrategicUploadPendingFile: keptReference,
+      nonStrategicUploadSubmitted: true,
+      nonStrategicUploadForm: { listType: "1" }
+    });
+    const req = { session, query: {} } as unknown as Request;
+    const res = { render: vi.fn() } as unknown as Response;
+
+    // Act
+    await callHandler(GET, req, res);
+
+    // Assert
+    const renderData = vi.mocked(res.render).mock.calls[0][1] as any;
+    expect(renderData.pendingFileName).toBeUndefined();
+    expect(mockRedisClient.del).toHaveBeenCalledWith("non-strategic-upload-pending:kept-id");
+    expect(session.nonStrategicUploadPendingFile).toBeUndefined();
   });
 });
