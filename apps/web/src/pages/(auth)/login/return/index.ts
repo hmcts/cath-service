@@ -1,8 +1,10 @@
-import { createOrUpdateUser } from "@hmcts/account/repository/query";
+import { createOrUpdateUser, updateLastVerifiedDate } from "@hmcts/account/repository/query";
 import type { UserProfile } from "@hmcts/auth";
 import { getB2cBaseUrl, getB2cConfig, isB2cConfigured } from "@hmcts/auth";
 import { trackException } from "@hmcts-cft/cloud-native-platform";
 import type { Request, Response } from "express";
+
+const MEDIA_VERIFICATION_PROVIDER = "media_verification";
 
 /**
  * Handles OAuth callback from Azure B2C (GET - response_mode=query)
@@ -97,6 +99,10 @@ async function handleCallback(req: Request, res: Response, params: any) {
       return res.redirect("/sign-in?error=db_error");
     }
 
+    if (provider === MEDIA_VERIFICATION_PROVIDER && dbUser.role === "VERIFIED") {
+      await updateLastVerifiedDate(dbUser.userProvenanceId);
+    }
+
     // Use database userId for session (required for foreign key relationships)
     userProfile.id = dbUser.userId;
 
@@ -105,7 +111,7 @@ async function handleCallback(req: Request, res: Response, params: any) {
     const locale = req.session.b2cLocale;
 
     // Build redirect URL with locale if Welsh
-    const redirectUrl = locale === "cy" ? `${returnTo}?lng=cy` : returnTo;
+    const redirectUrl = locale === "cy" ? `${returnTo}${returnTo.includes("?") ? "&" : "?"}lng=cy` : returnTo;
 
     // Clear B2C session data
     delete req.session.b2cProvider;
@@ -151,8 +157,10 @@ async function exchangeCodeForTokens(code: string, provider: string): Promise<{ 
     policy = b2cConfig.policyCath;
   } else if (provider === "password_reset") {
     policy = b2cConfig.policyResetCredentials;
+  } else if (provider === MEDIA_VERIFICATION_PROVIDER) {
+    policy = b2cConfig.policyMediaVerification;
   } else {
-    throw new Error(`Invalid B2C provider: ${provider}. Only 'cath' and 'password_reset' are supported.`);
+    throw new Error(`Invalid B2C provider: ${provider}. Only 'cath', 'password_reset' and '${MEDIA_VERIFICATION_PROVIDER}' are supported.`);
   }
 
   const tokenUrl = `${getB2cBaseUrl()}/oauth2/v2.0/token?p=${policy}`;

@@ -1,5 +1,8 @@
 {
   "applicationInsights": {
     "connectionString": "APPLICATION_INSIGHTS_CONNECTION_STRING"
+  },
+  "redis": {
+    "url": "REDIS_URL"
   }
 }

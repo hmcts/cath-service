@@ -7,6 +7,7 @@ interface B2cConfig {
   clientSecret: string;
   policyCath: string;
   policyResetCredentials: string;
+  policyMediaVerification: string;
   redirectUri: string;
   responseType: "code" | "code id_token" | "id_token code" | "id_token";
   // Query only: the session cookie is SameSite=Lax, so a cross-site form_post callback
@@ -49,6 +50,7 @@ export function getB2cConfig(): B2cConfig {
     clientSecret: getConfigValue("B2C_CLIENT_SECRET"),
     policyCath: getConfigValue("B2C_POLICY_CATH") || "B2C_1_SignInUserFlow",
     policyResetCredentials: getConfigValue("B2C_POLICY_RESET_CREDENTIALS") || "B2C_1A_PASSWORD_RESET",
+    policyMediaVerification: getConfigValue("B2C_POLICY_MEDIA_VERIFICATION") || "B2C_1_SignInMediaVerification",
     redirectUri,
     responseType: "code",
     responseMode: "query",

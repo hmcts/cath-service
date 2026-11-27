@@ -43,6 +43,22 @@ describe("B2C Configuration", () => {
 
       expect(config.policyCath).toBe("B2C_1_SignInUserFlow");
     });
+
+    it("should default the media verification policy to B2C_1_SignInMediaVerification", () => {
+      delete process.env.B2C_POLICY_MEDIA_VERIFICATION;
+
+      const config = getB2cConfig();
+
+      expect(config.policyMediaVerification).toBe("B2C_1_SignInMediaVerification");
+    });
+
+    it("should use B2C_POLICY_MEDIA_VERIFICATION when set", () => {
+      process.env.B2C_POLICY_MEDIA_VERIFICATION = "B2C_1A_CustomMediaVerification";
+
+      const config = getB2cConfig();
+
+      expect(config.policyMediaVerification).toBe("B2C_1A_CustomMediaVerification");
+    });
   });
 
   describe("isB2cConfigured", () => {

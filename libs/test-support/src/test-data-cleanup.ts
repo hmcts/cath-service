@@ -19,6 +19,7 @@ export async function cleanupByPrefix(prefix: string): Promise<CleanupResult> {
     ["artefacts", () => deleteArtefacts(prefix)],
     ["subscriptions", () => deleteSubscriptions(prefix)],
     ["users", () => deleteUsers(prefix)],
+    ["userArchives", () => deleteUserArchives(prefix)],
     ["locations", () => deleteLocations(prefix)],
     ["listTypes", () => deleteListTypes(prefix)],
     // Reference data goes after locations and list types so their link rows are already gone where they cascade
@@ -123,6 +124,14 @@ async function deleteUsers(prefix: string): Promise<number> {
   return result.count;
 }
 
+// Archive rows are written when an E2E test deletes a prefixed user through the System Admin journey
+async function deleteUserArchives(prefix: string): Promise<number> {
+  const result = await prisma.userArchive.deleteMany({
+    where: { OR: [{ email: { startsWith: prefix } }, { provenanceUserId: { startsWith: prefix } }] }
+  });
+  return result.count;
+}
+
 // CASCADE handles the location junction tables
 async function deleteLocations(prefix: string): Promise<number> {
   const result = await prisma.location.deleteMany({ where: { name: { startsWith: prefix } } });
@@ -196,6 +205,7 @@ export interface CleanupDetails {
   artefacts: number;
   subscriptions: number;
   users: number;
+  userArchives: number;
   locations: number;
   listTypes: number;
   subJurisdictions: number;

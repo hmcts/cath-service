@@ -259,6 +259,15 @@ describe("MOCK_AZURE_B2C", () => {
     await expect(updateMediaUser("any-token", "user-123", { displayName: "Test", givenName: "Test", surname: "User" })).resolves.toBeUndefined();
   });
 
+  it("should make no Graph call for deleteB2cUser when MOCK_AZURE_B2C is true", async () => {
+    const { Client } = await import("@microsoft/microsoft-graph-client");
+    const { deleteB2cUser } = await import("./client.js");
+
+    await expect(deleteB2cUser("any-token", "b2c-user-1")).resolves.toBeUndefined();
+
+    expect(Client.init).not.toHaveBeenCalled();
+  });
+
   it("should return mock user ID for createMediaUser when MOCK_AZURE_B2C is true", async () => {
     const { createMediaUser } = await import("./client.js");
 
@@ -309,16 +318,111 @@ describe("getGraphApiAccessToken", () => {
     await expect(getGraphApiAccessToken()).rejects.toThrow("Azure B2C credentials not configured");
   });
 
-  it("should throw error when token request fails", async () => {
+  it("should throw an error with only the status and OAuth error code when the token request fails", async () => {
     const { getGraphApiAccessToken } = await import("./client.js");
-
+    const body = {
+      error: "invalid_client",
+      error_description: "AADSTS7000215: Invalid client secret provided for test-client-secret",
+      trace_id: "trace-abc"
+    };
     mockFetch.mockResolvedValue({
       ok: false,
       status: 401,
-      text: async () => "Unauthorized"
+      json: async () => body,
+      text: async () => JSON.stringify(body)
     });
 
-    await expect(getGraphApiAccessToken()).rejects.toThrow("Failed to obtain Graph API access token: 401 Unauthorized");
+    const error = await getGraphApiAccessToken().catch((e: Error) => e);
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toBe("Failed to obtain Graph API access token: 401 invalid_client");
+    expect((error as Error).message).not.toContain("AADSTS7000215");
+    expect((error as Error).message).not.toContain("test-client-secret");
+  });
+
+  it("should use a generic code when the token error response is not JSON", async () => {
+    const { getGraphApiAccessToken } = await import("./client.js");
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 502,
+      json: async () => {
+        throw new SyntaxError("Unexpected token <");
+      }
+    });
+
+    await expect(getGraphApiAccessToken()).rejects.toThrow("Failed to obtain Graph API access token: 502 unknown_error");
+  });
+
+  it("should use a generic code when the token error response has no error field", async () => {
+    const { getGraphApiAccessToken } = await import("./client.js");
+    mockFetch.mockResolvedValue({ ok: false, status: 500, json: async () => ({ message: "boom" }) });
+
+    await expect(getGraphApiAccessToken()).rejects.toThrow("Failed to obtain Graph API access token: 500 unknown_error");
+  });
+});
+
+describe("deleteB2cUser", () => {
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("should send DELETE /users/{id}", async () => {
+    const { Client } = await import("@microsoft/microsoft-graph-client");
+    const { deleteB2cUser } = await import("./client.js");
+    const mockDelete = vi.fn().mockResolvedValue(undefined);
+    const mockApi = vi.fn().mockReturnValue({ delete: mockDelete });
+    vi.mocked(Client.init).mockReturnValue({ api: mockApi } as any);
+
+    await deleteB2cUser("test-token", "b2c-user-1");
+
+    expect(mockApi).toHaveBeenCalledWith("/users/b2c-user-1");
+    expect(mockDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it("should treat a 404 as success without logging", async () => {
+    const { Client } = await import("@microsoft/microsoft-graph-client");
+    const { deleteB2cUser } = await import("./client.js");
+    const mockDelete = vi.fn().mockRejectedValue({ statusCode: 404, code: "Request_ResourceNotFound", message: "Resource does not exist" });
+    vi.mocked(Client.init).mockReturnValue({ api: vi.fn().mockReturnValue({ delete: mockDelete }) } as any);
+
+    await expect(deleteB2cUser("test-token", "b2c-user-1")).resolves.toBeUndefined();
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("should wrap other errors with the status and code only, and log status, code and message", async () => {
+    const { Client } = await import("@microsoft/microsoft-graph-client");
+    const { deleteB2cUser } = await import("./client.js");
+    const mockDelete = vi.fn().mockRejectedValue({
+      statusCode: 403,
+      code: "Authorization_RequestDenied",
+      message: "Insufficient privileges",
+      body: "raw-body-with-token",
+      headers: { Authorization: "Bearer secret-token" }
+    });
+    vi.mocked(Client.init).mockReturnValue({ api: vi.fn().mockReturnValue({ delete: mockDelete }) } as any);
+
+    await expect(deleteB2cUser("secret-token", "b2c-user-1")).rejects.toThrow("Failed to delete B2C user: 403 Authorization_RequestDenied");
+    expect(consoleErrorSpy).toHaveBeenCalledWith("Graph API deleteB2cUser error:", {
+      statusCode: 403,
+      code: "Authorization_RequestDenied",
+      message: "Insufficient privileges"
+    });
+    expect(JSON.stringify(consoleErrorSpy.mock.calls)).not.toContain("secret-token");
+  });
+
+  it("should describe a missing status and code when wrapping an error", async () => {
+    const { Client } = await import("@microsoft/microsoft-graph-client");
+    const { deleteB2cUser } = await import("./client.js");
+    vi.mocked(Client.init).mockReturnValue({ api: vi.fn().mockReturnValue({ delete: vi.fn().mockRejectedValue({}) }) } as any);
+
+    await expect(deleteB2cUser("test-token", "b2c-user-1")).rejects.toThrow("Failed to delete B2C user: unknown status unknown code");
   });
 });
 

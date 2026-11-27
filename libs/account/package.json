@@ -14,6 +14,10 @@
     "./repository/service": {
       "production": "./dist/repository/service.js",
       "default": "./src/repository/service.ts"
+    },
+    "./user-archive": {
+      "production": "./dist/user-archive/service.js",
+      "default": "./src/user-archive/service.ts"
     }
   },
   "types": "./dist/roles.d.ts",

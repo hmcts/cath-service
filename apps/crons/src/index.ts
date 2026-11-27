@@ -39,7 +39,7 @@ export const main = async () => {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
-    console.error("Cron job failed:", error);
+    console.error("Cron job failed:", error instanceof Error ? error.message : "Unknown error");
     process.exit(1);
   });
 }

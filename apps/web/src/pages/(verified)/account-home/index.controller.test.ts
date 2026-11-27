@@ -29,7 +29,8 @@ describe("account-home controller", () => {
 
   beforeEach(() => {
     mockRequest = {
-      path: "/account-home"
+      path: "/account-home",
+      query: {}
     };
 
     mockResponse = {
@@ -251,6 +252,21 @@ describe("account-home controller", () => {
 
       const templatePath = (mockResponse.render as any).mock.calls[0][0];
       expect(templatePath).toBe("account-home/index");
+    });
+
+    it.each([
+      { verified: "true", expected: true },
+      { verified: "false", expected: false },
+      { verified: undefined, expected: false },
+      { verified: "yes", expected: false }
+    ])("should set showVerifiedBanner to $expected when verified is $verified", async ({ verified, expected }) => {
+      mockRequest.query = verified === undefined ? {} : { verified };
+
+      const { GET } = await import("./index.js");
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.render).toHaveBeenCalledWith("account-home/index", expect.objectContaining({ showVerifiedBanner: expected }));
     });
   });
 });

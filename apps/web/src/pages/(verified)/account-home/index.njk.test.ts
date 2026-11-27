@@ -67,4 +67,43 @@ describe("account-home template", () => {
       expect(tileHeadings).toEqual([cy.sections.courtHearings.title, cy.sections.sjpCases.title, cy.sections.emailSubscriptions.title]);
     });
   });
+
+  describe("verified banner", () => {
+    it("should show the verified notification banner when showVerifiedBanner is true", () => {
+      const { $ } = render(env, TEMPLATE, { ...en, showVerifiedBanner: true });
+
+      const banner = $(".govuk-notification-banner");
+      expect(banner).toHaveLength(1);
+      expect(banner.find(".govuk-notification-banner__title").text().trim()).toBe(en.bannerTitle);
+      expect(banner.find("p.govuk-notification-banner__heading").text().trim()).toBe(en.bannerText);
+    });
+
+    it("should render the banner before the page heading", () => {
+      const { $ } = render(env, TEMPLATE, { ...en, showVerifiedBanner: true });
+
+      const column = $(".govuk-grid-column-full").first();
+      expect(column.children().first().hasClass("govuk-notification-banner")).toBe(true);
+      expect(column.find(".govuk-notification-banner ~ h1")).toHaveLength(1);
+    });
+
+    it.each([false, undefined])("should not show the banner when showVerifiedBanner is %s", (showVerifiedBanner) => {
+      const { $ } = render(env, TEMPLATE, { ...en, showVerifiedBanner });
+
+      expect($(".govuk-notification-banner")).toHaveLength(0);
+    });
+
+    it("should show the Welsh banner title and text when the cy locale is used", () => {
+      const { $ } = render(env, TEMPLATE, { ...cy, showVerifiedBanner: true });
+
+      expect($(".govuk-notification-banner__title").text().trim()).toBe(cy.bannerTitle);
+      expect($("p.govuk-notification-banner__heading").text().trim()).toBe(cy.bannerText);
+      expect($("body").text()).not.toContain(en.bannerTitle);
+    });
+  });
+
+  it("should have the same locale keys in en and cy", () => {
+    expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+    expect(en.bannerText).toBe("Your account has been verified.");
+    expect(cy.bannerText).toBe("Mae eich cyfrif wedi cael ei ddilysu.");
+  });
 });

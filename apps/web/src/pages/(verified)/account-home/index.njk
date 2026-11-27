@@ -1,4 +1,5 @@
 {% extends "layouts/base-template.njk" %}
+{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
 
 {% block pageTitle %}
   {{ pageTitle }} - {{ serviceName }} - {{ govUk }}
@@ -7,6 +8,16 @@
 {% block page_content %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
+    {% if showVerifiedBanner %}
+      {% set bannerHtml %}
+        <p class="govuk-notification-banner__heading">{{ bannerText }}</p>
+      {% endset %}
+      {{ govukNotificationBanner({
+        titleText: bannerTitle,
+        html: bannerHtml
+      }) }}
+    {% endif %}
+
     <h1 class="govuk-heading-l">{{ title }}</h1>
 
     <div class="verified-tiles-container">

@@ -56,7 +56,7 @@ test.describe("MI Report download", () => {
 
     expect(download.suggestedFilename()).toMatch(/^mi-report-all-data-30days-\d{4}-\d{2}-\d{2}\.xlsx$/);
 
-    // Download the 'Deleted accounts' report (empty until #351 populates the table, but still a valid xlsx)
+    // Download the 'Deleted accounts' report
     await page.goto("/mi-report");
     await page.getByLabel("Reporting period").selectOption("all");
     await page.getByLabel("Report type").selectOption("deleted-accounts");
