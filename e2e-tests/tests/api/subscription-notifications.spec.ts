@@ -167,7 +167,11 @@ test.describe("Subscription Notifications", () => {
     expect(notifications).toHaveLength(0);
   });
 
-  test("non-strategic list publication sends the PDF-only email with 1 download link", async () => {
+  // QUARANTINED by the flaky test tracker (2026-11-23): failed then passed on retry in 4 of 15 master E2E jobs
+  // (e.g. https://github.com/hmcts/cath-service/actions/runs/45209114541/job/137825623755). The notification is
+  // "Sent" but the CST PDF never reaches blob storage, which points at intermittent PDF generation on AAT
+  // rather than the test. Un-skip once that is diagnosed. Report: see the PR that added this skip.
+  test.skip("non-strategic list publication sends the PDF-only email with 1 download link", async () => {
     test.skip(!process.env.GOVUK_NOTIFY_API_KEY, NOTIFY_KEY_MISSING);
     // Puppeteer PDF generation can take 40-60 seconds on a CI cold start, and notifications follow it
     test.setTimeout(120_000);

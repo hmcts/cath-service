@@ -1,5 +1,7 @@
 import type { Express } from "express";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+const COLD_IMPORT_TIMEOUT_MS = 60_000;
 
 // Mock all dependencies before importing createApp
 vi.mock("@hmcts-cft/cloud-native-platform", () => ({
@@ -223,6 +225,14 @@ async function fakeKeyVault(localEnv: Partial<Record<keyof typeof KEY_VAULT_SECR
 
 describe("Web Application", () => {
   let app: Express;
+
+  // The first import of app.ts transforms its ~50 workspace packages from cold.
+  // Under a parallel CI run that can exceed the default 10s hook timeout and fail
+  // whichever test runs first. Paying that cost once here, with a budget sized for
+  // it, means every beforeEach re-import hits the warm transform cache.
+  beforeAll(async () => {
+    await import("./app.js");
+  }, COLD_IMPORT_TIMEOUT_MS);
 
   beforeEach(async () => {
     vi.clearAllMocks();
