@@ -1,8 +1,10 @@
 import { createOrUpdateUser } from "@hmcts/account/repository/query";
 import type { UserProfile } from "@hmcts/auth";
-import { getB2cBaseUrl, getB2cConfig, isB2cConfigured } from "@hmcts/auth";
+import { consumeReturnTo, getB2cBaseUrl, getB2cConfig, isB2cConfigured } from "@hmcts/auth";
 import { trackException } from "@hmcts-cft/cloud-native-platform";
 import type { Request, Response } from "express";
+
+const DEFAULT_RETURN_TO = "/account-home";
 
 /**
  * Handles OAuth callback from Azure B2C (GET - response_mode=query)
@@ -100,16 +102,10 @@ async function handleCallback(req: Request, res: Response, params: any) {
     // Use database userId for session (required for foreign key relationships)
     userProfile.id = dbUser.userId;
 
-    // Get return URL and locale from session
-    const returnTo = req.session.returnTo || "/account-home";
-    const locale = req.session.b2cLocale;
-
-    // Build redirect URL with locale if Welsh
-    const redirectUrl = locale === "cy" ? `${returnTo}?lng=cy` : returnTo;
+    const redirectUrl = consumeReturnTo(req, DEFAULT_RETURN_TO);
 
     // Clear B2C session data
     delete req.session.b2cProvider;
-    delete req.session.returnTo;
     delete req.session.b2cLocale;
 
     // Log in user via Passport (this makes req.isAuthenticated() return true)

@@ -137,7 +137,19 @@ describe("files route", () => {
     await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
     expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Type", "application/octet-stream");
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Disposition", 'attachment; filename="file.xyz"');
     expect(mockResponse.send).toHaveBeenCalled();
+  });
+
+  it("should serve XML files with attachment disposition so XHTML content cannot run script", async () => {
+    mockRequest.params = { filename: "document.xml" };
+    mockDownloadBlob.mockResolvedValue(Buffer.from('<html xmlns="http://www.w3.org/1999/xhtml"><script>alert(1)</script></html>'));
+
+    const handler = GET[1];
+    await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Type", "application/octet-stream");
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Disposition", 'attachment; filename="document.xml"');
   });
 
   it("should serve HTML files with attachment disposition to prevent XSS", async () => {
@@ -147,7 +159,7 @@ describe("files route", () => {
     const handler = GET[1];
     await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-    expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Type", "text/html");
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Type", "application/octet-stream");
     expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Disposition", 'attachment; filename="document.html"');
     expect(mockResponse.setHeader).toHaveBeenCalledWith("Cache-Control", "no-store, no-cache, must-revalidate, private");
     expect(mockResponse.setHeader).toHaveBeenCalledWith("X-Content-Type-Options", "nosniff");
