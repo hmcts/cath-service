@@ -71,6 +71,13 @@ jobs:
       BASE_URL: https://localhost:8080
       PORT: 8080
 
+      # Load secrets through helm/values.dev.yaml from cath-aat, as local development does. Without
+      # these the apps read the deployed chart and Key Vault overrides the env below: REDIS_URL became
+      # AAT's private Managed Redis, so every Notify email hung in Pending, and secret names kept a
+      # literal <ENV>
+      LOCAL_DEV: "true"
+      VAULT_URI_SUFFIX: aat
+
       # Database Configuration (using service containers)
       DATABASE_URL: postgresql://hmcts@localhost:5432/postgres
       REDIS_URL: redis://localhost:6379
