@@ -1,0 +1,213 @@
+name: Prod
+
+# Smoke tests PROD after Flux rolls out a promoted release (#1099). It deploys
+# nothing: Main promotes the images to prod-<sha>-<timestamp> tags, Flux image
+# automation in hmcts/cnp-flux-config picks them up, and Flux upgrades the PROD
+# HelmReleases. This workflow waits for that rollout and then checks the result.
+#
+# How it runs:
+#   - workflow_run: starts when a Main run on master completes, as a separate run,
+#     so a PROD failure cannot turn Main, Demo or Perftest red.
+#     job.check-promoted.yml skips everything unless every Promote job succeeded.
+#   - workflow_dispatch: checks whatever PROD runs now, without waiting for a commit.
+#
+# What it checks, all from the azure-prod runners:
+#   - https://cath.platform.hmcts.net/health/deployment, until web and the API both
+#     run the promoted commit. cath-api.platform.hmcts.net is not reachable from the
+#     runners (#1448, DTSPO-36470), so web reports the API, which it calls at that
+#     host from inside AKS (CATH_API_URL, libs/web-core/src/health/deployment-health-check.ts)
+#   - /test-support returns 404, as ENABLE_TEST_SUPPORT is false in PROD
+#   - the web root, and the API through APIM's anonymous healthCheck operation, which
+#     is the route suppliers use (infrastructure/resources/operation-policies/healthCheck.xml)
+#
+# Rollback: in hmcts/cnp-flux-config, the image tag lives in the shared
+# apps/cath/cath-<app>/cath-<app>.yaml, next to an {"$imagepolicy": ...} marker
+# that image automation rewrites. To roll PROD back alone, set the last good
+# prod-* tag as nodejs.image in apps/cath/cath-<app>/prod.yaml, without the
+# marker so automation leaves it alone. Remove the override once a fixed release
+# is promoted, or PROD stays pinned.
+#
+# workflow_run only ever runs the default-branch copy of this file, so edits to
+# the trigger do nothing until merged.
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [Main]
+    types: [completed]
+    branches: [master]
+
+concurrency:
+  group: prod-smoke
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  WEB_URL: https://cath.platform.hmcts.net
+  APIM_URL: https://cft-api-mgmt.platform.hmcts.net/cath/
+
+jobs:
+  check-promoted:
+    name: Check Promoted
+    permissions:
+      actions: read
+    uses: ./.github/workflows/job.check-promoted.yml
+
+  rollout:
+    name: Wait for Flux
+    needs: [check-promoted]
+    if: needs.check-promoted.outputs.should-deploy == 'true'
+    # GitHub-hosted runners are not in the PROD WAF allow list.
+    runs-on:
+      group: azure-prod
+    permissions:
+      actions: read
+    timeout-minutes: 30
+
+    steps:
+      - name: Check which apps were promoted
+        id: promoted
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          # Promote only re-tags the apps the commit changed. An app that was not
+          # promoted keeps running an older image in PROD, so there is no new commit
+          # to wait for. A manual dispatch checks whatever is running.
+          if [ "${EVENT_NAME}" != "workflow_run" ]; then
+            echo "web=false" >> "$GITHUB_OUTPUT"
+            echo "api=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          JOBS=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/jobs?per_page=100" \
+            --jq '.jobs[] | select(.conclusion == "success") | .name')
+          for app in web api; do
+            if echo "${JOBS}" | grep -qx "Promote / Promote ${app} to prod"; then
+              echo "${app}=true" >> "$GITHUB_OUTPUT"
+              echo "${app} was promoted in Main run ${RUN_ID}"
+            else
+              echo "${app}=false" >> "$GITHUB_OUTPUT"
+              echo "${app} was not promoted in Main run ${RUN_ID} - not waiting for it"
+            fi
+          done
+
+      - name: Wait until PROD runs the promoted commit
+        env:
+          SHA: ${{ needs.check-promoted.outputs.sha }}
+          WAIT_WEB: ${{ steps.promoted.outputs.web }}
+          WAIT_API: ${{ steps.promoted.outputs.api }}
+        run: |
+          # Flux usually rolls out in about 2 minutes, but an API upgrade can take
+          # 5-10. Front Door spreads requests over the pods in both PROD clusters, so
+          # several matches in a row are needed before the rollout counts as done.
+          TIMEOUT_SECONDS=1200
+          INTERVAL_SECONDS=15
+          REQUIRED_MATCHES=5
+          deadline=$(( $(date +%s) + TIMEOUT_SECONDS ))
+          matches=0
+          while [ "$(date +%s)" -lt "${deadline}" ]; do
+            body=$(curl -s --max-time 15 "${WEB_URL}/health/deployment?t=$(date +%s%N)" || true)
+            status=$(echo "${body}" | jq -r '.status // empty' 2>/dev/null || true)
+            web=$(echo "${body}" | jq -r '.gitCommit // empty' 2>/dev/null || true)
+            api=$(echo "${body}" | jq -r '.services["cath-api"].gitCommit // empty' 2>/dev/null || true)
+
+            ready=true
+            [ "${status}" = "UP" ] || ready=false
+            if [ "${WAIT_WEB}" = "true" ] && [ "${web}" != "${SHA}" ]; then ready=false; fi
+            if [ "${WAIT_API}" = "true" ] && [ "${api}" != "${SHA}" ]; then ready=false; fi
+
+            if [ "${ready}" = "true" ]; then
+              matches=$((matches + 1))
+              echo "PROD is UP, web ${web:0:7}, api ${api:0:7} (${matches}/${REQUIRED_MATCHES})"
+              if [ "${matches}" -ge "${REQUIRED_MATCHES}" ]; then
+                exit 0
+              fi
+            else
+              matches=0
+              echo "Waiting for ${SHA:0:7}: status ${status:-no answer}, web ${web:-?}, api ${api:-?}"
+            fi
+            sleep "${INTERVAL_SECONDS}"
+          done
+          echo "::error::Flux did not roll out ${SHA:0:7} to PROD within $((TIMEOUT_SECONDS / 60)) minutes (last answer: ${body:-none}). Check the cath-web and cath-api HelmReleases in hmcts/cnp-flux-config and the cath-builds channel."
+          exit 1
+
+      - name: Check test support is disabled
+        run: |
+          status=$(curl -s -o /dev/null --max-time 20 -w "%{http_code}" "${WEB_URL}/test-support/health" || echo "000")
+          if [ "${status}" != "404" ]; then
+            echo "::error::${WEB_URL}/test-support/health returned ${status}, expected 404. ENABLE_TEST_SUPPORT must be false in PROD."
+            exit 1
+          fi
+          echo "Test support is disabled (404)"
+
+      - name: Encode smoke test URLs
+        id: urls
+        run: |
+          echo "urls=$(jq -cn --arg web "${WEB_URL}" --arg api "${APIM_URL}" '{web: $web, api: $api}' | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+    outputs:
+      urls: ${{ steps.urls.outputs.urls }}
+
+  smoke-test-stage:
+    name: Smoke Test
+    needs: [rollout]
+    uses: ./.github/workflows/stage.smoke-test.yml
+    with:
+      change-id: prod
+      urls: ${{ needs.rollout.outputs.urls }}
+      runner-group: azure-prod
+
+  notify:
+    name: Notify Failure
+    needs: [check-promoted, rollout, smoke-test-stage]
+    if: |
+      always() &&
+      needs.check-promoted.outputs.should-deploy == 'true' &&
+      (needs.rollout.result == 'failure' || needs.smoke-test-stage.result == 'failure')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      # The same webhook the watchdog posts with. See watchdog.yml for why it is a
+      # webhook and why it lives in cath-aat.
+      - name: Load the Slack webhook
+        run: |
+          set -euo pipefail
+          webhook=$(az keyvault secret show --vault-name cath-aat --name slack-webhook-url --query value -o tsv)
+          echo "::add-mask::$webhook"
+          echo "SLACK_WEBHOOK_URL=$webhook" >> "$GITHUB_ENV"
+
+      - name: Build the message
+        id: message
+        env:
+          SHA: ${{ needs.check-promoted.outputs.sha }}
+          ROLLOUT: ${{ needs.rollout.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ "${ROLLOUT}" = "failure" ]; then
+            what="Flux did not roll out \`${SHA:0:7}\` to PROD in time, or test support is enabled in PROD"
+          else
+            what="The PROD smoke test failed after \`${SHA:0:7}\` was promoted"
+          fi
+          {
+            echo "text<<SLACKEOF"
+            echo ":red_circle: *CaTH PROD:* ${what}."
+            echo "<${RUN_URL}|Prod workflow run>. To roll back, pin the last good \`prod-*\` tag in \`apps/cath/cath-<app>/prod.yaml\` in hmcts/cnp-flux-config."
+            echo "SLACKEOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Post to Slack
+        uses: hmcts/cnp-githubactions-library/slack-notify@b13c3487914b60791607a1d92f1c240c5b1c115e # merged in library#38
+        with:
+          text: ${{ steps.message.outputs.text }}
