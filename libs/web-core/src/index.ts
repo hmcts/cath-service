@@ -1,5 +1,6 @@
 import "./types/express.js";
 
+export { deploymentHealthCheck } from "./health/deployment-health-check.js";
 export { cy as accessibilityStatementCy } from "./locales/accessibility-statement/cy.js";
 // Page locale exports
 export { en as accessibilityStatementEn } from "./locales/accessibility-statement/en.js";
