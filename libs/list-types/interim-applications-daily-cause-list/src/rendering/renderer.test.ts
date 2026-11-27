@@ -96,6 +96,48 @@ describe("renderInterimApplicationsDailyCauseList", () => {
     expect(result.importantInfo.editableParagraph).toBe("Parties should contact the clerk to the Interim Judge as early as possible.");
   });
 
+  it("should use the first open-justice entry with a value when an earlier row is blank", () => {
+    const data = buildData({
+      openJusticeStatementDetails: [
+        { nameToBeDisplayed: "", email: "" },
+        { nameToBeDisplayed: "Judge A", email: "a@justice.gov.uk" },
+        { nameToBeDisplayed: "Judge B", email: "b@justice.gov.uk" }
+      ]
+    });
+
+    const result = renderInterimApplicationsDailyCauseList(data, OPTIONS);
+
+    expect(result.importantInfo.editableParagraph).toBe(
+      "Parties should contact the clerk to the Interim Judge, Judge A, a@justice.gov.uk as early as possible."
+    );
+  });
+
+  it("should use the first open-justice entry with a value in Welsh when an earlier row is blank", () => {
+    const data = buildData({
+      openJusticeStatementDetails: [
+        { nameToBeDisplayed: "", email: "" },
+        { nameToBeDisplayed: "Judge A", email: "a@justice.gov.uk" }
+      ]
+    });
+
+    const result = renderInterimApplicationsDailyCauseList(data, { ...OPTIONS, locale: "cy" });
+
+    expect(result.importantInfo.editableParagraph).toBe("Dylai partïon gysylltu â chlerc y Barnwr Interim, Judge A, a@justice.gov.uk cyn gynted â phosibl.");
+  });
+
+  it("should fall back to static wording when every open-justice row is blank", () => {
+    const data = buildData({
+      openJusticeStatementDetails: [
+        { nameToBeDisplayed: "", email: "" },
+        { nameToBeDisplayed: "", email: "" }
+      ]
+    });
+
+    const result = renderInterimApplicationsDailyCauseList(data, OPTIONS);
+
+    expect(result.importantInfo.editableParagraph).toBe("Parties should contact the clerk to the Interim Judge as early as possible.");
+  });
+
   it("should fall back to static wording when openJusticeStatementDetails is empty", () => {
     const result = renderInterimApplicationsDailyCauseList(buildData({ openJusticeStatementDetails: [] }), OPTIONS);
 

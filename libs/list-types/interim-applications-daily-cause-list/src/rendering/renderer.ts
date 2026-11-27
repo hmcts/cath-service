@@ -25,11 +25,12 @@ export interface RenderedData {
 }
 
 // The first paragraph of the "Important information" section is editable per upload: it names the
-// interim judge and their contact email from openJusticeStatementDetails[0]. When the array is
-// empty (the schema permits it) or both cells are blank, fall back to the static wording. Only the
-// non-blank cells are joined, so one blank cell does not leave a stray separator (PIP prints ", ,").
+// interim judge and their contact email from the first open-justice entry that has either value, so
+// a blank row the converter lets through (e.g. whitespace-only cells) cannot hide the real judge.
+// When there is no such entry, fall back to the static wording. Only the non-blank cells are
+// joined, so one blank cell does not leave a stray separator (PIP prints ", ,").
 function buildEditableParagraph(data: InterimApplicationsData, t: typeof en | typeof cy): string {
-  const details = data.openJusticeStatementDetails?.[0];
+  const details = data.openJusticeStatementDetails?.find((entry) => entry.nameToBeDisplayed || entry.email);
   const contactParts = [details?.nameToBeDisplayed, details?.email].filter(Boolean);
 
   if (contactParts.length === 0) {
