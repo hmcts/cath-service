@@ -40,7 +40,7 @@ describe("renderInterimApplicationsDailyCauseList", () => {
     const result = renderInterimApplicationsDailyCauseList(buildData(), OPTIONS);
 
     expect(result.importantInfo.editableParagraph).toBe(
-      "Parties should contact the clerk to the Interim Judge Judge OpenJusticeTest, Judge.OpenJusticeTest@justice.gov.uk as early as possible."
+      "Parties should contact the clerk to the Interim Judge, Judge OpenJusticeTest, Judge.OpenJusticeTest@justice.gov.uk as early as possible."
     );
   });
 
@@ -54,23 +54,46 @@ describe("renderInterimApplicationsDailyCauseList", () => {
     expect(result.importantInfo.editableParagraph).toContain("second@justice.gov.uk");
   });
 
-  // Pins the current output for a partially filled open-justice row (accepted since #1658);
-  // the stray separator is existing wording and is deliberately left unchanged here.
   it.each([
     {
       details: { nameToBeDisplayed: "Jane Smith", email: "" },
-      expected: "Parties should contact the clerk to the Interim Judge Jane Smith,  as early as possible."
+      expected: "Parties should contact the clerk to the Interim Judge, Jane Smith as early as possible."
     },
     {
       details: { nameToBeDisplayed: "", email: "jane.smith@justice.gov.uk" },
-      expected: "Parties should contact the clerk to the Interim Judge , jane.smith@justice.gov.uk as early as possible."
+      expected: "Parties should contact the clerk to the Interim Judge, jane.smith@justice.gov.uk as early as possible."
     }
-  ])("should render the editable paragraph as-is when the open-justice row is partly blank ($details)", ({ details, expected }) => {
+  ])("should leave out the separator when one open-justice cell is blank ($details)", ({ details, expected }) => {
     const data = buildData({ openJusticeStatementDetails: [details] });
 
     const result = renderInterimApplicationsDailyCauseList(data, OPTIONS);
 
     expect(result.importantInfo.editableParagraph).toBe(expected);
+  });
+
+  it.each([
+    {
+      details: { nameToBeDisplayed: "Jane Smith", email: "" },
+      expected: "Dylai partïon gysylltu â chlerc y Barnwr Interim, Jane Smith cyn gynted â phosibl."
+    },
+    {
+      details: { nameToBeDisplayed: "", email: "jane.smith@justice.gov.uk" },
+      expected: "Dylai partïon gysylltu â chlerc y Barnwr Interim, jane.smith@justice.gov.uk cyn gynted â phosibl."
+    }
+  ])("should leave out the separator in Welsh when one open-justice cell is blank ($details)", ({ details, expected }) => {
+    const data = buildData({ openJusticeStatementDetails: [details] });
+
+    const result = renderInterimApplicationsDailyCauseList(data, { ...OPTIONS, locale: "cy" });
+
+    expect(result.importantInfo.editableParagraph).toBe(expected);
+  });
+
+  it("should fall back to static wording when both open-justice cells are blank", () => {
+    const data = buildData({ openJusticeStatementDetails: [{ nameToBeDisplayed: "", email: "" }] });
+
+    const result = renderInterimApplicationsDailyCauseList(data, OPTIONS);
+
+    expect(result.importantInfo.editableParagraph).toBe("Parties should contact the clerk to the Interim Judge as early as possible.");
   });
 
   it("should fall back to static wording when openJusticeStatementDetails is empty", () => {

@@ -9,7 +9,7 @@ export const cy = {
   addressLine1: "Fetter Lane, London",
   addressLine2: "EC4A 1NL",
   importantInformationHeading: "Gwybodaeth bwysig",
-  openJusticeMessage1: "Dylai partïon gysylltu â chlerc y Barnwr Interim ",
+  openJusticeMessage1: "Dylai partïon gysylltu â chlerc y Barnwr Interim, ",
   openJusticeSeparator: ", ",
   openJusticeMessage2: " cyn gynted â phosibl.",
   openJusticeFallback: "Dylai partïon gysylltu â chlerc y Barnwr Interim cyn gynted â phosibl.",

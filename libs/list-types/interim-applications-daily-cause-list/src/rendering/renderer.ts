@@ -26,15 +26,17 @@ export interface RenderedData {
 
 // The first paragraph of the "Important information" section is editable per upload: it names the
 // interim judge and their contact email from openJusticeStatementDetails[0]. When the array is
-// empty (the schema permits it), fall back to the static wording without a name/email.
+// empty (the schema permits it) or both cells are blank, fall back to the static wording. Only the
+// non-blank cells are joined, so one blank cell does not leave a stray separator (PIP prints ", ,").
 function buildEditableParagraph(data: InterimApplicationsData, t: typeof en | typeof cy): string {
   const details = data.openJusticeStatementDetails?.[0];
+  const contactParts = [details?.nameToBeDisplayed, details?.email].filter(Boolean);
 
-  if (!details || (!details.nameToBeDisplayed && !details.email)) {
+  if (contactParts.length === 0) {
     return t.openJusticeFallback;
   }
 
-  return `${t.openJusticeMessage1}${details.nameToBeDisplayed}${t.openJusticeSeparator}${details.email}${t.openJusticeMessage2}`;
+  return `${t.openJusticeMessage1}${contactParts.join(t.openJusticeSeparator)}${t.openJusticeMessage2}`;
 }
 
 export function renderInterimApplicationsDailyCauseList(data: InterimApplicationsData, options: RenderOptions): RenderedData {
