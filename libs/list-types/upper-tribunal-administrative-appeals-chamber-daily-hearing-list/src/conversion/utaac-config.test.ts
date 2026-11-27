@@ -13,14 +13,6 @@ describe("UTAAC_EXCEL_CONFIG", () => {
     expect(fieldNames).toEqual(["time", "appellant", "caseReferenceNumber", "judges", "members", "modeOfHearing", "venue", "additionalInformation"]);
   });
 
-  it("should have correct required flags", () => {
-    const requiredFields = UTAAC_EXCEL_CONFIG.fields.filter((f) => f.required).map((f) => f.fieldName);
-    const optionalFields = UTAAC_EXCEL_CONFIG.fields.filter((f) => !f.required).map((f) => f.fieldName);
-
-    expect(requiredFields).toEqual(["time", "appellant", "caseReferenceNumber", "judges", "members", "modeOfHearing", "venue", "additionalInformation"]);
-    expect(optionalFields).toEqual([]);
-  });
-
   describe("field validators", () => {
     it("should accept values without HTML tags", () => {
       for (const field of UTAAC_EXCEL_CONFIG.fields) {

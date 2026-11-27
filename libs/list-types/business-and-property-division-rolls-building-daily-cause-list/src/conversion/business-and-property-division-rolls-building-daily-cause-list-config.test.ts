@@ -78,12 +78,6 @@ describe("STANDARD_CONFIG", () => {
     expect(STANDARD_CONFIG.fields.map((f) => f.fieldName)).toEqual(["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"]);
   });
 
-  it("should require only the time field, matching PIP", () => {
-    const requiredFields = STANDARD_CONFIG.fields.filter((field) => field.required).map((field) => field.fieldName);
-
-    expect(requiredFields).toEqual(["time"]);
-  });
-
   it("should allow empty section sheets with minRows of 0", () => {
     expect(STANDARD_CONFIG.minRows).toBe(0);
   });

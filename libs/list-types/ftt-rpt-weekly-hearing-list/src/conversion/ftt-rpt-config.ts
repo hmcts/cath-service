@@ -24,43 +24,43 @@ export const FTT_RPT_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Venue",
       fieldName: "venue",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Venue", rowNumber)]
     },
     {
       header: "Case Type",
       fieldName: "caseType",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Type", rowNumber)]
     },
     {
       header: "Case Reference Number",
       fieldName: "caseReferenceNumber",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Reference Number", rowNumber)]
     },
     {
       header: "Judge(s)",
       fieldName: "judges",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Judge(s)", rowNumber)]
     },
     {
       header: "Member(s)",
       fieldName: "members",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Member(s)", rowNumber)]
     },
     {
       header: "Hearing Method",
       fieldName: "hearingMethod",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Hearing Method", rowNumber)]
     },
     {
       header: "Additional Information",
       fieldName: "additionalInformation",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Additional Information", rowNumber)]
     }
   ],

@@ -9,7 +9,7 @@ export const en = {
   addressLine1: "Fetter Lane, London",
   addressLine2: "EC4A 1NL",
   importantInformationHeading: "Important information",
-  openJusticeMessage1: "Parties should contact the clerk to the Interim Judge ",
+  openJusticeMessage1: "Parties should contact the clerk to the Interim Judge, ",
   openJusticeSeparator: ", ",
   openJusticeMessage2: " as early as possible.",
   openJusticeFallback: "Parties should contact the clerk to the Interim Judge as early as possible.",

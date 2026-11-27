@@ -55,7 +55,8 @@ export function readCellValue(value: unknown): string {
   if ("hyperlink" in value) {
     return readCellValue(value.hyperlink);
   }
-  // Error values (e.g. #REF!) and unknown shapes are treated as empty so required-field validation catches them
+  // Error values (e.g. #REF!) and unknown shapes are treated as empty, as PIP does. A required field
+  // then fails its required check; an optional field is written as "".
   return "";
 }
 

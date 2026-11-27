@@ -1,11 +1,38 @@
 import * as ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
+import { listTypeData } from "../list-type-data.js";
 import { convertExcelForListTypeName, getConverterForListTypeName, hasConverterForListTypeName } from "./non-strategic-list-registry.js";
 
-// Import CST module to register its converter
+// Side-effect imports register each non-strategic list type's converter
+import "@hmcts/administrative-court-daily-cause-list";
+import "@hmcts/ast-daily-hearing-list";
+import "@hmcts/business-and-property-division-rolls-building-daily-cause-list";
 import "@hmcts/care-standards-tribunal-weekly-hearing-list";
+import "@hmcts/cic-weekly-hearing-list";
+import "@hmcts/court-of-appeal-civil-daily-cause-list";
+import "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list";
+import "@hmcts/ftt-rpt-weekly-hearing-list";
+import "@hmcts/ftt-tax-chamber-weekly-hearing-list";
+import "@hmcts/grc-weekly-hearing-list";
+import "@hmcts/interim-applications-daily-cause-list";
+import "@hmcts/london-administrative-court-daily-cause-list";
+import "@hmcts/pht-weekly-hearing-list";
+import "@hmcts/rcj-standard-daily-cause-list";
+import "@hmcts/send-daily-hearing-list";
+import "@hmcts/siac-poac-paac-weekly-hearing-list";
+import "@hmcts/sscs-daily-hearing-list";
+import "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list";
+import "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list";
+import "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list";
+import "@hmcts/utiac-jr-daily-hearing-list";
+import "@hmcts/utiac-statutory-appeal-daily-hearing-list";
+import "@hmcts/wpafcc-weekly-hearing-list";
 
 const CST_NAME = "CST_WEEKLY_HEARING_LIST";
+const CST_HEADER = ["Date", "Case name", "Hearing length", "Hearing type", "Venue", "Additional information"];
+// PIP rejects a blank cell only for these fields, because only their schema patterns reject ""
+const REQUIRED_FIELD_NAMES = new Set(["date", "time", "hearingTime"]);
+const NON_STRATEGIC_LIST_TYPE_NAMES = listTypeData.filter((listType) => listType.isNonStrategic).map((listType) => listType.name);
 
 async function createExcelBuffer(data: unknown[][]): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
@@ -40,6 +67,20 @@ describe("list-type-converters", () => {
 
     it("should return false for unknown list type", () => {
       expect(hasConverterForListTypeName("UNKNOWN_LIST_TYPE")).toBe(false);
+    });
+  });
+
+  describe("required fields", () => {
+    it.each(NON_STRATEGIC_LIST_TYPE_NAMES)("should require a value only for date and time fields in every non-strategic converter (%s)", (listTypeName) => {
+      const converter = getConverterForListTypeName(listTypeName);
+
+      const sheetConfigs = converter?.sheets ?? (converter ? [{ config: converter.config }] : []);
+      const fields = sheetConfigs.flatMap((sheet) => sheet.config.fields);
+
+      expect(converter).toBeDefined();
+      for (const field of fields) {
+        expect(field.required, `${listTypeName} ${field.fieldName}`).toBe(REQUIRED_FIELD_NAMES.has(field.fieldName));
+      }
     });
   });
 
@@ -206,15 +247,20 @@ describe("list-type-converters", () => {
       await expect(convertExcelForListTypeName(CST_NAME, buffer)).rejects.toThrow(/HTML tags are not allowed/);
     });
 
-    it("should reject empty required fields", async () => {
-      const excelData = [
-        ["Date", "Case name", "Hearing length", "Hearing type", "Venue", "Additional information"],
-        ["02/01/2025", "", "1 hour", "Substantive hearing", "Care Standards Tribunal", "Remote hearing"]
-      ];
-
+    it("should store blank, whitespace-only and formula-error optional cells as empty strings", async () => {
+      const excelData = [CST_HEADER, ["02/01/2025", "", "   ", { error: "#REF!" }, "", "Remote hearing"]];
       const buffer = await createExcelBuffer(excelData);
 
-      await expect(convertExcelForListTypeName(CST_NAME, buffer)).rejects.toThrow(/Missing required field 'Case name'/);
+      const result = await convertExcelForListTypeName(CST_NAME, buffer);
+
+      expect(result).toEqual([{ date: "02/01/2025", caseName: "", hearingLength: "", hearingType: "", venue: "", additionalInformation: "Remote hearing" }]);
+    });
+
+    it("should reject a blank date", async () => {
+      const excelData = [CST_HEADER, ["", "A Vs B", "1 hour", "Substantive hearing", "Care Standards Tribunal", "Remote hearing"]];
+      const buffer = await createExcelBuffer(excelData);
+
+      await expect(convertExcelForListTypeName(CST_NAME, buffer)).rejects.toThrow(/Missing required field 'Date'/);
     });
 
     it("should include row number in error messages", async () => {

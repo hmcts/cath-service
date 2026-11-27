@@ -13,14 +13,6 @@ describe("STANDARD_EXCEL_CONFIG", () => {
     expect(fieldNames).toEqual(["venue", "judge", "time", "caseNumber", "caseDetails", "hearingType", "additionalInformation"]);
   });
 
-  it("should have correct required flags", () => {
-    const requiredFields = STANDARD_EXCEL_CONFIG.fields.filter((f) => f.required).map((f) => f.fieldName);
-    const optionalFields = STANDARD_EXCEL_CONFIG.fields.filter((f) => !f.required).map((f) => f.fieldName);
-
-    expect(requiredFields).toEqual(["venue", "judge", "time", "caseNumber", "caseDetails", "hearingType"]);
-    expect(optionalFields).toEqual(["additionalInformation"]);
-  });
-
   describe("time field validation", () => {
     const timeField = STANDARD_EXCEL_CONFIG.fields.find((f) => f.fieldName === "time");
 

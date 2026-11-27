@@ -24,31 +24,31 @@ export const SIAC_POAC_PAAC_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Appellant",
       fieldName: "appellant",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Appellant", rowNumber)]
     },
     {
       header: "Case Reference Number",
       fieldName: "caseReferenceNumber",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Reference Number", rowNumber)]
     },
     {
       header: "Hearing Type",
       fieldName: "hearingType",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Hearing Type", rowNumber)]
     },
     {
       header: "Courtroom",
       fieldName: "courtroom",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Courtroom", rowNumber)]
     },
     {
       header: "Additional information",
       fieldName: "additionalInformation",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Additional information", rowNumber)]
     }
   ],

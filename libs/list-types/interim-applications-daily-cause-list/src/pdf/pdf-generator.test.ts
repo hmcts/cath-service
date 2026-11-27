@@ -30,7 +30,7 @@ const mockRenderedData = {
   },
   hearings: [],
   importantInfo: {
-    editableParagraph: "Parties should contact the clerk to the Interim Judge Judge A, a@justice.gov.uk as early as possible.",
+    editableParagraph: "Parties should contact the clerk to the Interim Judge, Judge A, a@justice.gov.uk as early as possible.",
     staticParagraph: "An application should not be listed before the Interim Applications Judge...",
     thirdParagraph: "Please note that hearings in the interim applications list will not additionally appear in their individual list."
   }

@@ -11,43 +11,43 @@ export const UTCC_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Case Reference Number",
       fieldName: "caseReferenceNumber",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Reference Number", rowNumber)]
     },
     {
       header: "Case Name",
       fieldName: "caseName",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Name", rowNumber)]
     },
     {
       header: "Judge(s)",
       fieldName: "judges",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Judge(s)", rowNumber)]
     },
     {
       header: "Member(s)",
       fieldName: "members",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Member(s)", rowNumber)]
     },
     {
       header: "Hearing Type",
       fieldName: "hearingType",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Hearing Type", rowNumber)]
     },
     {
       header: "Venue",
       fieldName: "venue",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Venue", rowNumber)]
     },
     {
       header: "Additional Information",
       fieldName: "additionalInformation",
-      required: true,
+      required: false,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Additional Information", rowNumber)]
     }
   ],

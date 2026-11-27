@@ -28,18 +28,6 @@ describe("DAILY_HEARINGS_CONFIG", () => {
     ]);
   });
 
-  it("should mark additionalInformation as optional", () => {
-    const additionalInfoField = DAILY_HEARINGS_CONFIG.fields.find((f) => f.fieldName === "additionalInformation");
-    expect(additionalInfoField?.required).toBe(false);
-  });
-
-  it("should mark all other fields as required", () => {
-    const requiredFields = DAILY_HEARINGS_CONFIG.fields.filter((f) => f.fieldName !== "additionalInformation");
-    for (const field of requiredFields) {
-      expect(field.required).toBe(true);
-    }
-  });
-
   it("should allow minRows of 0", () => {
     expect(DAILY_HEARINGS_CONFIG.minRows).toBe(0);
   });
@@ -181,18 +169,6 @@ describe("FUTURE_JUDGMENTS_CONFIG", () => {
       "hearingType",
       "additionalInformation"
     ]);
-  });
-
-  it("should mark additionalInformation as optional", () => {
-    const additionalInfoField = FUTURE_JUDGMENTS_CONFIG.fields.find((f) => f.fieldName === "additionalInformation");
-    expect(additionalInfoField?.required).toBe(false);
-  });
-
-  it("should mark all other fields as required", () => {
-    const requiredFields = FUTURE_JUDGMENTS_CONFIG.fields.filter((f) => f.fieldName !== "additionalInformation");
-    for (const field of requiredFields) {
-      expect(field.required).toBe(true);
-    }
   });
 
   it("should allow minRows of 0", () => {

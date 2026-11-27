@@ -25,13 +25,13 @@ export const FUTURE_JUDGMENTS_CONFIG: ExcelConverterConfig = {
     {
       header: "Venue",
       fieldName: "venue",
-      required: true,
+      required: false,
       validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Venue", rowNumber)]
     },
     {
       header: "Judge",
       fieldName: "judge",
-      required: true,
+      required: false,
       validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Judge", rowNumber)]
     },
     {
@@ -43,19 +43,19 @@ export const FUTURE_JUDGMENTS_CONFIG: ExcelConverterConfig = {
     {
       header: "Case Number",
       fieldName: "caseNumber",
-      required: true,
+      required: false,
       validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Case Number", rowNumber)]
     },
     {
       header: "Case Details",
       fieldName: "caseDetails",
-      required: true,
+      required: false,
       validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Case Details", rowNumber)]
     },
     {
       header: "Hearing Type",
       fieldName: "hearingType",
-      required: true,
+      required: false,
       validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Hearing Type", rowNumber)]
     },
     {

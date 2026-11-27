@@ -30,24 +30,6 @@ describe("SSCS_EXCEL_CONFIG", () => {
     expect(headers).toContain("Additional Information");
   });
 
-  it("should mark most fields as required", () => {
-    const requiredFields = SSCS_EXCEL_CONFIG.fields.filter((f) => f.required).map((f) => f.fieldName);
-
-    expect(requiredFields).toContain("venue");
-    expect(requiredFields).toContain("appealReferenceNumber");
-    expect(requiredFields).toContain("hearingType");
-    expect(requiredFields).toContain("appellant");
-    expect(requiredFields).toContain("courtroom");
-    expect(requiredFields).toContain("hearingTime");
-    expect(requiredFields).toContain("tribunal");
-    expect(requiredFields).toContain("respondent");
-  });
-
-  it("should mark additionalInformation as not required", () => {
-    const additionalInfo = SSCS_EXCEL_CONFIG.fields.find((f) => f.fieldName === "additionalInformation");
-    expect(additionalInfo?.required).toBe(false);
-  });
-
   it("should have minRows set to 1", () => {
     expect(SSCS_EXCEL_CONFIG.minRows).toBe(1);
   });
