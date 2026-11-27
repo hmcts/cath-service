@@ -1,6 +1,6 @@
 export const en = {
-  title: "Employment Tribunals Fortnightly List",
-  pageTitle: "Employment Tribunals Fortnightly List for",
+  title: "Employment Tribunal Advance Hearing List",
+  pageTitle: "Employment Tribunal Advance Hearing List for",
   factLink: "https://www.find-court-tribunal.service.gov.uk/",
   factLinkText1: "Find contact details and other information about courts and tribunals",
   factLinkText2: " in England and Wales, and some non-devolved tribunals in Scotland.",

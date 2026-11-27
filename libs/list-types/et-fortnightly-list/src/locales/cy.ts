@@ -1,6 +1,6 @@
 export const cy = {
-  title: "Rhestr Pob Pythefnos y Tribiwnlysoedd Cyflogaeth",
-  pageTitle: "Rhestr Pob Pythefnos y Tribiwnlysoedd Cyflogaeth ar gyfer",
+  title: "Rhestr Gwrandawiadau Ymlaen llaw y Tribiwnlys Cyflogaeth",
+  pageTitle: "Rhestr Gwrandawiadau Ymlaen llaw y Tribiwnlys Cyflogaeth ar gyfer",
   factLink: "https://www.find-court-tribunal.service.gov.uk/",
   factLinkText1: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd yng Nghymru a Lloegr",
   factLinkText2: " a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
