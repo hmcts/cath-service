@@ -57,6 +57,7 @@ import {
   configureHelmet,
   configureNonce,
   createFileUploadMiddleware,
+  deploymentHealthCheck,
   errorHandler,
   expressSessionRedis,
   notFoundHandler
@@ -92,6 +93,7 @@ export async function createApp(): Promise<Express> {
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
   app.get("/health", cftIdamHealthCheck());
+  app.get("/health/deployment", deploymentHealthCheck());
   app.use(healthcheck());
   app.use(monitoringMiddleware(config.get("applicationInsights")));
   app.use(configureNonce());
