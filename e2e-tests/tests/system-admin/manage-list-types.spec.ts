@@ -319,9 +319,9 @@ test.describe("Manage List Types", () => {
     const hiddenResponse = await page.goto(`/publication/${artefactId}`);
     expect(hiddenResponse?.status()).toBe(404);
 
-    // The hide is audited
+    // The hide is audited. The list shows the stored HIDE_LIST_TYPE action in title case
     await page.goto("/audit-log-list?actions=HIDE_LIST_TYPE");
-    await expect(page.getByRole("cell", { name: "HIDE_LIST_TYPE" }).first()).toBeVisible();
+    await expect(page.getByRole("cell", { name: "Hide List Type", exact: true }).first()).toBeVisible();
 
     // Show it again
     await page.goto(`/manage-list-type?id=${listType.id}`);

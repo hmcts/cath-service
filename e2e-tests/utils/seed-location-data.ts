@@ -7,24 +7,28 @@ import { seedLocationsFromCsv } from "./test-support-api.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const CSV_PATH = path.join(__dirname, "..", "fixtures", "test-reference-data.csv");
+
+function parseSeedCsv() {
+  const parseResult = parseProductionCsv(fs.readFileSync(CSV_PATH));
+  if (!parseResult.success) {
+    throw new Error(`CSV parsing failed: ${parseResult.errors.join(", ")}`);
+  }
+  return parseResult.data;
+}
+
+// The location IDs global setup seeds, so verification checks the fixture rather than a hard-coded count
+export function getSeedLocationIds(): number[] {
+  return parseSeedCsv().map((loc) => loc.locationId);
+}
+
 export async function seedLocationData(prefix: string): Promise<void> {
   try {
     console.log("=== Starting Location Data Seeding ===");
-
-    const csvPath = path.join(__dirname, "..", "fixtures", "test-reference-data.csv");
-    console.log(`Reading CSV from: ${csvPath}`);
-
-    const csvBuffer = fs.readFileSync(csvPath);
-    const parseResult = parseProductionCsv(csvBuffer);
-
-    if (!parseResult.success) {
-      const errorMsg = `CSV parsing failed: ${parseResult.errors.join(", ")}`;
-      console.error(`✗ ${errorMsg}`);
-      throw new Error(errorMsg);
-    }
+    console.log(`Reading CSV from: ${CSV_PATH}`);
 
     // Add prefix to location names for test isolation
-    const locations = parseResult.data.map((loc) => ({
+    const locations = parseSeedCsv().map((loc) => ({
       ...loc,
       locationName: `${prefix}${loc.locationName}`,
       welshLocationName: `${prefix}${loc.welshLocationName || loc.locationName}`

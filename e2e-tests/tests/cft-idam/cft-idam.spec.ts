@@ -141,7 +141,12 @@ test.describe("CFT IDAM Login Flow", () => {
 });
 
 test.describe("CFT IDAM Session Management", () => {
-  test("Complete session lifecycle: login, navigation, reload, and logout @nightly", async ({ page }) => {
+  // Skipped until app-cath-frontend registers post_logout_redirect_uris in hmcts/idam-access-config.
+  // It has none in any environment, so IDAM's /o/endSession answers 204 instead of redirecting to
+  // /session-logged-out, and page.goto("/logout") fails with net::ERR_ABORTED. Re-enable then.
+  test.fixme("Complete session lifecycle: login, navigation, reload, and logout @nightly", {
+    annotation: { type: "issue", description: "https://hmcts.atlassian.net/browse/VIBE-737" }
+  }, async ({ page }) => {
     // Test 1: Accessing protected route without session redirects to sign-in
     await page.goto("/account-home");
     await expect(page).toHaveURL(/sign-in/);

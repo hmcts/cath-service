@@ -35,8 +35,11 @@ const SECRET_MAPPINGS = {
   'gov-uk-notify-test-api-key': 'GOVUK_NOTIFY_API_KEY',
   // App secrets required at startup
   'session-secret': 'SESSION_SECRET',
-  'sso-client-id': 'SSO_CLIENT_ID',
-  'sso-client-secret': 'SSO_CLIENT_SECRET',
+  // The dev client (fd41d1b3), as in helm/cath-service/values.preview.template.yaml. Only it has
+  // https://localhost:8080/sso/return registered; sso-client-id (00b72acf) fails with AADSTS50011,
+  // which stopped every SSO login in the nightly and in local runs
+  'sso-client-id-dev': 'SSO_CLIENT_ID',
+  'sso-client-secret-dev': 'SSO_CLIENT_SECRET',
   'sso-issuer-url': 'SSO_ISSUER_URL',
   'sso-sg-system-admin': 'SSO_SYSTEM_ADMIN_GROUP_ID',
   'sso-sg-admin-ctsc': 'SSO_INTERNAL_ADMIN_CTSC_GROUP_ID',
