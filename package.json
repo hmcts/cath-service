@@ -85,7 +85,7 @@
     "lodash": "4.18.1",
     "node-forge": "1.4.0",
     "pg": "8.21.0",
-    "pg-connection-string": "2.14.0",
+    "pg-connection-string": "2.14.1",
     "qs": "6.15.3",
     "tar": "7.5.22",
     "undici": "8.5.0",
