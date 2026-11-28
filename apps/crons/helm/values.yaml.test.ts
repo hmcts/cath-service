@@ -35,8 +35,21 @@ describe("cath-crons chart values", () => {
     expect(values.job.environment.CATH_SERVICE_URL).toBe("https://cath.{{ .Values.global.environment }}.platform.hmcts.net");
     expect(values.job.environment.CATH_SERVICE_URL).toBe(webValues.nodejs.environment.CATH_SERVICE_URL);
   });
+});
 
-  it("should keep the example script as the chart default", () => {
+// The umbrella chart runs cath-crons every 5 minutes on preview and pipeline deploys. Real crons
+// such as purge-user-archive run only from their own Flux HelmRelease, so the umbrella must keep
+// running the placeholder script.
+describe("cath-crons SCRIPT_NAME", () => {
+  it("should default to the example script in the chart values", () => {
+    const values = readYaml("apps/crons/helm/values.yaml");
+
     expect(values.job.environment.SCRIPT_NAME).toBe("example");
+  });
+
+  it.each(["helm/cath-service/values.template.yaml", "helm/cath-service/values.preview.template.yaml"])("should not be overridden in %s", (relativePath) => {
+    const values = readYaml(relativePath);
+
+    expect(values["cath-crons"]?.job?.environment?.SCRIPT_NAME).toBeUndefined();
   });
 });

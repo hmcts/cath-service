@@ -1,14 +1,16 @@
 import { prisma } from "@hmcts/postgres-prisma";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { archiveAndDeleteUser } from "./service.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { archiveAndDeleteUser, purgeExpiredUserArchives } from "./service.js";
 
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     user: { findUnique: vi.fn() },
+    userArchive: { deleteMany: vi.fn() },
     $transaction: vi.fn()
   }
 }));
 
+const ORIGINAL_TZ = process.env.TZ;
 const USER_ID = "11111111-1111-1111-1111-111111111111";
 const EMAIL = "media.person@example.com";
 
@@ -131,5 +133,78 @@ describe("archiveAndDeleteUser", () => {
 
     // Act & Assert
     await expect(archiveAndDeleteUser(USER_ID, vi.fn())).rejects.toBe(dbError);
+  });
+});
+
+describe("purgeExpiredUserArchives", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    if (ORIGINAL_TZ === undefined) {
+      delete process.env.TZ;
+    } else {
+      process.env.TZ = ORIGINAL_TZ;
+    }
+  });
+
+  it("should delete rows archived on or before the exact 3-month cutoff and return the count", async () => {
+    // Arrange
+    vi.setSystemTime(new Date("2026-11-18T02:00:00.000Z"));
+    vi.mocked(prisma.userArchive.deleteMany).mockResolvedValue({ count: 4 });
+    const expectedCutoff = new Date("2026-08-18T02:00:00.000Z");
+
+    // Act
+    const result = await purgeExpiredUserArchives();
+
+    // Assert
+    expect(prisma.userArchive.deleteMany).toHaveBeenCalledTimes(1);
+    expect(prisma.userArchive.deleteMany).toHaveBeenCalledWith({ where: { archivedDate: { lte: expectedCutoff } } });
+    expect(result).toEqual({ deletedCount: 4, cutoff: expectedCutoff });
+  });
+
+  it.each([
+    { now: "2027-05-31T02:00:00.000Z", expected: "2027-02-28T02:00:00.000Z", tz: "UTC" },
+    { now: "2028-05-31T02:00:00.000Z", expected: "2028-02-29T02:00:00.000Z", tz: "UTC" },
+    { now: "2026-12-31T02:00:00.000Z", expected: "2026-09-30T02:00:00.000Z", tz: "UTC" },
+    { now: "2027-01-15T02:00:00.000Z", expected: "2026-10-15T02:00:00.000Z", tz: "UTC" },
+    { now: "2027-05-31T23:30:00.000Z", expected: "2027-02-28T23:30:00.000Z", tz: "Europe/London" }
+  ])("should compute a UTC month-end-clamped cutoff of $expected when now is $now in TZ $tz", async ({ now, expected, tz }) => {
+    // Arrange
+    process.env.TZ = tz;
+    vi.setSystemTime(new Date(now));
+    vi.mocked(prisma.userArchive.deleteMany).mockResolvedValue({ count: 1 });
+
+    // Act
+    const result = await purgeExpiredUserArchives();
+
+    // Assert
+    expect(prisma.userArchive.deleteMany).toHaveBeenCalledWith({ where: { archivedDate: { lte: new Date(expected) } } });
+    expect(result.cutoff.toISOString()).toBe(expected);
+  });
+
+  it("should return zero when no rows are eligible", async () => {
+    // Arrange
+    vi.setSystemTime(new Date("2026-11-18T02:00:00.000Z"));
+    vi.mocked(prisma.userArchive.deleteMany).mockResolvedValue({ count: 0 });
+
+    // Act
+    const result = await purgeExpiredUserArchives();
+
+    // Assert
+    expect(result.deletedCount).toBe(0);
+  });
+
+  it("should reject with the database error when the delete fails", async () => {
+    // Arrange
+    vi.setSystemTime(new Date("2026-11-18T02:00:00.000Z"));
+    const dbError = new Error("connection refused");
+    vi.mocked(prisma.userArchive.deleteMany).mockRejectedValue(dbError);
+
+    // Act & Assert
+    await expect(purgeExpiredUserArchives()).rejects.toBe(dbError);
   });
 });
