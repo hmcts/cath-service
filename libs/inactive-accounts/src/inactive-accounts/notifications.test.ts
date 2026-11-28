@@ -1,6 +1,12 @@
 import { sendNotifyEmail } from "@hmcts/govuk-notify";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getNotificationSettings, type NotificationSettings, sendIdamSignInNotificationEmail, sendMediaVerificationEmail } from "./notifications.js";
+import {
+  getNotificationSettings,
+  type NotificationSettings,
+  sendIdamSignInNotificationEmail,
+  sendMediaAccountDeletionEmail,
+  sendMediaVerificationEmail
+} from "./notifications.js";
 
 vi.mock("@hmcts/govuk-notify", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@hmcts/govuk-notify")>()),
@@ -11,7 +17,8 @@ const SETTINGS: NotificationSettings = {
   apiKey: "test-api-key",
   mediaVerificationPageLink: "https://cath.test/media-verification",
   cftSignInLink: "https://cath.test/cft-login",
-  crimeSignInLink: "https://cath.test/crime-login"
+  crimeSignInLink: "https://cath.test/crime-login",
+  createMediaAccountLink: "https://cath.test/create-media-account"
 };
 
 describe("inactive account notifications", () => {
@@ -23,6 +30,7 @@ describe("inactive account notifications", () => {
     delete process.env.MEDIA_VERIFICATION_PAGE_LINK;
     delete process.env.CFT_SIGN_IN_LINK;
     delete process.env.CRIME_SIGN_IN_LINK;
+    delete process.env.CREATE_MEDIA_ACCOUNT_LINK;
     vi.mocked(sendNotifyEmail).mockResolvedValue({ notificationId: "n-1" });
   });
 
@@ -44,7 +52,8 @@ describe("inactive account notifications", () => {
         apiKey: "key",
         mediaVerificationPageLink: "https://cath.aat.platform.hmcts.net/media-verification",
         cftSignInLink: "https://cath.aat.platform.hmcts.net/cft-login",
-        crimeSignInLink: "https://cath.aat.platform.hmcts.net/crime-login"
+        crimeSignInLink: "https://cath.aat.platform.hmcts.net/crime-login",
+        createMediaAccountLink: "https://cath.aat.platform.hmcts.net/create-media-account"
       });
     });
 
@@ -55,6 +64,7 @@ describe("inactive account notifications", () => {
       process.env.MEDIA_VERIFICATION_PAGE_LINK = "https://override/media";
       process.env.CFT_SIGN_IN_LINK = "https://override/cft";
       process.env.CRIME_SIGN_IN_LINK = "https://override/crime";
+      process.env.CREATE_MEDIA_ACCOUNT_LINK = "https://override/create-media-account";
 
       // Act
       const settings = getNotificationSettings();
@@ -63,7 +73,8 @@ describe("inactive account notifications", () => {
       expect(settings).toMatchObject({
         mediaVerificationPageLink: "https://override/media",
         cftSignInLink: "https://override/cft",
-        crimeSignInLink: "https://override/crime"
+        crimeSignInLink: "https://override/crime",
+        createMediaAccountLink: "https://override/create-media-account"
       });
     });
 
@@ -107,6 +118,40 @@ describe("inactive account notifications", () => {
 
       // Assert
       expect(vi.mocked(sendNotifyEmail).mock.calls[0][0].personalisation).toMatchObject({ full_name: "user" });
+    });
+  });
+
+  describe("sendMediaAccountDeletionEmail", () => {
+    const deletedUser = { userId: "u-3", email: "deleted@example.com", firstName: "Jane", lastVerifiedDate: new Date("2025-03-20T10:00:00.000Z") };
+
+    it("should send the deletion template with full-name, the re-verification date and link-to-service", async () => {
+      // Act
+      await sendMediaAccountDeletionEmail(SETTINGS, deletedUser, new Date("2026-03-05T00:00:00.000Z"));
+
+      // Assert
+      expect(sendNotifyEmail).toHaveBeenCalledWith({
+        apiKey: "test-api-key",
+        templateId: "b08a6094-edc4-4d76-beca-f8937b63e879",
+        emailAddress: "deleted@example.com",
+        personalisation: { "full-name": "Jane", date: "05 March 2026", "link-to-service": "https://cath.test/create-media-account" },
+        reference: "inactive-media-deletion-u-3"
+      });
+    });
+
+    it.each([null, ""])("should fall back to 'user' when the first name is %j", async (firstName) => {
+      // Act
+      await sendMediaAccountDeletionEmail(SETTINGS, { ...deletedUser, firstName }, new Date("2026-03-05T00:00:00.000Z"));
+
+      // Assert
+      expect(vi.mocked(sendNotifyEmail).mock.calls[0][0].personalisation).toMatchObject({ "full-name": "user" });
+    });
+
+    it("should reject when Notify fails", async () => {
+      // Arrange
+      vi.mocked(sendNotifyEmail).mockRejectedValueOnce(new Error("Notify unavailable"));
+
+      // Act & Assert
+      await expect(sendMediaAccountDeletionEmail(SETTINGS, deletedUser, new Date("2026-03-05T00:00:00.000Z"))).rejects.toThrow("Notify unavailable");
     });
   });
 

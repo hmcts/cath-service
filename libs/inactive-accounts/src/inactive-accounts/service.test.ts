@@ -3,7 +3,7 @@ import { deleteB2cUser, getGraphApiAccessToken } from "@hmcts/auth/graph-api";
 import { validateEmailRateLimit } from "@hmcts/email-rate-limit";
 import { tryConsumeToken } from "@hmcts/redis";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getNotificationSettings, sendIdamSignInNotificationEmail, sendMediaVerificationEmail } from "./notifications.js";
+import { getNotificationSettings, sendIdamSignInNotificationEmail, sendMediaAccountDeletionEmail, sendMediaVerificationEmail } from "./notifications.js";
 import {
   findAdminUsersForDeletion,
   findIdamUsersForDeletion,
@@ -21,7 +21,8 @@ vi.mock("./settings.js", () => ({ getInactivitySettings: vi.fn() }));
 vi.mock("./notifications.js", () => ({
   getNotificationSettings: vi.fn(),
   sendMediaVerificationEmail: vi.fn(),
-  sendIdamSignInNotificationEmail: vi.fn()
+  sendIdamSignInNotificationEmail: vi.fn(),
+  sendMediaAccountDeletionEmail: vi.fn()
 }));
 vi.mock("./queries.js", () => ({
   findMediaUsersForVerification: vi.fn(),
@@ -31,7 +32,7 @@ vi.mock("./queries.js", () => ({
   findIdamUsersForDeletion: vi.fn()
 }));
 
-const SETTINGS = { startDate: new Date("2026-01-01T00:00:00.000Z") } as ReturnType<typeof getInactivitySettings>;
+const SETTINGS = { startDate: new Date("2026-01-01T00:00:00.000Z"), mediaVerificationEmailDays: 350 } as ReturnType<typeof getInactivitySettings>;
 const NOTIFICATION_SETTINGS = { apiKey: "key" } as ReturnType<typeof getNotificationSettings>;
 const EMPTY = { succeeded: 0, skipped: 0, failed: 0 };
 const FINDERS = [
@@ -41,6 +42,14 @@ const FINDERS = [
   findAdminUsersForDeletion,
   findIdamUsersForDeletion
 ] as const;
+
+function mediaDeletionUser(userId: string, lastVerifiedDate = new Date("2026-01-10T09:00:00.000Z")) {
+  return { userId, email: `${userId}@example.com`, firstName: "Media", lastVerifiedDate };
+}
+
+function notifyError(status: number, error: string, message: string) {
+  return Object.assign(new Error("Request failed"), { response: { status, data: { errors: [{ error, message }] } } });
+}
 
 function mockBatches(finder: (typeof FINDERS)[number], ...batches: { userId: string }[][]) {
   for (const batch of batches) {
@@ -61,6 +70,7 @@ describe("processInactiveAccounts", () => {
     }
     vi.mocked(sendMediaVerificationEmail).mockResolvedValue(undefined);
     vi.mocked(sendIdamSignInNotificationEmail).mockResolvedValue(undefined);
+    vi.mocked(sendMediaAccountDeletionEmail).mockResolvedValue(undefined);
     vi.mocked(archiveAndDeleteUser).mockResolvedValue(true);
     vi.mocked(getGraphApiAccessToken).mockResolvedValue("graph-token");
     vi.mocked(deleteB2cUser).mockResolvedValue(undefined);
@@ -110,13 +120,13 @@ describe("processInactiveAccounts", () => {
     });
   });
 
-  it("should send one email per notify candidate and archive and delete every deletion candidate without email", async () => {
+  it("should send one email per notify candidate and archive and delete every deletion candidate", async () => {
     // Arrange
     const mediaUser = { userId: "m-1", email: "m@example.com", firstName: "M" };
     const idamUser = { userId: "i-1", email: "i@example.com", firstName: "I", surname: "S", userProvenance: "CFT_IDAM", lastSignedInDate: new Date() };
     mockBatches(findMediaUsersForVerification, [mediaUser]);
     mockBatches(findIdamUsersForSignInNotification, [idamUser]);
-    mockBatches(findMediaUsersForDeletion, [{ userId: "md-1" }]);
+    mockBatches(findMediaUsersForDeletion, [mediaDeletionUser("md-1")]);
     mockBatches(findAdminUsersForDeletion, [{ userId: "a-1" }, { userId: "a-2" }]);
     mockBatches(findIdamUsersForDeletion, [{ userId: "id-1" }]);
 
@@ -140,7 +150,7 @@ describe("processInactiveAccounts", () => {
 
   it("should get the Graph token once per run and pass it to every B2C delete", async () => {
     // Arrange
-    mockBatches(findMediaUsersForDeletion, [{ userId: "md-1" }, { userId: "md-2" }]);
+    mockBatches(findMediaUsersForDeletion, [mediaDeletionUser("md-1"), mediaDeletionUser("md-2")]);
     vi.mocked(archiveAndDeleteUser).mockImplementation(async (userId, deleter) => {
       await deleter(`b2c-${userId}`);
       return true;
@@ -270,5 +280,165 @@ describe("processInactiveAccounts", () => {
     const afterIds = vi.mocked(findIdamUsersForDeletion).mock.calls.map((call) => call[2]);
     expect(afterIds).toEqual([undefined, "id-2", "id-3"]);
     expect(summary.idamDeletions.succeeded).toBe(3);
+  });
+
+  describe("media-deletion", () => {
+    it("should send the deletion email before archiving and deleting each media user", async () => {
+      // Arrange
+      const users = [mediaDeletionUser("md-1"), mediaDeletionUser("md-2")];
+      mockBatches(findMediaUsersForDeletion, users);
+
+      // Act
+      const summary = await processInactiveAccounts();
+
+      // Assert
+      const emailOrder = vi.mocked(sendMediaAccountDeletionEmail).mock.invocationCallOrder;
+      const deleteOrder = vi.mocked(archiveAndDeleteUser).mock.invocationCallOrder;
+      expect(sendMediaAccountDeletionEmail).toHaveBeenNthCalledWith(1, NOTIFICATION_SETTINGS, users[0], new Date("2026-12-26T00:00:00.000Z"));
+      expect(sendMediaAccountDeletionEmail).toHaveBeenNthCalledWith(2, NOTIFICATION_SETTINGS, users[1], new Date("2026-12-26T00:00:00.000Z"));
+      expect(vi.mocked(archiveAndDeleteUser).mock.calls.map(([userId]) => userId)).toEqual(["md-1", "md-2"]);
+      expect(emailOrder[0]).toBeLessThan(deleteOrder[0]);
+      expect(deleteOrder[0]).toBeLessThan(emailOrder[1]);
+      expect(emailOrder[1]).toBeLessThan(deleteOrder[1]);
+      expect(summary.mediaDeletions).toEqual({ succeeded: 2, skipped: 0, failed: 0 });
+    });
+
+    it("should keep the account and count it failed when the deletion email fails, then carry on", async () => {
+      // Arrange
+      mockBatches(findMediaUsersForDeletion, [mediaDeletionUser("md-1"), mediaDeletionUser("md-2")]);
+      vi.mocked(sendMediaAccountDeletionEmail).mockRejectedValueOnce(notifyError(400, "BadRequestError", "Missing personalisation: full-name"));
+
+      // Act
+      const summary = await processInactiveAccounts();
+
+      // Assert
+      expect(sendMediaAccountDeletionEmail).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(archiveAndDeleteUser).mock.calls.map(([userId]) => userId)).toEqual(["md-2"]);
+      expect(summary.mediaDeletions).toEqual({ succeeded: 1, skipped: 0, failed: 1 });
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Inactive accounts: failed to process user", {
+        step: "media-deletion",
+        userId: "md-1",
+        status: 400,
+        message: "Missing personalisation: full-name"
+      });
+      expect(JSON.stringify(consoleErrorSpy.mock.calls)).not.toContain("@example.com");
+    });
+
+    it("should delete the account and log a warning when Notify rejects the email address as invalid", async () => {
+      // Arrange
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      mockBatches(findMediaUsersForDeletion, [mediaDeletionUser("md-1"), mediaDeletionUser("md-2")]);
+      vi.mocked(sendMediaAccountDeletionEmail).mockRejectedValueOnce(notifyError(400, "ValidationError", "email_address Not a valid email address"));
+
+      // Act
+      const summary = await processInactiveAccounts();
+
+      // Assert
+      expect(vi.mocked(archiveAndDeleteUser).mock.calls.map(([userId]) => userId)).toEqual(["md-1", "md-2"]);
+      expect(summary.mediaDeletions).toEqual({ succeeded: 2, skipped: 0, failed: 0 });
+      expect(consoleWarnSpy).toHaveBeenCalledWith("Inactive accounts: deleting without the deletion email because Notify rejected the address", {
+        step: "media-deletion",
+        userId: "md-1",
+        status: 400,
+        message: "email_address Not a valid email address"
+      });
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+      expect(JSON.stringify(consoleWarnSpy.mock.calls)).not.toContain("@example.com");
+    });
+
+    it("should keep the account when Notify rejects the send with a team-only API key", async () => {
+      // Arrange
+      mockBatches(findMediaUsersForDeletion, [mediaDeletionUser("md-1")]);
+      vi.mocked(sendMediaAccountDeletionEmail).mockRejectedValueOnce(
+        notifyError(400, "BadRequestError", "Can't send to this recipient using a team-only API key")
+      );
+
+      // Act
+      const summary = await processInactiveAccounts();
+
+      // Assert
+      expect(archiveAndDeleteUser).not.toHaveBeenCalled();
+      expect(summary.mediaDeletions).toEqual({ succeeded: 0, skipped: 0, failed: 1 });
+    });
+
+    it("should keep the account when Notify fails with a server error", async () => {
+      // Arrange
+      mockBatches(findMediaUsersForDeletion, [mediaDeletionUser("md-1")]);
+      vi.mocked(sendMediaAccountDeletionEmail).mockRejectedValueOnce(notifyError(500, "Exception", "Internal server error"));
+
+      // Act
+      const summary = await processInactiveAccounts();
+
+      // Assert
+      expect(archiveAndDeleteUser).not.toHaveBeenCalled();
+      expect(summary.mediaDeletions).toEqual({ succeeded: 0, skipped: 0, failed: 1 });
+    });
+
+    it("should keep the account and log no address when the real email rate limiter rejects the deletion email", async () => {
+      // Arrange
+      vi.mocked(tryConsumeToken).mockResolvedValue(false);
+      const rateLimitError = await validateEmailRateLimit("john.smith@example.com", "STANDARD", "Email").catch((error: unknown) => error);
+      mockBatches(findMediaUsersForDeletion, [{ ...mediaDeletionUser("md-1"), email: "john.smith@example.com" }] as never);
+      vi.mocked(sendMediaAccountDeletionEmail).mockRejectedValueOnce(rateLimitError);
+
+      // Act
+      const summary = await processInactiveAccounts();
+
+      // Assert
+      expect(archiveAndDeleteUser).not.toHaveBeenCalled();
+      expect(summary.mediaDeletions).toEqual({ succeeded: 0, skipped: 0, failed: 1 });
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Inactive accounts: failed to process user", {
+        step: "media-deletion",
+        userId: "md-1",
+        code: "EMAIL_RATE_LIMITED",
+        message: "Email rate limit exceeded"
+      });
+      expect(JSON.stringify(consoleErrorSpy.mock.calls)).not.toContain("@");
+    });
+
+    it("should count the user skipped when the account is already gone after the email is sent", async () => {
+      // Arrange
+      mockBatches(findMediaUsersForDeletion, [mediaDeletionUser("md-1"), mediaDeletionUser("md-2")]);
+      vi.mocked(archiveAndDeleteUser).mockResolvedValueOnce(false);
+
+      // Act
+      const summary = await processInactiveAccounts();
+
+      // Assert
+      expect(sendMediaAccountDeletionEmail).toHaveBeenCalledTimes(2);
+      expect(archiveAndDeleteUser).toHaveBeenCalledTimes(2);
+      expect(summary.mediaDeletions).toEqual({ succeeded: 1, skipped: 1, failed: 0 });
+    });
+
+    it("should not send the deletion email for admin or IDAM deletions", async () => {
+      // Arrange
+      mockBatches(findAdminUsersForDeletion, [{ userId: "a-1" }]);
+      mockBatches(findIdamUsersForDeletion, [{ userId: "id-1" }]);
+
+      // Act
+      const summary = await processInactiveAccounts();
+
+      // Assert
+      expect(sendMediaAccountDeletionEmail).not.toHaveBeenCalled();
+      expect(summary.adminDeletions).toEqual({ succeeded: 1, skipped: 0, failed: 0 });
+      expect(summary.idamDeletions).toEqual({ succeeded: 1, skipped: 0, failed: 0 });
+    });
+
+    it("should pass the re-verification date worked out from the start date and configured verification days", async () => {
+      // Arrange
+      vi.mocked(getInactivitySettings).mockReturnValue({
+        ...SETTINGS,
+        startDate: new Date("2026-02-01T00:00:00.000Z"),
+        mediaVerificationEmailDays: 10
+      });
+      const user = mediaDeletionUser("md-1", new Date("2025-06-01T12:00:00.000Z"));
+      mockBatches(findMediaUsersForDeletion, [user]);
+
+      // Act
+      await processInactiveAccounts();
+
+      // Assert
+      expect(sendMediaAccountDeletionEmail).toHaveBeenCalledWith(NOTIFICATION_SETTINGS, user, new Date("2026-02-11T00:00:00.000Z"));
+    });
   });
 });

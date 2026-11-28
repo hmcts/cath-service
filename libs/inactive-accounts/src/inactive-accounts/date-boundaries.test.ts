@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { buildFlooredDateFilter, type DateCondition, exactDayCondition, onOrBeforeCondition } from "./date-boundaries.js";
+import { buildFlooredDateFilter, type DateCondition, exactDayCondition, onOrBeforeCondition, verificationEmailDate } from "./date-boundaries.js";
 
 const DAY_MS = 86_400_000;
 
@@ -141,6 +141,69 @@ describe("date boundaries", () => {
         const value = new Date(runDate.getTime() + offsetHours * 3_600_000);
         expect(matchesFilter(filter, "lastSignedInDate", value), value.toISOString()).toBe(pipMatch(value, startDate, runDate, days, mode));
       }
+    });
+  });
+
+  describe("verificationEmailDate", () => {
+    const startDate = new Date("2026-01-01T00:00:00.000Z");
+
+    it("should add the verification days to the last verified day when it is on or after the start date", () => {
+      // Arrange
+      const lastVerifiedDate = new Date("2026-02-10T09:15:00.000Z");
+
+      // Act
+      const result = verificationEmailDate(lastVerifiedDate, 350, startDate);
+
+      // Assert
+      expect(result).toEqual(new Date("2027-01-26T00:00:00.000Z"));
+    });
+
+    it("should add the verification days to the start date when the user was last verified before it", () => {
+      // Arrange
+      const lastVerifiedDate = new Date("2024-05-01T12:00:00.000Z");
+
+      // Act
+      const result = verificationEmailDate(lastVerifiedDate, 350, startDate);
+
+      // Assert
+      expect(result).toEqual(new Date("2026-12-17T00:00:00.000Z"));
+    });
+
+    it("should drop the time of day from the last verified date", () => {
+      // Arrange
+      const startOfDay = new Date("2026-03-05T00:00:00.000Z");
+      const endOfDay = new Date("2026-03-05T23:59:59.999Z");
+
+      // Act
+      const fromStartOfDay = verificationEmailDate(startOfDay, 350, startDate);
+      const fromEndOfDay = verificationEmailDate(endOfDay, 350, startDate);
+
+      // Assert
+      expect(fromEndOfDay).toEqual(fromStartOfDay);
+      expect(fromEndOfDay).toEqual(new Date("2027-02-18T00:00:00.000Z"));
+    });
+
+    it("should use the configured verification days", () => {
+      // Arrange
+      const lastVerifiedDate = new Date("2026-03-05T10:00:00.000Z");
+
+      // Act
+      const result = verificationEmailDate(lastVerifiedDate, 10, startDate);
+
+      // Assert
+      expect(result).toEqual(new Date("2026-03-15T00:00:00.000Z"));
+    });
+
+    it("should match the day exactDayCondition selects the user for the verification email", () => {
+      // Arrange
+      const lastVerifiedDate = new Date("2026-02-10T09:15:00.000Z");
+
+      // Act
+      const result = verificationEmailDate(lastVerifiedDate, 350, startDate);
+
+      // Assert
+      const condition = exactDayCondition(350, new Date(result.getTime() + 8 * 3_600_000));
+      expect(lastVerifiedDate >= (condition.gte as Date) && lastVerifiedDate < condition.lt).toBe(true);
     });
   });
 });
